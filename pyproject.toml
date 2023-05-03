@@ -10,6 +10,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+dependencies = ["camel-converter>=3.0.0"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
@@ -37,7 +38,7 @@ exclude = '''
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--cov=prelude_parser --cov-report term-missing"
+addopts = "--cov=prelude_parser --cov-report term-missing --no-cov-on-fail"
 
 [tool.mypy]
 check_untyped_defs = true
@@ -46,6 +47,10 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["_prelude_parser.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 select=["E", "F", "T201", "T203", "I001"]
