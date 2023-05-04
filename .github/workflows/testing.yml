@@ -57,7 +57,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: "pip"
     - name: Install dependencies
-      run: pip -r requirements-dev.txt && maturin develop
+      run: pip intall -r requirements-dev.txt && maturin develop
     - name: Run tests
       run: pytest --cov=prelude_parser --cov-report=xml
     - name: Upload coverage
