@@ -56,6 +56,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: "pip"
+    - name: Activate virtualenv on Windows
+      if: matrix.os == 'windows-latest'
+      run: .venv\Scripts\activate.ps1
+    - name: Activate vituralenv on Linux and Mac
+      if: matrix.os != 'windows-latest'
+      run: . .venv/bin/activate
     - name: Install dependencies
       run: |
         pip install -U pip && pip install -r requirements-dev.txt && maturin develop
