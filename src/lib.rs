@@ -1,11 +1,11 @@
-// use std::fs::read_to_string;
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{IntoPyDict, PyDict};
 use roxmltree::Document;
 
 create_exception!(_prelude_parser, FileNotFoundError, PyException);
@@ -18,19 +18,33 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                let data = PyDict::new(py);
+                let mut data: HashMap<&str, Vec<&PyDict>> = HashMap::new();
                 let tree = doc.root_element();
-                if let Some(form_name) = tree.first_element_child() {
-                    data.set_item("form_name", form_name.tag_name().name())
-                        .unwrap();
-                    for child in form_name.children() {
-                        if child.tag_name().name() != "" {
-                            data.set_item(child.tag_name().name(), child.text())
-                                .unwrap();
+                for form in tree.children() {
+                    let form_name = form.tag_name().name();
+                    if form_name != "" {
+                        if let Some(d) = data.get_mut(form_name) {
+                            let mut form_data: HashMap<&str, Option<&str>> = HashMap::new();
+                            for child in form.children() {
+                                if child.is_element() && child.tag_name().name() != "" {
+                                    form_data.insert(child.tag_name().name(), child.text());
+                                }
+                            }
+                            d.push(form_data.into_py_dict(py));
+                        } else {
+                            let mut items: Vec<&PyDict> = Vec::new();
+                            let mut form_data: HashMap<&str, Option<&str>> = HashMap::new();
+                            for child in form.children() {
+                                if child.is_element() && child.tag_name().name() != "" {
+                                    form_data.insert(child.tag_name().name(), child.text());
+                                }
+                            }
+                            items.push(form_data.into_py_dict(py));
+                            data.insert(form_name, items);
                         }
                     }
                 }
-                return Ok(data);
+                return Ok(data.into_py_dict(py));
             }
             Err(e) => ParsingError::new_err(format!("Error parsing xml file: {:?}", e)).restore(py),
         },
@@ -58,7 +72,6 @@ fn _parse_flat_file(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
     Ok(data)
 }
 
-/// A Python module implemented in Rust.
 #[pymodule]
 fn _prelude_parser(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_parse_flat_file, m)?)?;
