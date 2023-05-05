@@ -61,7 +61,7 @@ jobs:
         pip install -U pip
         pip install -r requirements-dev.txt
         pip install -e .
-        maturin build -i python --universal2 --out dist
+        maturin build --out dist
         pip install --no-index --find-links=dist/ prelude-parser
     - name: Run tests
       run: pytest --cov=prelude_parser --cov-report=xml
