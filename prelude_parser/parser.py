@@ -4,8 +4,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from _prelude_parser import _parse_flat_file
 from camel_converter import to_pascal, to_snake
+
+from prelude_parser._prelude_parser import _parse_flat_file
 
 
 class _MetaCls(type):
