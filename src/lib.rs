@@ -22,7 +22,7 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                 let tree = doc.root_element();
                 for form in tree.children() {
                     let form_name = form.tag_name().name();
-                    if form_name != "" {
+                    if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(form_name) {
                             let mut form_data: HashMap<&str, Option<&str>> = HashMap::new();
                             for child in form.children() {
