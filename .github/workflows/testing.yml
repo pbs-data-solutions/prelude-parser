@@ -56,17 +56,22 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         cache: "pip"
-    - name: Activate virtualenv on Windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        python -m venv .venv && .venv\Scripts\activate.ps1
+          # - name: Activate virtualenv on Windows
+          #   if: matrix.os == 'windows-latest'
+          #   run: |
+          #     python -m venv .venv
+          #     .venv\Scripts\activate.ps1
     - name: Activate vituralenv on Linux and Mac
-      if: matrix.os != 'windows-latest'
+      # if: matrix.os != 'windows-latest'
       run: |
-        python -m venv .venv && . .venv/bin/activate
+        python -m venv .venv
+        echo "$GITHUB_WORKSPACE/py-polars/.venv/bin" >> $GITHUB_PATH
+        # . .venv/bin/activate
     - name: Install dependencies
       run: |
-        pip install -U pip && pip install -r requirements-dev.txt && maturin develop
+        pip install -U pip
+        pip install -r requirements-dev.txt
+        maturin develop
     - name: Run tests
       run: pytest --cov=prelude_parser --cov-report=xml
     - name: Upload coverage
