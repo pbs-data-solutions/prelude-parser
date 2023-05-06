@@ -5,11 +5,16 @@ build-backend = "maturin"
 [project]
 name = "prelude-parser"
 requires-python = ">=3.8"
+authors = [{name = "Paul Sanders", email = "paul@pbsdatasolutions.com"}]
 classifiers = [
-    "Programming Language :: Rust",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
+  "Programming Language :: Rust",
+  "Programming Language :: Python :: Implementation :: CPython",
 ]
+license = {file = "LICENSE"}
+readme = "README.md"
+repository = "https://github.com/pbs-data-solutions/prelude-parser"
+homepage = "https://github.com/pbs-data-solutions/prelude-parser"
+documentation = "https://github.com/pbs-data-solutions/prelude-parser"
 dependencies = ["camel-converter>=3.0.0"]
 
 [tool.maturin]

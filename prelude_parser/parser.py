@@ -15,6 +15,22 @@ class _MetaCls(type):
 
 
 def parse_flat_file(xml_file: str | Path) -> list[Any]:
+    """Parse a Prelude flat XML file into a Python class.
+
+    The name of the class is taken from the form name node in the XML file converted to pascal case.
+    For example a <physical_examination> node will result in a PhysicalExamination class being
+    created.
+
+    Args:
+        xml_file: The path to the XML file to parser.
+
+    Returns:
+        A list of Python classes containing the data from the XML file.
+
+    Examples:
+        >>> from prelude_parser import parse_flat_file
+        >>> data = parse_flat_file("physical_examination.xml")
+    """
     parsed = _parse_flat_file(xml_file)
     formatted: list[Any] = []
     for form, data in parsed.items():
