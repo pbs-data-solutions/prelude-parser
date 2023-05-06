@@ -1,5 +1,8 @@
 from datetime import datetime
 
+import pytest
+
+from prelude_parser._prelude_parser import FileNotFoundError, InvalidFileTypeError, ParsingError
 from prelude_parser.parser import parse_flat_file
 
 
@@ -46,3 +49,22 @@ def test_parse_flat_file_i_form(test_file_3):
     assert result[0].contacted_by == "You"
     assert result[0].investigator == "Dr. Me"
     assert result[0].communication == "Some random talk"
+
+
+def test_parse_flat_file_not_found_error():
+    with pytest.raises(FileNotFoundError):
+        parse_flat_file("bad.xml")
+
+
+def test_parse_flat_file_invalid_file_type_error(tmp_path):
+    bad = tmp_path / "bad.txt"
+    bad.touch()
+    with pytest.raises(InvalidFileTypeError):
+        parse_flat_file(bad)
+
+
+def test_parse_flat_file_parsing_error(tmp_path):
+    bad = tmp_path / "bad.xml"
+    bad.touch()
+    with pytest.raises(ParsingError):
+        parse_flat_file(bad)

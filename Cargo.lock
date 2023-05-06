@@ -82,7 +82,7 @@ dependencies = [
 
 [[package]]
 name = "prelude-parser"
-version = "0.0.6"
+version = "0.1.0"
 dependencies = [
  "pyo3",
  "roxmltree",
