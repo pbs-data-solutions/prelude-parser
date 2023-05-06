@@ -13,3 +13,7 @@ Parses XML files exported from [Prelude EDC](https://preludeedc.com/) into Pytho
 ```sh
 pip install prelude-parser
 ```
+
+## Contributing
+
+Contributions to this project are welcome. If you are interesting in contributing please see our [contributing guide](CONTRIBUTING.md)
