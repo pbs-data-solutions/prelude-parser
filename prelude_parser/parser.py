@@ -15,6 +15,65 @@ class _MetaCls(type):
 
 
 def parse_flat_file(xml_file: str | Path) -> list[Any]:
+    """Parse a Prelude flat XML file into a Python class.
+
+    The name of the class is taken from the form name node in the XML file converted to pascal case.
+    For example a <physical_examination> node will result in a PhysicalExamination class being
+    created.
+
+    Args:
+        xml_file: The path to the XML file to parser.
+
+    Returns:
+        A list of Python classes containing the data from the XML file.
+
+    Examples:
+        >>> from prelude_parser import parse_flat_file
+        >>> data = parse_flat_file("physical_examination.xml")
+    """
+    parsed = _parse_flat_file(xml_file)
+    formatted: list[Any] = []
+    for form, data in parsed.items():
+        class_name = to_pascal(form)
+        formatted_data: dict[str, Any] = {}
+
+        for d in data:
+            for k, v in d.items():
+                key = to_snake(k)
+                try:
+                    if "." in v:
+                        formatted_data[key] = float(v)
+                    else:
+                        formatted_data[key] = int(v)
+                    continue
+                except (TypeError, ValueError):
+                    pass
+
+                try:
+                    formatted_data[key] = datetime.strptime(v, "%d-%b-%Y")
+                    continue
+                except (TypeError, ValueError):
+                    pass
+
+                formatted_data[key] = v
+            formatted.append(_MetaCls(class_name, (object,), formatted_data))
+
+    return formatted
+
+
+def parse_flat_file_to_dict(xml_file: str | Path) -> list[dict[str, list[Any]]]:
+    """Parse a Prelude flat XML file into a Python dictionary.
+
+    Args:
+        xml_file: The path to the XML file to parser.
+
+    Returns:
+        A list of Python classes containing the data from the XML file.
+
+    Examples:
+        >>> from prelude_parser import parse_flat_file
+        >>> data = parse_flat_file("physical_examination.xml")
+    """
     parsed = _parse_flat_file(xml_file)
     formatted: list[Any] = []
     for form, data in parsed.items():

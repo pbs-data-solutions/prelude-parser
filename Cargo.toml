@@ -2,6 +2,10 @@
 name = "prelude-parser"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+homepage = "https://github.com/pbs-data-solutions/prelude-parser"
+repository = "https://github.com/pbs-data-solutions/prelude-parser"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
