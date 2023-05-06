@@ -46,19 +46,15 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                 }
                 return Ok(data.into_py_dict(py));
             }
-            Err(e) => {
-                return Err(ParsingError::new_err(format!(
-                    "Error parsing xml file: {:?}",
-                    e
-                )))
-            }
-        },
-        Err(e) => {
-            return Err(ParsingError::new_err(format!(
+            Err(e) => Err(ParsingError::new_err(format!(
                 "Error parsing xml file: {:?}",
                 e
-            )))
-        }
+            ))),
+        },
+        Err(e) => Err(ParsingError::new_err(format!(
+            "Error parsing xml file: {:?}",
+            e
+        ))),
     }
 }
 
