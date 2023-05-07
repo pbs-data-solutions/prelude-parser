@@ -9,7 +9,7 @@ use pyo3::types::{IntoPyDict, PyDict};
 use roxmltree::Document;
 
 create_exception!(_prelude_parser, FileNotFoundError, PyException);
-create_exception!(_prelude_parser, InvalidFileType, PyException);
+create_exception!(_prelude_parser, InvalidFileTypeError, PyException);
 create_exception!(_prelude_parser, ParsingError, PyException);
 
 fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
@@ -46,19 +46,29 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                 }
                 return Ok(data.into_py_dict(py));
             }
-            Err(e) => ParsingError::new_err(format!("Error parsing xml file: {:?}", e)).restore(py),
+            Err(e) => Err(ParsingError::new_err(format!(
+                "Error parsing xml file: {:?}",
+                e
+            ))),
         },
-        Err(e) => ParsingError::new_err(format!("Error parsing xml file: {:?}", e)).restore(py),
+        Err(e) => Err(ParsingError::new_err(format!(
+            "Error parsing xml file: {:?}",
+            e
+        ))),
     }
-
-    Err(ParsingError::new_err("Unable to parse XML file"))
 }
 
-fn validate_file(py: Python, xml_file: &PathBuf) -> PyResult<()> {
+fn validate_file(xml_file: &PathBuf) -> PyResult<()> {
     if !xml_file.is_file() {
-        FileNotFoundError::new_err(format!("File not found: {:?}", xml_file)).restore(py);
+        return Err(FileNotFoundError::new_err(format!(
+            "File not found: {:?}",
+            xml_file
+        )));
     } else if xml_file.extension().unwrap() != "xml" {
-        InvalidFileType::new_err(format!("{:?} is not an xml file", xml_file)).restore(py);
+        return Err(InvalidFileTypeError::new_err(format!(
+            "{:?} is not an xml file",
+            xml_file
+        )));
     }
 
     Ok(())
@@ -66,14 +76,20 @@ fn validate_file(py: Python, xml_file: &PathBuf) -> PyResult<()> {
 
 #[pyfunction]
 fn _parse_flat_file(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
-    validate_file(py, &xml_file)?;
+    validate_file(&xml_file)?;
     let data = parse_xml(py, &xml_file)?;
 
     Ok(data)
 }
 
 #[pymodule]
-fn _prelude_parser(_py: Python, m: &PyModule) -> PyResult<()> {
+fn _prelude_parser(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_parse_flat_file, m)?)?;
+    m.add("FileNotFoundError", py.get_type::<FileNotFoundError>())?;
+    m.add(
+        "InvalidFileTypeError",
+        py.get_type::<InvalidFileTypeError>(),
+    )?;
+    m.add("ParsingError", py.get_type::<ParsingError>())?;
     Ok(())
 }
