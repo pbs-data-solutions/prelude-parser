@@ -6,9 +6,16 @@ build-backend = "maturin"
 name = "prelude-parser"
 requires-python = ">=3.8"
 authors = [{name = "Paul Sanders", email = "paul@pbsdatasolutions.com"}]
+keywords = ["prelude-edc", "xml", "parser"]
 classifiers = [
   "Programming Language :: Rust",
   "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+  "Typing :: Typed",
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
