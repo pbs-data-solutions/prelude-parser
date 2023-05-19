@@ -5,13 +5,13 @@ from pathlib import Path
 from prelude_parser._prelude_parser import _parse_flat_file_to_pandas_dict
 
 try:
-    import pandas as pd
+    import polars as pl
 except ImportError:  # pragma: no cover
-    raise ImportError("prelude-parser must be installed with the pandas or all extra to use pandas")
+    raise ImportError("prelude-parser must be installed with the polars or all extra to use pandas")
 
 
-def to_dataframe(xml_file: str | Path) -> pd.DataFrame:
-    """Parse a Prelude flat XML file into a Pandas DataFrame.
+def to_dataframe(xml_file: str | Path) -> pl.DataFrame:
+    """Parse a Prelude flat XML file into a Polars DataFrame.
 
     This works for Prelude flat XML files that were exported with the "write tables to seperate
     files" option.
@@ -20,11 +20,11 @@ def to_dataframe(xml_file: str | Path) -> pd.DataFrame:
         xml_file: The path to the XML file to parser.
 
     Returns:
-        A Pandas DataFrame the data from the XML file.
+        A Polars DataFrame the data from the XML file.
 
     Examples:
-        >>> from prelude_parser.pandas import to_dataframe
+        >>> from prelude_parser.polars import to_dataframe
         >>> df = to_dataframe("physical_examination.xml")
     """
     data = _parse_flat_file_to_pandas_dict(xml_file)
-    return pd.DataFrame.from_dict(data)
+    return pl.from_dict(data)

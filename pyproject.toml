@@ -27,7 +27,8 @@ dependencies = ["camel-converter>=3.0.0"]
 
 [project.optional-dependencies]
 pandas = ["pandas>=2.0.1"]
-all = ["pandas>=2.0.1"]
+polars = ["polars>=0.17.14"]
+all = ["pandas>=2.0.1", "polars>=0.17.14"]
 
 [tool.maturin]
 module-name = "prelude_parser._prelude_parser"
