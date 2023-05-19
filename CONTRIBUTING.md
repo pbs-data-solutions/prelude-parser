@@ -24,7 +24,7 @@ Please include:
 
 ## Working on the code
 
-In order to work on this project you will need to have [Rust](https://www.rust-lang.org/) and 
+In order to work on this project you will need to have [Rust](https://www.rust-lang.org/) and
 [just](https://github.com/casey/just) in addition to Python.
 
 ### Fork the project
@@ -53,7 +53,7 @@ python -m venv .venv
 Then install the dev requirements. This will also build the Rust module in dev mode and install it.
 
 ```sh
-just install 
+just install
 ```
 
 When changes are made to the Rust code, build and install the new module with:
