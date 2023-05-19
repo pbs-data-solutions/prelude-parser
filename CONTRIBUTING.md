@@ -15,9 +15,9 @@ Please include:
 [GitHub markdown](https://docs.github.com/en/free-pro-team@latest/github/writing-on-github). For example:
 
     ```py
-    from prelude_parser import parse_flat_file
+    from prelude_parser import parse_to_classes
 
-    data = parse_flat_file("my_file.xml")
+    data = parse_to_classes("my_file.xml")
     ```
 
 2. Explain what is currently happening and what you expect instead.

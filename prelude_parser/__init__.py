@@ -1,3 +1,3 @@
-from prelude_parser.parser import parse_flat_file
+from prelude_parser.parser import parse_to_classes, parse_to_dict
 
-__all__ = ["parse_flat_file"]
+__all__ = ["parse_to_classes", "parse_to_dict"]
