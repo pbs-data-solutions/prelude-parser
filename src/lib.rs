@@ -58,6 +58,41 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
     }
 }
 
+fn parse_xml_pandas<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
+    let reader = read_to_string(xml_file);
+
+    match reader {
+        Ok(r) => match Document::parse(&r) {
+            Ok(doc) => {
+                let mut data: HashMap<&str, Vec<Option<&str>>> = HashMap::new();
+                let tree = doc.root_element();
+
+                for form in tree.children() {
+                    for child in form.children() {
+                        if child.is_element() && child.tag_name().name() != "" {
+                            let column = child.tag_name().name();
+                            if let Some(d) = data.get_mut(column) {
+                                d.push(child.text());
+                            } else {
+                                data.insert(column, vec![child.text()]);
+                            }
+                        }
+                    }
+                }
+                return Ok(data.into_py_dict(py));
+            }
+            Err(e) => Err(ParsingError::new_err(format!(
+                "Error parsing xml file: {:?}",
+                e
+            ))),
+        },
+        Err(e) => Err(ParsingError::new_err(format!(
+            "Error parsing xml file: {:?}",
+            e
+        ))),
+    }
+}
+
 fn validate_file(xml_file: &PathBuf) -> PyResult<()> {
     if !xml_file.is_file() {
         return Err(FileNotFoundError::new_err(format!(
@@ -82,9 +117,18 @@ fn _parse_flat_file(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
     Ok(data)
 }
 
+#[pyfunction]
+fn _parse_flat_file_to_pandas_dict(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
+    validate_file(&xml_file)?;
+    let data = parse_xml_pandas(py, &xml_file)?;
+
+    Ok(data)
+}
+
 #[pymodule]
 fn _prelude_parser(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_parse_flat_file, m)?)?;
+    m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
     m.add("FileNotFoundError", py.get_type::<FileNotFoundError>())?;
     m.add(
         "InvalidFileTypeError",

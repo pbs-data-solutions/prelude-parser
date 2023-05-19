@@ -24,6 +24,9 @@ Please include:
 
 ## Working on the code
 
+In order to work on this project you will need to have [Rust](https://www.rust-lang.org/) and 
+[just](https://github.com/casey/just) in addition to Python.
+
 ### Fork the project
 
 In order to work on the project you will need your own fork. To do this click the "Fork" button on
@@ -39,12 +42,7 @@ git remote add upstream git@github.com:pbs-data-solutions/prelude-parser
 
 This creates the directory prelude-parser and connects your repository to the upstream (main project) repository.
 
-### Working with the code
-
-In order to work on this project you will need to have [Rust](https://www.rust-lang.org/) in
-addition to Python.
-
-Once Rust is installed you should create a vitural environment and activate it.
+Next create a vitural environment and activate it.
 
 ```sh
 python -m venv .venv
@@ -52,16 +50,16 @@ python -m venv .venv
 . .venv/bin/activate
 ```
 
-Then install the dev requirements
+Then install the dev requirements. This will also build the Rust module in dev mode and install it.
 
 ```sh
-pip install -r requirements-dev.txt
+just install 
 ```
 
-Now the Rust module can be built in dev mode.
+When changes are made to the Rust code, build and install the new module with:
 
 ```sh
-maturin develop
+just develop
 ```
 
 ### Creating a branch
@@ -95,20 +93,7 @@ formmating.
 You can run linting on your code at any time with:
 
 ```sh
-# Run ruff
-ruff check .
-
-# Run black
-black prelude_parser tests
-
-# Run mypy
-mypy .
-
-# clippy
-cargo clippy
-
-# rustfmt
-cargo fmt
+just lint
 ```
 
 It is also suggested that you setup [pre-commit](https://pre-commit.com/) in order to run linting
@@ -165,7 +150,7 @@ be accepted. You can view the current coverage level in the codecov badge on the
 the code coverage by running:
 
 ```sh
-pytest
+just test
 ```
 
 In additon to mainting the coverage percentage please ensure that all tests are passing before
