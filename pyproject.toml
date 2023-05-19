@@ -1,10 +1,11 @@
 [build-system]
-requires = ["maturin>=0.14,<0.15"]
+requires = ["maturin>=0.15"]
 build-backend = "maturin"
 
 [project]
 name = "prelude-parser"
 requires-python = ">=3.8"
+description = "Parses XML files exported from Prelude EDC into formats usable by Python."
 authors = [{name = "Paul Sanders", email = "paul@pbsdatasolutions.com"}]
 keywords = ["prelude-edc", "xml", "parser"]
 classifiers = [
@@ -23,6 +24,10 @@ repository = "https://github.com/pbs-data-solutions/prelude-parser"
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 documentation = "https://github.com/pbs-data-solutions/prelude-parser"
 dependencies = ["camel-converter>=3.0.0"]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2.0.1"]
+all = ["pandas>=2.0.1"]
 
 [tool.maturin]
 module-name = "prelude_parser._prelude_parser"

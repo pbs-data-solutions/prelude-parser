@@ -1,6 +1,7 @@
 [package]
 name = "prelude-parser"
 version = "0.1.1"
+description = "Parses XML files exported from Prelude EDC into formats usable by Python."
 edition = "2021"
 license = "MIT"
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"

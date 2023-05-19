@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 def _parse_flat_file(xml_file: str | Path) -> dict[str, list[Any]]: ...
+def _parse_flat_file_to_pandas_dict(xml_file: str | Path) -> dict[str, list[Any]]: ...
 
 class FileNotFoundError(Exception):
     pass

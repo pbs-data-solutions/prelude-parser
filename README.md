@@ -6,12 +6,18 @@
 [![PyPI version](https://badge.fury.io/py/prelude-parser.svg)](https://badge.fury.io/py/prelude-parser)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/prelude-parser?color=5cc141)](https://github.com/pbs-data-solutions/prelude-parser)
 
-Parses XML files exported from [Prelude EDC](https://preludeedc.com/) into Python classes.
+Parses XML files exported from [Prelude EDC](https://preludeedc.com/) into formats Python can use.
 
 ## Installation
 
 ```sh
 pip install prelude-parser
+```
+
+Optionally the Pandas extra can be installed to parse to a Pandas `DataFrame`
+
+```sh
+pip install prelude-parser[pandas]
 ```
 
 ## Contributing
