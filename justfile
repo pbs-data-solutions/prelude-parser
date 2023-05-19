@@ -1,5 +1,5 @@
 @develop:
-  maturin develop
+  maturin develop -E all
 
 @install: develop
   pip install -r requirements-dev.txt
