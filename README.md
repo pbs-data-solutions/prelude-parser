@@ -14,10 +14,22 @@ Parses XML files exported from [Prelude EDC](https://preludeedc.com/) into forma
 pip install prelude-parser
 ```
 
-Optionally the Pandas extra can be installed to parse to a Pandas `DataFrame`
+Optionally the `polars` extra can be installed to parse to a Pandas `DataFrame`
 
 ```sh
 pip install prelude-parser[pandas]
+```
+
+Optionally the `polars` extra can be installed to parse to a Polars `DataFrame`
+
+```sh
+pip install prelude-parser[polars]
+```
+
+All extras can be install with
+
+```sh
+pip install prelude-parser[all]
 ```
 
 ## Contributing
