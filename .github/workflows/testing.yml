@@ -51,8 +51,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
-    - name: Install just
-      uses: extractions/setup-just@v1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -61,7 +59,10 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -U pip
-        just install
+        pip install -r requirements-dev.txt
+        pip install -e .[all]
+        maturin build --out dist
+        pip install --no-index --find-links=dist/ prelude-parser
     - name: Run tests
       run: pytest --cov=prelude_parser --cov-report=xml
     - name: Upload coverage
