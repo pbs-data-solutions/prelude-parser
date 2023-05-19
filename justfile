@@ -1,7 +1,7 @@
 @develop:
   maturin develop -E all
 
-@install: develop
+@install: && develop
   pip install -r requirements-dev.txt
 
 @lint:
