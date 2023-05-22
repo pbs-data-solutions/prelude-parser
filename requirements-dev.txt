@@ -1,5 +1,5 @@
 black==23.3.0
-maturin==0.15.2
+maturin==0.15.3
 mypy==1.3.0
 pandas-stubs==2.0.1.230501
 pre-commit==3.3.2
