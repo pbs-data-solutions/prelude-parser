@@ -13,7 +13,7 @@ class _MetaCls(type):
     def __new__(
         cls, clsname: str, superclasses: tuple[type, ...], attributedict: dict[str, Any]
     ) -> _MetaCls:
-        return super(_MetaCls, cls).__new__(cls, clsname, superclasses, attributedict)
+        return super().__new__(cls, clsname, superclasses, attributedict)
 
 
 def parse_to_dict(xml_file: str | Path) -> dict[str, list[dict[str, Any]]]:
