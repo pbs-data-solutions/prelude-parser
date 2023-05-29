@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -29,25 +28,7 @@ def parse_to_dict(xml_file: str | Path) -> dict[str, list[dict[str, Any]]]:
         >>> from prelude_parser import parse_to_dict
         >>> data = parse_to_dict("physical_examination.xml")
     """
-    parsed = _parse_flat_file_to_dict(xml_file)
-    for _, data in parsed.items():
-        for d in data:
-            for k, v in d.items():
-                try:
-                    if "." in v:
-                        d[k] = float(v)
-                    else:
-                        d[k] = int(v)
-                    continue
-                except (TypeError, ValueError):
-                    pass
-
-                try:
-                    d[k] = datetime.strptime(v, "%d-%b-%Y")
-                except (TypeError, ValueError):
-                    pass
-
-    return parsed
+    return _parse_flat_file_to_dict(xml_file)
 
 
 def parse_to_classes(xml_file: str | Path) -> list[Any]:
