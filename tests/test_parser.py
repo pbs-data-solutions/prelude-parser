@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 import pytest
 
@@ -28,7 +28,7 @@ def test_parse_to_classes_with_float(test_file_2):
     assert len(result) == 2
     assert result[0].__name__ == "Demographics"
     assert result[0].weight == 80.2
-    assert result[0].dob == datetime(2020, 4, 15)
+    assert result[0].dob == date(2020, 4, 15)
 
 
 def test_parse_to_classes_i_form(test_file_3):
@@ -115,7 +115,7 @@ def test_parse_to_dict_with_float(test_file_2):
             {
                 "base_form": "day.0.form.name.demographics",
                 "breed": "Labrador",
-                "dob": datetime(2020, 4, 15),
+                "dob": date(2020, 4, 15),
                 "first_name": "Imma",
                 "form_group": "Day 0",
                 "form_number": None,
@@ -131,13 +131,13 @@ def test_parse_to_dict_with_float(test_file_2):
                 "site_type": "Live",
                 "study_name": "PBS",
                 "subject_id": "ABC-001",
-                "visit_date": datetime(2023, 4, 15),
+                "visit_date": date(2023, 4, 15),
                 "weight": 80.2,
             },
             {
                 "base_form": "day.0.form.name.demographics",
                 "breed": "Golden",
-                "dob": datetime(2019, 4, 9),
+                "dob": date(2019, 4, 9),
                 "first_name": "Arthur",
                 "form_group": "Day 0",
                 "form_number": None,
@@ -153,7 +153,7 @@ def test_parse_to_dict_with_float(test_file_2):
                 "site_type": "Live",
                 "study_name": "PBS",
                 "subject_id": "ABC-002",
-                "visit_date": datetime(2023, 4, 15),
+                "visit_date": date(2023, 4, 15),
                 "weight": 40.5,
             },
         ]

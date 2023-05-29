@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 
+use chrono::{Datelike, NaiveDate};
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -36,6 +37,8 @@ fn to_snake(camel_string: &str) -> String {
 
 fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
     let reader = read_to_string(xml_file);
+    let datetime = py.import("datetime")?;
+    let date = datetime.getattr("date")?;
 
     match reader {
         Ok(r) => match Document::parse(&r) {
@@ -46,21 +49,88 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                     let form_name = to_snake(form.tag_name().name());
                     if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(&form_name) {
-                            let mut form_data: HashMap<String, Option<&str>> = HashMap::new();
+                            // let mut form_data: HashMap<String, Option<&str>> = HashMap::new();
+                            let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = to_snake(child.tag_name().name());
-                                    form_data.insert(key, child.text());
-                                }
+                                    match child.text() {
+                                        Some(t) => {
+                                            if t.contains('.') {
+                                                match t.parse::<f64>() {
+                                                    Ok(float_val) => {
+                                                        form_data.set_item(key, float_val)?
+                                                    }
+                                                    Err(_) => form_data.set_item(key, t)?,
+                                                };
+                                            } else {
+                                                match t.parse::<usize>() {
+                                                    Ok(int_val) => {
+                                                        form_data.set_item(key, int_val)?
+                                                    }
+                                                    Err(_) => {
+                                                        match NaiveDate::parse_from_str(
+                                                            t, "%d-%b-%Y",
+                                                        ) {
+                                                            Ok(dt) => {
+                                                                let py_date = date.call1((
+                                                                    dt.year(),
+                                                                    dt.month(),
+                                                                    dt.day(),
+                                                                ))?;
+                                                                form_data.set_item(key, py_date)?;
+                                                            }
+                                                            Err(_) => form_data.set_item(key, t)?,
+                                                        };
+                                                    }
+                                                };
+                                            };
+                                        }
+                                        None => form_data.set_item(key, py.None())?,
+                                    };
+                                };
                             }
-                            d.push(form_data.into_py_dict(py));
+                            d.push(form_data);
                         } else {
                             let mut items: Vec<&PyDict> = Vec::new();
-                            let mut form_data: HashMap<String, Option<&str>> = HashMap::new();
+                            let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = to_snake(child.tag_name().name());
-                                    form_data.insert(key, child.text());
+                                    match child.text() {
+                                        Some(t) => {
+                                            if t.contains('.') {
+                                                match t.parse::<f64>() {
+                                                    Ok(float_val) => {
+                                                        form_data.set_item(key, float_val)?
+                                                    }
+                                                    Err(_) => form_data.set_item(key, t)?,
+                                                };
+                                            } else {
+                                                match t.parse::<usize>() {
+                                                    Ok(int_val) => {
+                                                        form_data.set_item(key, int_val)?
+                                                    }
+                                                    Err(_) => {
+                                                        match NaiveDate::parse_from_str(
+                                                            t, "%d-%b-%Y",
+                                                        ) {
+                                                            Ok(dt) => {
+                                                                let py_date = date.call1((
+                                                                    dt.year(),
+                                                                    dt.month(),
+                                                                    dt.day(),
+                                                                ))?;
+                                                                form_data.set_item(key, py_date)?;
+                                                            }
+                                                            Err(_) => form_data.set_item(key, t)?,
+                                                        };
+                                                    }
+                                                };
+                                            };
+                                        }
+                                        None => form_data.set_item(key, py.None())?,
+                                    };
                                 }
                             }
                             items.push(form_data.into_py_dict(py));
