@@ -55,37 +55,27 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = to_snake(child.tag_name().name());
                                     match child.text() {
-                                        Some(t) => {
-                                            if t.contains('.') {
-                                                match t.parse::<f64>() {
-                                                    Ok(float_val) => {
-                                                        form_data.set_item(key, float_val)?
+                                        Some(t) => match t.parse::<usize>() {
+                                            Ok(int_val) => form_data.set_item(key, int_val)?,
+                                            Err(_) => match t.parse::<f64>() {
+                                                Ok(float_val) => {
+                                                    form_data.set_item(key, float_val)?
+                                                }
+                                                Err(_) => {
+                                                    match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
+                                                        Ok(dt) => {
+                                                            let py_date = date.call1((
+                                                                dt.year(),
+                                                                dt.month(),
+                                                                dt.day(),
+                                                            ))?;
+                                                            form_data.set_item(key, py_date)?;
+                                                        }
+                                                        Err(_) => form_data.set_item(key, t)?,
                                                     }
-                                                    Err(_) => form_data.set_item(key, t)?,
-                                                };
-                                            } else {
-                                                match t.parse::<usize>() {
-                                                    Ok(int_val) => {
-                                                        form_data.set_item(key, int_val)?
-                                                    }
-                                                    Err(_) => {
-                                                        match NaiveDate::parse_from_str(
-                                                            t, "%d-%b-%Y",
-                                                        ) {
-                                                            Ok(dt) => {
-                                                                let py_date = date.call1((
-                                                                    dt.year(),
-                                                                    dt.month(),
-                                                                    dt.day(),
-                                                                ))?;
-                                                                form_data.set_item(key, py_date)?;
-                                                            }
-                                                            Err(_) => form_data.set_item(key, t)?,
-                                                        };
-                                                    }
-                                                };
-                                            };
-                                        }
+                                                }
+                                            },
+                                        },
                                         None => form_data.set_item(key, py.None())?,
                                     };
                                 };
