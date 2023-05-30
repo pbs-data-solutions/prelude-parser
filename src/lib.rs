@@ -35,10 +35,37 @@ fn to_snake(camel_string: &str) -> String {
         .replace("__", "_")
 }
 
-fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
-    let reader = read_to_string(xml_file);
+fn add_item<'py>(
+    py: Python<'py>,
+    key: &str,
+    value: Option<&str>,
+    form_data: &'py PyDict,
+) -> PyResult<&'py PyDict> {
     let datetime = py.import("datetime")?;
     let date = datetime.getattr("date")?;
+
+    match value {
+        Some(t) => match t.parse::<usize>() {
+            Ok(int_val) => form_data.set_item(key, int_val)?,
+            Err(_) => match t.parse::<f64>() {
+                Ok(float_val) => form_data.set_item(key, float_val)?,
+                Err(_) => match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
+                    Ok(dt) => {
+                        let py_date = date.call1((dt.year(), dt.month(), dt.day()))?;
+                        form_data.set_item(key, py_date)?;
+                    }
+                    Err(_) => form_data.set_item(key, t)?,
+                },
+            },
+        },
+        None => form_data.set_item(key, py.None())?,
+    };
+
+    Ok(form_data)
+}
+
+fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
+    let reader = read_to_string(xml_file);
 
     match reader {
         Ok(r) => match Document::parse(&r) {
@@ -49,35 +76,11 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                     let form_name = to_snake(form.tag_name().name());
                     if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(&form_name) {
-                            // let mut form_data: HashMap<String, Option<&str>> = HashMap::new();
                             let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = to_snake(child.tag_name().name());
-                                    match child.text() {
-                                        Some(t) => match t.parse::<usize>() {
-                                            Ok(int_val) => form_data.set_item(key, int_val)?,
-                                            Err(_) => match t.parse::<f64>() {
-                                                Ok(float_val) => {
-                                                    form_data.set_item(key, float_val)?
-                                                }
-                                                Err(_) => {
-                                                    match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
-                                                        Ok(dt) => {
-                                                            let py_date = date.call1((
-                                                                dt.year(),
-                                                                dt.month(),
-                                                                dt.day(),
-                                                            ))?;
-                                                            form_data.set_item(key, py_date)?;
-                                                        }
-                                                        Err(_) => form_data.set_item(key, t)?,
-                                                    }
-                                                }
-                                            },
-                                        },
-                                        None => form_data.set_item(key, py.None())?,
-                                    };
+                                    add_item(py, &key, child.text(), form_data)?;
                                 };
                             }
                             d.push(form_data);
@@ -87,40 +90,7 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = to_snake(child.tag_name().name());
-                                    match child.text() {
-                                        Some(t) => {
-                                            if t.contains('.') {
-                                                match t.parse::<f64>() {
-                                                    Ok(float_val) => {
-                                                        form_data.set_item(key, float_val)?
-                                                    }
-                                                    Err(_) => form_data.set_item(key, t)?,
-                                                };
-                                            } else {
-                                                match t.parse::<usize>() {
-                                                    Ok(int_val) => {
-                                                        form_data.set_item(key, int_val)?
-                                                    }
-                                                    Err(_) => {
-                                                        match NaiveDate::parse_from_str(
-                                                            t, "%d-%b-%Y",
-                                                        ) {
-                                                            Ok(dt) => {
-                                                                let py_date = date.call1((
-                                                                    dt.year(),
-                                                                    dt.month(),
-                                                                    dt.day(),
-                                                                ))?;
-                                                                form_data.set_item(key, py_date)?;
-                                                            }
-                                                            Err(_) => form_data.set_item(key, t)?,
-                                                        };
-                                                    }
-                                                };
-                                            };
-                                        }
-                                        None => form_data.set_item(key, py.None())?,
-                                    };
+                                    add_item(py, &key, child.text(), form_data)?;
                                 }
                             }
                             items.push(form_data.into_py_dict(py));
