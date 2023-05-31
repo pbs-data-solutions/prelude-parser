@@ -6,7 +6,7 @@ use chrono::{Datelike, NaiveDate};
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict};
+use pyo3::types::{IntoPyDict, PyDict, PyList};
 use roxmltree::Document;
 
 create_exception!(_prelude_parser, FileNotFoundError, PyException);
@@ -33,6 +33,34 @@ fn to_snake(camel_string: &str) -> String {
         .trim_start_matches('_')
         .to_lowercase()
         .replace("__", "_")
+}
+
+fn py_list_append<'py>(
+    py: Python<'py>,
+    value: Option<&str>,
+    list: &'py PyList,
+) -> PyResult<&'py PyList> {
+    let datetime = py.import("datetime")?;
+    let date = datetime.getattr("date")?;
+
+    match value {
+        Some(t) => match t.parse::<usize>() {
+            Ok(int_val) => list.append(int_val)?,
+            Err(_) => match t.parse::<f64>() {
+                Ok(float_val) => list.append(float_val)?,
+                Err(_) => match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
+                    Ok(dt) => {
+                        let py_date = date.call1((dt.year(), dt.month(), dt.day()))?;
+                        list.append(py_date)?;
+                    }
+                    Err(_) => list.append(t)?,
+                },
+            },
+        },
+        None => list.append(py.None())?,
+    };
+
+    Ok(list)
 }
 
 fn add_item<'py>(
@@ -118,18 +146,29 @@ fn parse_xml_pandas<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py P
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                let mut data: HashMap<&str, Vec<Option<&str>>> = HashMap::new();
+                // let mut data: HashMap<&str, &PyList> = HashMap::new(); //Vec<Option<&str>>> = HashMap::new();
+                let data = PyDict::new(py);
                 let tree = doc.root_element();
 
                 for form in tree.children() {
                     for child in form.children() {
                         if child.is_element() && child.tag_name().name() != "" {
-                            let column = child.tag_name().name();
-                            if let Some(d) = data.get_mut(column) {
-                                d.push(child.text());
+                            let column = to_snake(child.tag_name().name());
+                            if let Some(c) = data.get_item(column.clone()) {
+                                py_list_append(py, child.text(), c.extract()?)?;
+                                data.set_item(column, c)?;
                             } else {
-                                data.insert(column, vec![child.text()]);
+                                let list = PyList::empty(py);
+                                py_list_append(py, child.text(), list)?;
+                                data.set_item(column, list)?;
                             }
+                            /*if let Some(d) = data.get_mut(column) {
+                                py_list_append(py, child.text(), list)?;
+                                d = list;
+                            } else {
+                                py_list_append(py, child.text(), list)?;
+                                data.insert(column, list);
+                            }*/
                         }
                     }
                 }
