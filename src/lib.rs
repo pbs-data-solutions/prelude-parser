@@ -14,25 +14,21 @@ create_exception!(_prelude_parser, InvalidFileTypeError, PyException);
 create_exception!(_prelude_parser, ParsingError, PyException);
 
 fn to_snake(camel_string: &str) -> String {
-    let snake_string: String = camel_string
-        .chars()
-        .map(|c| {
-            if c.is_uppercase() {
-                format!("_{}", c)
-            } else {
-                c.to_string()
+    let mut snake_string = String::with_capacity(
+        camel_string.len() + camel_string.chars().filter(|c| c.is_uppercase()).count(),
+    );
+
+    let mut chars = camel_string.chars().peekable();
+    while let Some(c) = chars.next() {
+        snake_string.push(c);
+        if let Some(next) = chars.peek() {
+            if next.is_uppercase() && c != '_' {
+                snake_string.push('_');
             }
-        })
-        .collect();
+        }
+    }
 
-    // There is some weirdness in the Prelude XML files that can result in names like
-    // `i_communications_Details`. Because of this we can end up with values like
-    // `i_communications__details` so we need to fix double `__` values when we return the string.
-
-    snake_string
-        .trim_start_matches('_')
-        .to_lowercase()
-        .replace("__", "_")
+    snake_string.to_lowercase()
 }
 
 fn py_list_append<'py>(
