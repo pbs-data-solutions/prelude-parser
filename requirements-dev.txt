@@ -1,7 +1,7 @@
 black==23.9.1
 maturin==1.2.3
 mypy==1.5.1
-pandas-stubs==2.0.3.230814
+pandas-stubs==2.1.1.230928; python_version>"3.8"
 pre-commit==3.4.0
 pytest==7.4.2
 pytest-cov==4.1.0

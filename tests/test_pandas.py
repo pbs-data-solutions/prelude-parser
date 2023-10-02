@@ -1,8 +1,14 @@
-import pandas as pd
+import sys
 
-from prelude_parser.pandas import to_dataframe
+import pytest
+
+if sys.version_info >= (3, 9):
+    import pandas as pd
+
+    from prelude_parser.pandas import to_dataframe
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Pandas only supports 3.9+")
 def test_pandas_to_dataframe(test_file_1):
     result = to_dataframe(test_file_1)
     data = {
