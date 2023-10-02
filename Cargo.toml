@@ -16,4 +16,4 @@ crate-type = ["cdylib"]
 [dependencies]
 chrono = "0.4.31"
 pyo3 = { version = "0.19.2", features = ["extension-module", "abi3-py38"] }
-roxmltree = "0.18.0"
+roxmltree = "0.18.1"
