@@ -26,9 +26,9 @@ documentation = "https://github.com/pbs-data-solutions/prelude-parser"
 dependencies = ["camel-converter>=3.0.0"]
 
 [project.optional-dependencies]
-pandas = ["pandas>=2.0.1"]
+pandas = ['pandas>=2.1.0; python_version>"3.8"']
 polars = ["polars>=0.17.14"]
-all = ["pandas>=2.0.1", "polars>=0.17.14"]
+all = ['pandas>=2.1.0; python_version>"3.8"', "polars>=0.17.14"]
 
 [tool.maturin]
 module-name = "prelude_parser._prelude_parser"

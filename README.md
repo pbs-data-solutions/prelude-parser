@@ -16,6 +16,8 @@ pip install prelude-parser
 
 Optionally the `pandas` extra can be installed to parse to a Pandas `DataFrame`
 
+Note: Pandas only supports Python 3.9+ so this is not available in Python 3.8.
+
 ```sh
 pip install prelude-parser[pandas]
 ```
