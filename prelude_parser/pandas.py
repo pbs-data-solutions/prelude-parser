@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
     raise ImportError("prelude-parser must be installed with the pandas or all extra to use pandas")
 
 
-def to_dataframe(xml_file: str | Path) -> pd.DataFrame:
+def to_dataframe(xml_file: str | Path, *, short_names: bool = False) -> pd.DataFrame:
     """Parse a Prelude flat XML file into a Pandas DataFrame.
 
     This works for Prelude flat XML files that were exported with the "write tables to seperate
@@ -27,6 +27,7 @@ def to_dataframe(xml_file: str | Path) -> pd.DataFrame:
 
     Args:
         xml_file: The path to the XML file to parser.
+        short_names: Set to True if short names were used in the export.
 
     Returns:
         A Pandas DataFrame the data from the XML file.
@@ -35,5 +36,5 @@ def to_dataframe(xml_file: str | Path) -> pd.DataFrame:
         >>> from prelude_parser.pandas import to_dataframe
         >>> df = to_dataframe("physical_examination.xml")
     """
-    data = _parse_flat_file_to_pandas_dict(xml_file)
+    data = _parse_flat_file_to_pandas_dict(xml_file, short_names)
     return pd.DataFrame.from_dict(data)

@@ -88,7 +88,7 @@ fn add_item<'py>(
     Ok(form_data)
 }
 
-fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
+fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf, short_names: bool) -> PyResult<&'py PyDict> {
     let reader = read_to_string(xml_file);
 
     match reader {
@@ -97,13 +97,21 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                 let mut data: HashMap<String, Vec<&PyDict>> = HashMap::new();
                 let tree = doc.root_element();
                 for form in tree.children() {
-                    let form_name = to_snake(form.tag_name().name());
+                    let form_name = if short_names {
+                        form.tag_name().name().to_owned().to_lowercase()
+                    } else {
+                        to_snake(form.tag_name().name())
+                    };
                     if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(&form_name) {
                             let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
-                                    let key = to_snake(child.tag_name().name());
+                                    let key = if short_names {
+                                        child.tag_name().name().to_owned().to_lowercase()
+                                    } else {
+                                        to_snake(child.tag_name().name())
+                                    };
                                     add_item(py, &key, child.text(), form_data)?;
                                 };
                             }
@@ -113,7 +121,11 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
                             let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
-                                    let key = to_snake(child.tag_name().name());
+                                    let key = if short_names {
+                                        child.tag_name().name().to_owned().to_lowercase()
+                                    } else {
+                                        to_snake(child.tag_name().name())
+                                    };
                                     add_item(py, &key, child.text(), form_data)?;
                                 }
                             }
@@ -136,20 +148,27 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> 
     }
 }
 
-fn parse_xml_pandas<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py PyDict> {
+fn parse_xml_pandas<'py>(
+    py: Python<'py>,
+    xml_file: &PathBuf,
+    short_names: bool,
+) -> PyResult<&'py PyDict> {
     let reader = read_to_string(xml_file);
 
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                // let mut data: HashMap<&str, &PyList> = HashMap::new(); //Vec<Option<&str>>> = HashMap::new();
                 let data = PyDict::new(py);
                 let tree = doc.root_element();
 
                 for form in tree.children() {
                     for child in form.children() {
                         if child.is_element() && child.tag_name().name() != "" {
-                            let column = to_snake(child.tag_name().name());
+                            let column = if short_names {
+                                child.tag_name().name().to_owned().to_lowercase()
+                            } else {
+                                to_snake(child.tag_name().name())
+                            };
                             if let Some(c) = data.get_item(column.clone()) {
                                 py_list_append(py, child.text(), c.extract()?)?;
                                 data.set_item(column, c)?;
@@ -158,13 +177,6 @@ fn parse_xml_pandas<'py>(py: Python<'py>, xml_file: &PathBuf) -> PyResult<&'py P
                                 py_list_append(py, child.text(), list)?;
                                 data.set_item(column, list)?;
                             }
-                            /*if let Some(d) = data.get_mut(column) {
-                                py_list_append(py, child.text(), list)?;
-                                d = list;
-                            } else {
-                                py_list_append(py, child.text(), list)?;
-                                data.insert(column, list);
-                            }*/
                         }
                     }
                 }
@@ -199,17 +211,21 @@ fn validate_file(xml_file: &PathBuf) -> PyResult<()> {
 }
 
 #[pyfunction]
-fn _parse_flat_file_to_dict(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
+fn _parse_flat_file_to_dict(py: Python, xml_file: PathBuf, short_names: bool) -> PyResult<&PyDict> {
     validate_file(&xml_file)?;
-    let data = parse_xml(py, &xml_file)?;
+    let data = parse_xml(py, &xml_file, short_names)?;
 
     Ok(data)
 }
 
 #[pyfunction]
-fn _parse_flat_file_to_pandas_dict(py: Python, xml_file: PathBuf) -> PyResult<&PyDict> {
+fn _parse_flat_file_to_pandas_dict(
+    py: Python,
+    xml_file: PathBuf,
+    short_names: bool,
+) -> PyResult<&PyDict> {
     validate_file(&xml_file)?;
-    let data = parse_xml_pandas(py, &xml_file)?;
+    let data = parse_xml_pandas(py, &xml_file, short_names)?;
 
     Ok(data)
 }
