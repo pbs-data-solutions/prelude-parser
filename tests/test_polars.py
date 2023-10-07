@@ -25,3 +25,14 @@ def test_pandas_to_dataframe(test_file_1):
     expected = pl.from_dict(data)  # type: ignore
     result = result.pipe(lambda x: x.select(sorted(x.columns)))
     assert_frame_equal(expected, result)
+
+
+def test_pandas_to_dataframe_short_names(test_file_4):
+    result = to_dataframe(test_file_4, short_names=True)
+    data = {
+        "sitename": ["Some Site", "Another Site"],
+        "studyname": ["PBS", "PBS"],
+    }
+    expected = pl.from_dict(data)  # type: ignore
+    result = result.pipe(lambda x: x.select(sorted(x.columns)))
+    assert_frame_equal(expected, result)

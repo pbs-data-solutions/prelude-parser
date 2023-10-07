@@ -70,6 +70,14 @@ def test_parse_to_classes_parsing_error(tmp_path):
         parse_to_classes(bad)
 
 
+def test_parse_to_classes_short_names(test_file_4):
+    result = parse_to_classes(test_file_4, short_names=True)
+    assert len(result) == 2
+    assert result[0].__name__ == "Communications"
+    assert result[0].studyname == "PBS"
+    assert result[0].sitename == "Some Site"
+
+
 def test_parse_to_dict(test_file_1):
     result = parse_to_dict(test_file_1)
     expected = {
@@ -222,5 +230,25 @@ def test_parse_to_dict_i_form(test_file_3):
     result["i_communications_details"] = [
         dict(sorted(x.items())) for x in result["i_communications_details"]
     ]
+
+    assert result == expected
+
+
+def test_parse_to_dict_short_names(test_file_4):
+    result = parse_to_dict(test_file_4, short_names=True)
+    expected = {
+        "communications": [
+            {
+                "sitename": "Some Site",
+                "studyname": "PBS",
+            },
+            {
+                "sitename": "Another Site",
+                "studyname": "PBS",
+            },
+        ]
+    }
+
+    result["communications"] = [dict(sorted(x.items())) for x in result["communications"]]
 
     assert result == expected

@@ -15,11 +15,14 @@ class _MetaCls(type):
         return super().__new__(cls, clsname, superclasses, attributedict)
 
 
-def parse_to_dict(xml_file: str | Path) -> dict[str, list[dict[str, Any]]]:
+def parse_to_dict(
+    xml_file: str | Path, *, short_names: bool = False
+) -> dict[str, list[dict[str, Any]]]:
     """Parse a Prelude flat XML file into a dict.
 
     Args:
         xml_file: The path to the XML file to parser.
+        short_names: Set to True if short names were used in the export.
 
     Returns:
         A Python dictionary containing the data from the XML file.
@@ -28,10 +31,10 @@ def parse_to_dict(xml_file: str | Path) -> dict[str, list[dict[str, Any]]]:
         >>> from prelude_parser import parse_to_dict
         >>> data = parse_to_dict("physical_examination.xml")
     """
-    return _parse_flat_file_to_dict(xml_file)
+    return _parse_flat_file_to_dict(xml_file, short_names)
 
 
-def parse_to_classes(xml_file: str | Path) -> list[Any]:
+def parse_to_classes(xml_file: str | Path, short_names: bool = False) -> list[Any]:
     """Parse a Prelude flat XML file into a list of Python class.
 
     The name of the class is taken from the form name node in the XML file converted to pascal case.
@@ -40,6 +43,7 @@ def parse_to_classes(xml_file: str | Path) -> list[Any]:
 
     Args:
         xml_file: The path to the XML file to parser.
+        short_names: Set to True if short names were used in the export.
 
     Returns:
         A list of Python classes containing the data from the XML file.
@@ -48,7 +52,7 @@ def parse_to_classes(xml_file: str | Path) -> list[Any]:
         >>> from prelude_parser import parse_to_classes
         >>> data = parse_to_classes("physical_examination.xml")
     """
-    parsed = parse_to_dict(xml_file)
+    parsed = parse_to_dict(xml_file, short_names=short_names)
     formatted: list[Any] = []
     for form, data in parsed.items():
         class_name = to_pascal(form)

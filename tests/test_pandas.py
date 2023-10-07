@@ -30,3 +30,15 @@ def test_pandas_to_dataframe(test_file_1):
     expected = pd.DataFrame.from_dict(data)
     result = result.reindex(sorted(result.columns), axis=1)
     assert expected.equals(result)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="Pandas only supports 3.9+")
+def test_pandas_to_dataframe_short_names(test_file_4):
+    result = to_dataframe(test_file_4, short_names=True)
+    data = {
+        "sitename": ["Some Site", "Another Site"],
+        "studyname": ["PBS", "PBS"],
+    }
+    expected = pd.DataFrame.from_dict(data)
+    result = result.reindex(sorted(result.columns), axis=1)
+    assert expected.equals(result)
