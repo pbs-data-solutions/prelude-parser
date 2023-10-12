@@ -169,7 +169,7 @@ fn parse_xml_pandas<'py>(
                             } else {
                                 to_snake(child.tag_name().name())
                             };
-                            if let Some(c) = data.get_item(column.clone()) {
+                            if let Ok(Some(c)) = data.get_item(column.clone()) {
                                 py_list_append(py, child.text(), c.extract()?)?;
                                 data.set_item(column, c)?;
                             } else {
