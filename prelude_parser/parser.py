@@ -6,18 +6,17 @@ from typing import Any
 from camel_converter import to_pascal
 
 from prelude_parser._prelude_parser import _parse_flat_file_to_dict
+from prelude_parser.types import FieldInfo, FlatFormInfo
 
 
 class _MetaCls(type):
     def __new__(
-        cls, clsname: str, superclasses: tuple[type, ...], attributedict: dict[str, Any]
+        cls, clsname: str, superclasses: tuple[type, ...], attributedict: dict[str, FieldInfo]
     ) -> _MetaCls:
         return super().__new__(cls, clsname, superclasses, attributedict)
 
 
-def parse_to_dict(
-    xml_file: str | Path, *, short_names: bool = False
-) -> dict[str, list[dict[str, Any]]]:
+def parse_to_dict(xml_file: str | Path, *, short_names: bool = False) -> dict[str, FlatFormInfo]:
     """Parse a Prelude flat XML file into a dict.
 
     Args:
