@@ -210,6 +210,77 @@ fn validate_file(xml_file: &PathBuf) -> PyResult<()> {
     Ok(())
 }
 
+fn remove_common_fiels<'py>(
+    data: &'py PyDict,
+    short_names: bool,
+    common_fields: &Option<Vec<&str>>,
+) -> PyResult<&'py PyDict> {
+    let processed_data = data;
+    let common_fields = if let Some(c) = common_fields {
+        c.clone()
+    } else if short_names {
+        vec![
+            "stdyname", "sitename", "usiteid", "subid", "usubjid", "formtitl", "baseform",
+            "formnum", "formgrp", "frmstate",
+        ]
+    } else {
+        vec![
+            "study_name",
+            "site_name",
+            "site_id",
+            "patient_name",
+            "patient_id",
+            "form_title",
+            "base_form",
+            "form_number",
+            "form_group",
+            "form_state",
+        ]
+    };
+
+    for (d, _) in data.iter() {
+        if common_fields.contains(&d.to_string().as_str()) {
+            processed_data.del_item(d)?;
+        }
+    }
+
+    Ok(processed_data)
+}
+
+#[pyfunction]
+fn _merge_i_data<'py>(
+    _py: Python,
+    main_data: Vec<&'py PyDict>,
+    i_data: Vec<&PyDict>,
+    short_names: bool,
+    common_fields: Option<Vec<&str>>,
+) -> PyResult<Vec<&'py PyDict>> {
+    let combined = main_data.clone();
+    let logs = i_data.clone();
+    for log in logs {
+        if let (Some(log_sbjid), Some(log_formnum)) =
+            (log.get_item("sbjid")?, log.get_item("formnum")?)
+        {
+            for combine in &combined {
+                if let (Some(combine_sbjid), Some(combined_formnum)) =
+                    (combine.get_item("sbjid")?, combine.get_item("formnum")?)
+                {
+                    if combine_sbjid.to_string() == log_sbjid.to_string()
+                        && combined_formnum.to_string() == log_formnum.to_string()
+                    {
+                        let stripped = remove_common_fiels(log, short_names, &common_fields)?;
+                        combine.update(stripped.as_mapping())?;
+                    }
+                }
+            }
+        } else {
+            return Err(PyException::new_err("Field not found"));
+        }
+    }
+
+    Ok(combined)
+}
+
 #[pyfunction]
 fn _parse_flat_file_to_dict(py: Python, xml_file: PathBuf, short_names: bool) -> PyResult<&PyDict> {
     validate_file(&xml_file)?;
@@ -232,6 +303,7 @@ fn _parse_flat_file_to_pandas_dict(
 
 #[pymodule]
 fn _prelude_parser(py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(_merge_i_data, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
     m.add("FileNotFoundError", py.get_type::<FileNotFoundError>())?;
