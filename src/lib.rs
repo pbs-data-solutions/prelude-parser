@@ -1,34 +1,39 @@
+mod errors;
+mod utils;
+
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
 
 use chrono::{Datelike, NaiveDate};
-use pyo3::create_exception;
-use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList};
 use roxmltree::Document;
 
-create_exception!(_prelude_parser, FileNotFoundError, PyException);
-create_exception!(_prelude_parser, InvalidFileTypeError, PyException);
-create_exception!(_prelude_parser, ParsingError, PyException);
+use crate::errors::{
+    FileNotFoundError, InvalidFileTypeError, ParsingError, XmlFileValidationError,
+};
+use crate::utils::{to_snake, validate_file};
 
-fn to_snake(camel_string: &str) -> String {
-    let mut snake_string = String::with_capacity(
-        camel_string.len() + camel_string.chars().filter(|c| c.is_uppercase()).count(),
-    );
-
-    let mut chars = camel_string.chars().peekable();
-    while let Some(c) = chars.next() {
-        snake_string.push(c);
-        if let Some(next) = chars.peek() {
-            if next.is_uppercase() && c != '_' {
-                snake_string.push('_');
+fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
+    if let Err(e) = validate_file(xml_file) {
+        match e {
+            XmlFileValidationError::FileNotFound(_) => {
+                return Err(FileNotFoundError::new_err(format!(
+                    "File not found: {:?}",
+                    xml_file
+                )))
             }
-        }
-    }
+            XmlFileValidationError::InvalidFileType(_) => {
+                return Err(InvalidFileTypeError::new_err(format!(
+                    "{:?} is not an xml file",
+                    xml_file
+                )))
+            }
+        };
+    };
 
-    snake_string.to_lowercase()
+    Ok(())
 }
 
 fn py_list_append<'py>(
@@ -194,25 +199,9 @@ fn parse_xml_pandas<'py>(
     }
 }
 
-fn validate_file(xml_file: &PathBuf) -> PyResult<()> {
-    if !xml_file.is_file() {
-        return Err(FileNotFoundError::new_err(format!(
-            "File not found: {:?}",
-            xml_file
-        )));
-    } else if xml_file.extension().unwrap() != "xml" {
-        return Err(InvalidFileTypeError::new_err(format!(
-            "{:?} is not an xml file",
-            xml_file
-        )));
-    }
-
-    Ok(())
-}
-
 #[pyfunction]
 fn _parse_flat_file_to_dict(py: Python, xml_file: PathBuf, short_names: bool) -> PyResult<&PyDict> {
-    validate_file(&xml_file)?;
+    check_valid_file(&xml_file)?;
     let data = parse_xml(py, &xml_file, short_names)?;
 
     Ok(data)
@@ -224,7 +213,7 @@ fn _parse_flat_file_to_pandas_dict(
     xml_file: PathBuf,
     short_names: bool,
 ) -> PyResult<&PyDict> {
-    validate_file(&xml_file)?;
+    check_valid_file(&xml_file)?;
     let data = parse_xml_pandas(py, &xml_file, short_names)?;
 
     Ok(data)
