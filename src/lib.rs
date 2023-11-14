@@ -16,7 +16,7 @@ use crate::errors::{
 use crate::utils::{to_snake, validate_file};
 
 fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
-    if let Err(e) = validate_file(&xml_file) {
+    if let Err(e) = validate_file(xml_file) {
         match e {
             XmlFileValidationError::FileNotFound(_) => {
                 return Err(FileNotFoundError::new_err(format!(
