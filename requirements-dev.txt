@@ -1,4 +1,4 @@
-black==23.12.1
+black==24.1.0
 maturin==1.4.0
 mypy==1.8.0
 pandas-stubs==2.1.4.231227; python_version>"3.8"
