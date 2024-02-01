@@ -56,7 +56,7 @@ jobs:
           pip install --no-index --find-links=dist/ prelude-parser
       - name: Run tests
         run:
-          pytest --cov=prelude_parser --cov-report=xml
+          pytest --cov=prelude_parser --cov-report=html
           # - name: Upload coverage
           #   uses: codecov/codecov-action@v3
           #   with:
