@@ -56,7 +56,7 @@ jobs:
           pip install --no-index --find-links=dist/ prelude-parser
       - name: Run tests
         run:
-          pytest --cov=prelude_parser --cov-report=html
+          pytest --cov=prelude_parser
           # - name: Upload coverage
           #   uses: codecov/codecov-action@v3
           #   with:
@@ -66,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
-          path: coverage.*
+          path: .coverage.*
   coverage:
     name: Combine & check coverage
     if: always()
@@ -91,7 +91,7 @@ jobs:
           python -Im pip install --upgrade coverage[toml]
 
           python -Im coverage combine
-          python -Im coverage html --skip-covered --skip-empty
+          python -Im coverage html --skip-covered
 
           # Report and write to summary.
           python -Im coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
