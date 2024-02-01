@@ -56,7 +56,7 @@ jobs:
           pip install --no-index --find-links=dist/ prelude-parser
       - name: Run tests
         run:
-          pytest --cov=prelude_parser --cov-report=xml:coverage-${{ matrix.os }}-${{ matrix.python-version }}.xml
+          pytest --cov=prelude_parser --cov-report=xml
           # - name: Upload coverage
           #   uses: codecov/codecov-action@v3
           #   with:
@@ -65,8 +65,8 @@ jobs:
       - name: Upload coverage data
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-${{ matrix.python-version }}
-          path: coverage-${{ matrix.os }}-${{ matrix.python-version }}.*
+          name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
+          path: coverage.*
   coverage:
     name: Combine & check coverage
     if: always()
