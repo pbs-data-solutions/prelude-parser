@@ -5,4 +5,4 @@ pandas-stubs==2.1.4.231227; python_version>"3.8"
 pre-commit==3.5.0
 pytest==8.0.0
 pytest-cov==4.1.0
-ruff==0.2.1
+ruff==0.2.2
