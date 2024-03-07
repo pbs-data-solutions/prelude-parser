@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.80"
-chrono = "0.4.34"
+chrono = "0.4.35"
 pyo3 = { version = "0.20.3", features = ["extension-module", "abi3-py38"] }
 roxmltree = "0.19.0"
 serde = { version = "1.0.197", features = ["derive"] }
