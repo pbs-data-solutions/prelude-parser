@@ -39,9 +39,9 @@ fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
 fn py_list_append<'py>(
     py: Python<'py>,
     value: Option<&str>,
-    list: &'py PyList,
-) -> PyResult<&'py PyList> {
-    let datetime = py.import("datetime")?;
+    list: &'py Bound<'py, PyList>,
+) -> PyResult<&'py Bound<'py, PyList>> {
+    let datetime = py.import_bound("datetime")?;
     let date = datetime.getattr("date")?;
 
     match value {
@@ -68,9 +68,9 @@ fn add_item<'py>(
     py: Python<'py>,
     key: &str,
     value: Option<&str>,
-    form_data: &'py PyDict,
-) -> PyResult<&'py PyDict> {
-    let datetime = py.import("datetime")?;
+    form_data: &'py Bound<'py, PyDict>,
+) -> PyResult<&'py Bound<'py, PyDict>> {
+    let datetime = py.import_bound("datetime")?;
     let date = datetime.getattr("date")?;
 
     match value {
@@ -93,13 +93,17 @@ fn add_item<'py>(
     Ok(form_data)
 }
 
-fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf, short_names: bool) -> PyResult<&'py PyDict> {
+fn parse_xml<'py>(
+    py: Python<'py>,
+    xml_file: &PathBuf,
+    short_names: bool,
+) -> PyResult<Bound<'py, PyDict>> {
     let reader = read_to_string(xml_file);
 
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                let mut data: HashMap<String, Vec<&PyDict>> = HashMap::new();
+                let mut data: HashMap<String, Vec<Bound<'_, PyDict>>> = HashMap::new();
                 let tree = doc.root_element();
                 for form in tree.children() {
                     let form_name = if short_names {
@@ -109,7 +113,7 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf, short_names: bool) -> PyR
                     };
                     if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(&form_name) {
-                            let form_data = PyDict::new(py);
+                            let form_data = PyDict::new_bound(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = if short_names {
@@ -117,13 +121,13 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf, short_names: bool) -> PyR
                                     } else {
                                         to_snake(child.tag_name().name())
                                     };
-                                    add_item(py, &key, child.text(), form_data)?;
+                                    add_item(py, &key, child.text(), &form_data)?;
                                 };
                             }
                             d.push(form_data);
                         } else {
-                            let mut items: Vec<&PyDict> = Vec::new();
-                            let form_data = PyDict::new(py);
+                            let mut items: Vec<Bound<'_, PyDict>> = Vec::new();
+                            let form_data = PyDict::new_bound(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = if short_names {
@@ -131,15 +135,15 @@ fn parse_xml<'py>(py: Python<'py>, xml_file: &PathBuf, short_names: bool) -> PyR
                                     } else {
                                         to_snake(child.tag_name().name())
                                     };
-                                    add_item(py, &key, child.text(), form_data)?;
+                                    add_item(py, &key, child.text(), &form_data)?;
                                 }
                             }
-                            items.push(form_data.into_py_dict(py));
+                            items.push(form_data.into_py_dict_bound(py));
                             data.insert(form_name, items);
                         }
                     }
                 }
-                return Ok(data.into_py_dict(py));
+                return Ok(data.into_py_dict_bound(py));
             }
             Err(e) => Err(ParsingError::new_err(format!(
                 "Error parsing xml file: {:?}",
@@ -157,13 +161,13 @@ fn parse_xml_pandas<'py>(
     py: Python<'py>,
     xml_file: &PathBuf,
     short_names: bool,
-) -> PyResult<&'py PyDict> {
+) -> PyResult<Bound<'py, PyDict>> {
     let reader = read_to_string(xml_file);
 
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                let data = PyDict::new(py);
+                let data = PyDict::new_bound(py);
                 let tree = doc.root_element();
 
                 for form in tree.children() {
@@ -175,17 +179,17 @@ fn parse_xml_pandas<'py>(
                                 to_snake(child.tag_name().name())
                             };
                             if let Ok(Some(c)) = data.get_item(&column) {
-                                py_list_append(py, child.text(), c.extract()?)?;
+                                py_list_append(py, child.text(), &c.extract()?)?;
                                 data.set_item(column, c)?;
                             } else {
-                                let list = PyList::empty(py);
-                                py_list_append(py, child.text(), list)?;
+                                let list = PyList::empty_bound(py);
+                                py_list_append(py, child.text(), &list)?;
                                 data.set_item(column, list)?;
                             }
                         }
                     }
                 }
-                return Ok(data.into_py_dict(py));
+                return Ok(data.into_py_dict_bound(py));
             }
             Err(e) => Err(ParsingError::new_err(format!(
                 "Error parsing xml file: {:?}",
@@ -200,7 +204,11 @@ fn parse_xml_pandas<'py>(
 }
 
 #[pyfunction]
-fn _parse_flat_file_to_dict(py: Python, xml_file: PathBuf, short_names: bool) -> PyResult<&PyDict> {
+fn _parse_flat_file_to_dict(
+    py: Python,
+    xml_file: PathBuf,
+    short_names: bool,
+) -> PyResult<Bound<'_, PyDict>> {
     check_valid_file(&xml_file)?;
     let data = parse_xml(py, &xml_file, short_names)?;
 
@@ -212,7 +220,7 @@ fn _parse_flat_file_to_pandas_dict(
     py: Python,
     xml_file: PathBuf,
     short_names: bool,
-) -> PyResult<&PyDict> {
+) -> PyResult<Bound<'_, PyDict>> {
     check_valid_file(&xml_file)?;
     let data = parse_xml_pandas(py, &xml_file, short_names)?;
 
@@ -220,15 +228,18 @@ fn _parse_flat_file_to_pandas_dict(
 }
 
 #[pymodule]
-fn _prelude_parser(py: Python, m: &PyModule) -> PyResult<()> {
+fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
-    m.add("FileNotFoundError", py.get_type::<FileNotFoundError>())?;
+    m.add(
+        "FileNotFoundError",
+        py.get_type_bound::<FileNotFoundError>(),
+    )?;
     m.add(
         "InvalidFileTypeError",
-        py.get_type::<InvalidFileTypeError>(),
+        py.get_type_bound::<InvalidFileTypeError>(),
     )?;
-    m.add("ParsingError", py.get_type::<ParsingError>())?;
+    m.add("ParsingError", py.get_type_bound::<ParsingError>())?;
     Ok(())
 }
 
