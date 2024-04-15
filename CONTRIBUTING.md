@@ -12,17 +12,17 @@ for something that interests you.
 
 Please include:
 
-1. A short, self-contained Python snippet reproducing the problem. You can format the code by using
-[GitHub markdown](https://docs.github.com/en/free-pro-team@latest/github/writing-on-github). For
-example:
+1.  A short, self-contained Python snippet reproducing the problem. You can format the code by using
+    [GitHub markdown](https://docs.github.com/en/free-pro-team@latest/github/writing-on-github). For
+    example:
 
-    ```py
-    from prelude_parser import parse_to_classes
+        ```py
+        from prelude_parser import parse_to_classes
 
-    data = parse_to_classes("my_file.xml")
-    ```
+        data = parse_to_classes("my_file.xml")
+        ```
 
-2. Explain what is currently happening and what you expect instead.
+2.  Explain what is currently happening and what you expect instead.
 
 ## Working on the code
 
@@ -86,10 +86,10 @@ git checkout main
 git pull upstream main --ff-only
 ```
 
-### Code Standards and tests (ruff, black, mypy, pytest, clippy, rustfmt, and pre-commit)
+### Code Standards and tests (ruff, mypy, pytest, clippy, rustfmt, and pre-commit)
 
-prelude-parser uses [ruff](https://github.com/charliermarsh/ruff), [Black](https://github.com/psf/black),
-and [mypy](https://mypy.readthedocs.io/en/stable/), [clippy](https://doc.rust-lang.org/clippy/), and
+prelude-parser uses [ruff](https://github.com/charliermarsh/ruff), and
+[mypy](https://mypy.readthedocs.io/en/stable/), [clippy](https://doc.rust-lang.org/clippy/), and
 [rustfmt](https://rust-lang.github.io/rustfmt/?version=v1.5.1&search=) to ensure consistent code
 formatting.
 

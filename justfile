@@ -13,8 +13,6 @@
   just --justfile {{justfile()}} fmt
   echo ruff
   just --justfile {{justfile()}} ruff
-  echo black
-  just --justfile {{justfile()}} black
   echo mypy
   just --justfile {{justfile()}} mypy
 
@@ -26,9 +24,6 @@
 
 @fmt:
   cargo fmt
-
-@black:
-  black prelude_parser tests
 
 @mypy:
   mypy .
