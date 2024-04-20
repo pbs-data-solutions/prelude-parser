@@ -12,11 +12,13 @@ class UnsupportedPythonVersionError(Exception):
 
 try:
     import pandas as pd
-except ImportError:  # pragma: no cover
+except ImportError as e:  # pragma: no cover
     if sys.version_info < (3, 9):  # pargma: no cover
-        raise UnsupportedPythonVersionError("Pandas only supports Python 3.9+")
+        raise UnsupportedPythonVersionError("Pandas only supports Python 3.9+") from e
 
-    raise ImportError("prelude-parser must be installed with the pandas or all extra to use pandas")
+    raise ImportError(
+        "prelude-parser must be installed with the pandas or all extra to use pandas"
+    ) from e
 
 
 def to_dataframe(xml_file: str | Path, *, short_names: bool = False) -> pd.DataFrame:
