@@ -49,7 +49,12 @@ module = ["tests.*"]
 disallow_untyped_defs = false
 
 [tool.ruff]
-select=["E", "F", "UP", "I001", "T201", "T203"]
+line-length = 100
+target-version = "py38"
+fix = true
+
+[tool.ruff.lint]
+select=["E", "B", "F", "UP", "I001", "T201", "T203"]
 ignore=[
   # Recommened ignores by ruff when using formatter
   "E501",
@@ -68,6 +73,3 @@ ignore=[
   "ISC001",
   "ISC002",
 ]
-line-length = 100
-target-version = "py38"
-fix = true

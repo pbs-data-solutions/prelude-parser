@@ -6,8 +6,10 @@ from prelude_parser._prelude_parser import _parse_flat_file_to_pandas_dict
 
 try:
     import polars as pl
-except ImportError:  # pragma: no cover
-    raise ImportError("prelude-parser must be installed with the polars or all extra to use pandas")
+except ImportError as e:  # pragma: no cover
+    raise ImportError(
+        "prelude-parser must be installed with the polars or all extra to use pandas"
+    ) from e
 
 
 def to_dataframe(xml_file: str | Path, *, short_names: bool = False) -> pl.DataFrame:

@@ -26,7 +26,7 @@
   cargo fmt
 
 @mypy:
-  mypy .
+  mypy prelude_parser tests
 
 @ruff:
   ruff check . --fix
