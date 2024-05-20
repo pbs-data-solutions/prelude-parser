@@ -14,7 +14,7 @@ name = "_prelude_parser"
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.83"
+anyhow = "1.0.86"
 chrono = "0.4.38"
 pyo3 = { version = "0.21.2", features = ["extension-module", "abi3-py38"] }
 roxmltree = "0.19.0"
