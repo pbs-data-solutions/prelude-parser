@@ -1,10 +1,11 @@
+/// Module containing the [errors].
+pub mod errors;
 /// Module containing the [native] structs.
 pub mod native;
 
 use std::{fs::read_to_string, path::Path};
 
-use anyhow::Result;
-
+use crate::errors::Error;
 use crate::native::Native;
 
 /// Parses a Prelude native XML file into a `Native` stuct.
@@ -16,10 +17,14 @@ use crate::native::Native;
 ///
 /// use prelude_xml_parser::parse_native_file;
 ///
-/// // let file_path = Path::new("tests/assets/native.xml");
+/// let file_path = Path::new("tests/assets/native.xml");
 /// // let native = parse_native_file(&file_path).unwrap();
 /// ```
-pub fn parse_native_file(xml_path: &Path) -> Result<Native> {
+pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
+    if !xml_path.exists() {
+        return Err(Error::FileNotFound(xml_path.to_path_buf()));
+    }
+
     let xml_file = read_to_string(xml_path)?;
     let native = parse_native_string(&xml_file)?;
 
@@ -204,7 +209,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native> {
 /// let result = parse_native_string(xml).unwrap();
 /// assert_eq!(result, expected);
 /// ```
-pub fn parse_native_string(xml_str: &str) -> Result<Native> {
+pub fn parse_native_string(xml_str: &str) -> Result<Native, Error> {
     let native: Native = serde_xml_rs::from_str(xml_str)?;
 
     Ok(native)
