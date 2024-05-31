@@ -18,7 +18,7 @@ use crate::native::Native;
 /// use prelude_xml_parser::parse_native_file;
 ///
 /// let file_path = Path::new("tests/assets/native.xml");
-/// // let native = parse_native_file(&file_path).unwrap();
+/// let native = parse_native_file(&file_path).unwrap();
 /// ```
 pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
     if !xml_path.exists() {
@@ -72,22 +72,22 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///     patients: vec![
 ///         Patient {
 ///             patient_id: "ABC-001".to_string(),
-///             unique_id: 1681574905819,
+///             unique_id: "1681574905819".to_string(),
 ///             when_created: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc),
 ///             creator: "Paul Sanders".to_string(),
 ///             site_name: "Some Site".to_string(),
-///             site_unique_id: 1681574834910,
+///             site_unique_id: "1681574834910".to_string(),
 ///             last_language: Some("English".to_string()),
 ///             number_of_forms: 6,
-///             forms: vec![Form {
+///             forms: Some(vec![Form {
 ///                 name: "day.0.form.name.demographics".to_string(),
-///                 last_modified: DateTime::parse_from_rfc3339("2023-04-15T16:09:15Z")
+///                 last_modified: Some(DateTime::parse_from_rfc3339("2023-04-15T16:09:15Z")
 ///                     .unwrap()
-///                     .with_timezone(&Utc),
-///                 who_last_modified_name: "Paul Sanders".to_string(),
-///                 who_last_modified_role: "Project Manager".to_string(),
+///                     .with_timezone(&Utc)),
+///                 who_last_modified_name: Some("Paul Sanders".to_string()),
+///                 who_last_modified_role: Some("Project Manager".to_string()),
 ///                 when_created: 1681574905839,
 ///                 has_errors: false,
 ///                 has_warnings: false,
@@ -101,14 +101,14 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                 state: Some(State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: 1681162687395,
+///                     signer_unique_id: "1681162687395".to_string(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
 ///                 }),
-///                 category: Category {
+///                 category: Some(Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
@@ -121,40 +121,40 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                         keep_history: true,
-///                         entries: vec![Entry {
-///                             id: 1,
-///                             value: Value {
+///                         entries: Some(vec![Entry {
+///                             id: "1".to_string(),
+///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: 1681162687395,
+///                                 by_unique_id: Some("1681162687395".to_string()),
 ///                                 role: "Project Manager".to_string(),
 ///                                 when: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc),
 ///                                 value: "Labrador".to_string(),
-///                             },
-///                         }],
+///                             }),
+///                         }]),
 ///                     }],
-///                 },
-///             }],
+///                 }),
+///             }]),
 ///         },
 ///         Patient {
 ///             patient_id: "DEF-002".to_string(),
-///             unique_id: 1681574905820,
+///             unique_id: "1681574905820".to_string(),
 ///             when_created: DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc),
 ///             creator: "Wade Watts".to_string(),
 ///             site_name: "Another Site".to_string(),
-///             site_unique_id: 1681574834911,
+///             site_unique_id: "1681574834911".to_string(),
 ///             last_language: None,
 ///             number_of_forms: 8,
-///             forms: vec![Form {
+///             forms: Some(vec![Form {
 ///                 name: "day.0.form.name.demographics".to_string(),
-///                 last_modified: DateTime::parse_from_rfc3339("2023-04-16T16:10:15Z")
+///                 last_modified: Some(DateTime::parse_from_rfc3339("2023-04-16T16:10:15Z")
 ///                     .unwrap()
-///                     .with_timezone(&Utc),
-///                 who_last_modified_name: "Barney Rubble".to_string(),
-///                 who_last_modified_role: "Technician".to_string(),
+///                     .with_timezone(&Utc)),
+///                 who_last_modified_name: Some("Barney Rubble".to_string()),
+///                 who_last_modified_role: Some("Technician".to_string()),
 ///                 when_created: 1681574905838,
 ///                 has_errors: false,
 ///                 has_warnings: false,
@@ -168,14 +168,14 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                 state: Some(State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: 1681162687395,
+///                     signer_unique_id: "1681162687395".to_string(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
 ///                 }),
-///                 category: Category {
+///                 category: Some(Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
@@ -188,21 +188,21 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                         keep_history: true,
-///                         entries: vec![Entry {
-///                             id: 1,
-///                             value: Value {
+///                         entries: Some(vec![Entry {
+///                             id: "1".to_string(),
+///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: 1681162687395,
+///                                 by_unique_id: Some("1681162687395".to_string()),
 ///                                 role: "Project Manager".to_string(),
 ///                                 when: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc),
 ///                                 value: "Labrador".to_string(),
-///                             },
-///                         }],
+///                             }),
+///                         }]),
 ///                     }],
-///                 },
-///             }],
+///                 }),
+///             }]),
 ///         },
 ///     ],
 /// };

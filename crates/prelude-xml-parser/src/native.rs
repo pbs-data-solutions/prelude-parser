@@ -22,11 +22,11 @@ fn deserialize_empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<St
 where
     D: Deserializer<'de>,
 {
-    let s = String::deserialize(deserializer)?;
-    if s.is_empty() {
-        Ok(None)
-    } else {
-        Ok(Some(s))
+    let s = Option::<String>::deserialize(deserializer)?;
+    match s {
+        Some(v) if v.is_empty() => Ok(None),
+        Some(v) => Ok(Some(v)),
+        None => Ok(None),
     }
 }
 
@@ -34,7 +34,12 @@ where
 #[serde(rename_all = "camelCase")]
 pub struct Value {
     pub by: String,
-    pub by_unique_id: usize,
+
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub by_unique_id: Option<String>,
     pub role: String,
     pub when: DateTime<Utc>,
 
@@ -42,11 +47,19 @@ pub struct Value {
     pub value: String,
 }
 
+fn default_datetime_none() -> Option<DateTime<Utc>> {
+    None
+}
+
+fn default_string_none() -> Option<String> {
+    None
+}
+
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
-    pub id: usize,
-    pub value: Value,
+    pub id: String,
+    pub value: Option<Value>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -63,7 +76,7 @@ pub struct Field {
     pub keep_history: bool,
 
     #[serde(rename = "$value")]
-    pub entries: Vec<Entry>,
+    pub entries: Option<Vec<Entry>>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -85,9 +98,12 @@ pub struct Category {
 pub struct State {
     pub value: String,
     pub signer: String,
-    pub signer_unique_id: usize,
+    pub signer_unique_id: String,
 
-    #[serde(deserialize_with = "deserialize_empty_string_as_none_datetime")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
     pub date_signed: Option<DateTime<Utc>>,
 }
 
@@ -95,44 +111,68 @@ pub struct State {
 #[serde(rename_all = "camelCase")]
 pub struct Form {
     pub name: String,
-    pub last_modified: DateTime<Utc>,
-    pub who_last_modified_name: String,
-    pub who_last_modified_role: String,
+
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub last_modified: Option<DateTime<Utc>>,
+
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub who_last_modified_name: Option<String>,
+
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub who_last_modified_role: Option<String>,
     pub when_created: usize,
     pub has_errors: bool,
     pub has_warnings: bool,
     pub locked: bool,
 
-    #[serde(deserialize_with = "deserialize_empty_string_as_none")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
     pub user: Option<String>,
 
-    #[serde(deserialize_with = "deserialize_empty_string_as_none_datetime")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
     pub date_time_changed: Option<DateTime<Utc>>,
     pub form_title: String,
     pub form_index: usize,
     pub form_group: String,
     pub form_state: String,
     pub state: Option<State>,
-    pub category: Category,
+    pub category: Option<Category>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Patient {
     pub patient_id: String,
-    pub unique_id: usize,
+    pub unique_id: String,
     pub when_created: DateTime<Utc>,
     pub creator: String,
     pub site_name: String,
-    pub site_unique_id: usize,
+    pub site_unique_id: String,
 
-    #[serde(deserialize_with = "deserialize_empty_string_as_none")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
     pub last_language: Option<String>,
 
     pub number_of_forms: usize,
 
     #[serde(rename = "$value")]
-    pub forms: Vec<Form>,
+    pub forms: Option<Vec<Form>>,
 }
 
 /// Contains the information from the Prelude native XML.
