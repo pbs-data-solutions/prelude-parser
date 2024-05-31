@@ -1,0 +1,10 @@
+[package]
+name = "prelude-xml-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde-xml-rs = "0.6.0"
