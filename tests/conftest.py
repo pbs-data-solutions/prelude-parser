@@ -23,3 +23,8 @@ def test_file_3():
 @pytest.fixture
 def test_file_4():
     return ASSETS_PATH / "test4.xml"
+
+
+@pytest.fixture
+def subject_native_xml():
+    return ASSETS_PATH / "subject_native.xml"
