@@ -6,6 +6,8 @@ use std::fs::read_to_string;
 use std::path::PathBuf;
 
 use chrono::{Datelike, NaiveDate};
+use prelude_xml_parser::parse_subject_native_file as parse_subject_native_file_rs;
+pub use prelude_xml_parser::subject_native::SubjectNative;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList};
 use roxmltree::Document;
@@ -227,10 +229,23 @@ fn _parse_flat_file_to_pandas_dict(
     Ok(data)
 }
 
+#[pyfunction]
+fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SubjectNative> {
+    match parse_subject_native_file_rs(&xml_file) {
+        Ok(native) => Ok(native),
+        Err(e) => Err(ParsingError::new_err(format!(
+            "Error parsing xml file: {:?}",
+            e
+        ))),
+    }
+}
+
 #[pymodule]
 fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<SubjectNative>()?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_subject_native_file, m)?)?;
     m.add(
         "FileNotFoundError",
         py.get_type_bound::<FileNotFoundError>(),

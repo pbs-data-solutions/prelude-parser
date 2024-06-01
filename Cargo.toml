@@ -16,7 +16,8 @@ crate-type = ["cdylib"]
 [dependencies]
 anyhow = "1.0.86"
 chrono = "0.4.38"
-pyo3 = { version = "0.21.2", features = ["extension-module", "abi3-py38"] }
+prelude-xml-parser = { version = "0.1.0", features = ["python"] }
+pyo3 = { version = "0.21.2", features = ["extension-module"] }
 roxmltree = "0.20.0"
 serde = { version = "1.0.203", features = ["derive"] }
 serde-xml-rs = "0.6.0"
