@@ -1,12 +1,12 @@
 /// Module containing the [errors].
 pub mod errors;
 /// Module containing the [native] structs.
-pub mod subject_native;
+pub mod native;
 
 use std::{fs::read_to_string, path::Path};
 
 use crate::errors::Error;
-use crate::subject_native::SubjectNative;
+use crate::native::subject_native::SubjectNative;
 
 /// Parses a Prelude native XML file into a `Native` stuct.
 ///
@@ -40,7 +40,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// ```
 /// use chrono::{DateTime, Utc};
 /// use prelude_xml_parser::parse_subject_native_string;
-/// use prelude_xml_parser::subject_native::*;
+/// use prelude_xml_parser::native::subject_native::*;
 ///
 /// let xml = r#"<export_from_vision_EDC date="30-May-2024 10:35 -0500" createdBy="Paul Sanders" role="Project Manager" numberSubjectsProcessed="4">
 ///     <patient patientId="ABC-001" uniqueId="1681574905819" whenCreated="2023-04-15 12:09:02 -0400" creator="Paul Sanders" siteName="Some Site" siteUniqueId="1681574834910" lastLanguage="English" numberOfForms="6">
