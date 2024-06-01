@@ -379,7 +379,7 @@ pub struct Form {
     pub form_state: String,
 
     #[serde(rename = "state", default)]
-    pub states: Option<State>,
+    pub states: Option<Vec<State>>,
 
     #[serde(rename = "category", default)]
     pub categories: Option<Vec<Category>>,
@@ -459,17 +459,17 @@ impl Form {
     }
 
     #[getter]
-    fn state(&self) -> PyResult<Option<State>> {
-        if let Some(state) = &self.state {
-            Ok(Some(state.clone()))
+    fn state(&self) -> PyResult<Option<Vec<State>>> {
+        if let Some(states) = &self.states {
+            Ok(Some(states.clone()))
         } else {
             Ok(None)
         }
     }
 
     #[getter]
-    fn category(&self) -> PyResult<Option<Category>> {
-        Ok(self.category.clone())
+    fn category(&self) -> PyResult<Option<Vec<Category>>> {
+        Ok(self.categories.clone())
     }
 }
 
