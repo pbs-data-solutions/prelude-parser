@@ -134,7 +134,7 @@ pub struct Field {
     pub when_created: DateTime<Utc>,
     pub keep_history: bool,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "entry")]
     pub entries: Option<Vec<Entry>>,
 }
 
@@ -153,7 +153,7 @@ pub struct Field {
     pub when_created: DateTime<Utc>,
     pub keep_history: bool,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "entry")]
     pub entries: Option<Vec<Entry>>,
 }
 
@@ -207,7 +207,7 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "field")]
     pub fields: Vec<Field>,
 }
 
@@ -223,7 +223,7 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "field")]
     pub fields: Vec<Field>,
 }
 
@@ -326,7 +326,9 @@ pub struct Form {
     pub form_group: String,
     pub form_state: String,
     pub state: Option<State>,
-    pub category: Option<Category>,
+
+    #[serde(rename = "category")]
+    pub categories: Option<Vec<Category>>,
 }
 
 #[cfg(feature = "python")]
@@ -484,7 +486,7 @@ pub struct Patient {
 
     pub number_of_forms: usize,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "form")]
     pub forms: Option<Vec<Form>>,
 }
 
@@ -508,7 +510,7 @@ pub struct Patient {
 
     pub number_of_forms: usize,
 
-    #[serde(rename = "$value")]
+    #[serde(rename = "form")]
     pub forms: Option<Vec<Form>>,
 }
 
@@ -566,7 +568,7 @@ impl Patient {
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Native {
-    #[serde(rename = "$value")]
+    #[serde(rename = "patient", default)]
     pub patients: Vec<Patient>,
 }
 
@@ -576,7 +578,7 @@ pub struct Native {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Native {
-    #[serde(rename = "$value")]
+    #[serde(rename = "patient", default)]
     pub patients: Vec<Patient>,
 }
 
