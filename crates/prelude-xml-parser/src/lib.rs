@@ -1,12 +1,12 @@
 /// Module containing the [errors].
 pub mod errors;
 /// Module containing the [native] structs.
-pub mod native;
+pub mod subject_native;
 
 use std::{fs::read_to_string, path::Path};
 
 use crate::errors::Error;
-use crate::native::Native;
+use crate::subject_native::SubjectNative;
 
 /// Parses a Prelude native XML file into a `Native` stuct.
 ///
@@ -15,30 +15,32 @@ use crate::native::Native;
 /// ```
 /// use std::path::Path;
 ///
-/// use prelude_xml_parser::parse_native_file;
+/// use prelude_xml_parser::parse_subject_native_file;
 ///
-/// let file_path = Path::new("tests/assets/native.xml");
-/// let native = parse_native_file(&file_path).unwrap();
+/// let file_path = Path::new("tests/assets/subject_native.xml");
+/// let native = parse_subject_native_file(&file_path).unwrap();
+///
+/// assert!(native.patients.len() >= 1, "Vector length is less than 1");
 /// ```
-pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
+pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error> {
     if !xml_path.exists() {
         return Err(Error::FileNotFound(xml_path.to_path_buf()));
     }
 
     let xml_file = read_to_string(xml_path)?;
-    let native = parse_native_string(&xml_file)?;
+    let native = parse_subject_native_string(&xml_file)?;
 
     Ok(native)
 }
 
-/// Parse a string of Preliude native XML into a `Native` struct.
+/// Parse a string of Preliude native site XML into a `Native` struct.
 ///
 /// # Example
 ///
 /// ```
 /// use chrono::{DateTime, Utc};
-/// use prelude_xml_parser::parse_native_string;
-/// use prelude_xml_parser::native::*;
+/// use prelude_xml_parser::parse_subject_native_string;
+/// use prelude_xml_parser::subject_native::*;
 ///
 /// let xml = r#"<export_from_vision_EDC date="30-May-2024 10:35 -0500" createdBy="Paul Sanders" role="Project Manager" numberSubjectsProcessed="4">
 ///     <patient patientId="ABC-001" uniqueId="1681574905819" whenCreated="2023-04-15 12:09:02 -0400" creator="Paul Sanders" siteName="Some Site" siteUniqueId="1681574834910" lastLanguage="English" numberOfForms="6">
@@ -68,7 +70,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 /// </export_from_vision_EDC>
 /// "#;
 ///
-/// let expected = Native {
+/// let expected = SubjectNative {
 ///     patients: vec![
 ///         Patient {
 ///             patient_id: "ABC-001".to_string(),
@@ -98,7 +100,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                 form_index: 1,
 ///                 form_group: "Day 0".to_string(),
 ///                 form_state: "In-Work".to_string(),
-///                 state: Some(State {
+///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
 ///                     signer_unique_id: "1681162687395".to_string(),
@@ -107,7 +109,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }),
+///                 }]),
 ///                 categories: Some(vec![Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
@@ -165,7 +167,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                 form_index: 1,
 ///                 form_group: "Day 0".to_string(),
 ///                 form_state: "In-Work".to_string(),
-///                 state: Some(State {
+///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
 ///                     signer_unique_id: "1681162687395".to_string(),
@@ -174,7 +176,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }),
+///                 }]),
 ///                 categories: Some(vec![Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
@@ -206,11 +208,11 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///         },
 ///     ],
 /// };
-/// let result = parse_native_string(xml).unwrap();
+/// let result = parse_subject_native_string(xml).unwrap();
 /// assert_eq!(result, expected);
 /// ```
-pub fn parse_native_string(xml_str: &str) -> Result<Native, Error> {
-    let native: Native = serde_xml_rs::from_str(xml_str)?;
+pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
+    let native: SubjectNative = serde_xml_rs::from_str(xml_str)?;
 
     Ok(native)
 }
