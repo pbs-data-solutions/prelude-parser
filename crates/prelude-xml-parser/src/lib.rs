@@ -108,7 +108,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .with_timezone(&Utc),
 ///                     ),
 ///                 }),
-///                 category: Some(Category {
+///                 categories: Some(vec![Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
@@ -134,7 +134,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             }),
 ///                         }]),
 ///                     }],
-///                 }),
+///                 }]),
 ///             }]),
 ///         },
 ///         Patient {
@@ -175,7 +175,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             .with_timezone(&Utc),
 ///                     ),
 ///                 }),
-///                 category: Some(Category {
+///                 categories: Some(vec![Category {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
@@ -201,7 +201,7 @@ pub fn parse_native_file(xml_path: &Path) -> Result<Native, Error> {
 ///                             }),
 ///                         }]),
 ///                     }],
-///                 }),
+///                 }]),
 ///             }]),
 ///         },
 ///     ],
