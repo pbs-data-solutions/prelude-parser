@@ -2,6 +2,14 @@
 name = "prelude-xml-parser"
 version = "0.1.0"
 edition = "2021"
+authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
+description = "Deserialize Prelude EDC native XML files into Rust stucts."
+documentation = "https://docs.rs/prelude-xml-parser"
+homepage = "https://github.com/pbs-data-solutions/prelude-xml-parser"
+repository = "https://github.com/pbs-data-solutions/prelude-xml-parser"
+readme = "README.md"
+keywords = ["prelude-edc", "xml", "deserialization", "pyo3"]
+license = "MIT"
 
 [features]
 python = ["dep:pyo3"]
