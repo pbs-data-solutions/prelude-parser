@@ -207,7 +207,7 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "field")]
+    #[serde(rename = "field", default)]
     pub fields: Vec<Field>,
 }
 
@@ -223,7 +223,7 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "field")]
+    #[serde(rename = "field", default)]
     pub fields: Vec<Field>,
 }
 
@@ -325,9 +325,11 @@ pub struct Form {
     pub form_index: usize,
     pub form_group: String,
     pub form_state: String,
-    pub state: Option<State>,
 
-    #[serde(rename = "category")]
+    #[serde(rename = "state", default)]
+    pub states: Option<Vec<State>>,
+
+    #[serde(rename = "category", default)]
     pub categories: Option<Vec<Category>>,
 }
 
@@ -375,8 +377,12 @@ pub struct Form {
     pub form_index: usize,
     pub form_group: String,
     pub form_state: String,
-    pub state: Option<State>,
-    pub category: Option<Category>,
+
+    #[serde(rename = "state", default)]
+    pub states: Option<State>,
+
+    #[serde(rename = "category", default)]
+    pub categories: Option<Vec<Category>>,
 }
 
 #[cfg(feature = "python")]
@@ -564,20 +570,20 @@ impl Patient {
 }
 
 #[cfg(not(feature = "python"))]
-/// Contains the information from the Prelude native XML.
+/// Contains the information from the Prelude native subject XML.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Native {
+pub struct SubjectNative {
     #[serde(rename = "patient", default)]
     pub patients: Vec<Patient>,
 }
 
 #[cfg(feature = "python")]
-/// Contains the information from the Prelude native XML.
+/// Contains the information from the Prelude native subject XML.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
-pub struct Native {
+pub struct SubjectNative {
     #[serde(rename = "patient", default)]
     pub patients: Vec<Patient>,
 }
