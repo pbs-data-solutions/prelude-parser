@@ -5,3 +5,9 @@
 
 Deserialize Prelude EDC native XML files into Rust stucts. Enabling the `python` feature allows
 deserializing to Python classes with PyO3.
+
+## Supported native files
+
+- [x] Subject native XML
+- [ ] Site Native XML
+- [ ] User Native XML
