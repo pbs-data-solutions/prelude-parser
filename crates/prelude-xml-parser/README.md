@@ -9,5 +9,5 @@ deserializing to Python classes with PyO3.
 ## Supported native files
 
 - [x] Subject native XML
-- [ ] Site Native XML
+- [x] Site Native XML
 - [ ] User Native XML
