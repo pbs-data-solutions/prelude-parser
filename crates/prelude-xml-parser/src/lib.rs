@@ -6,7 +6,9 @@ pub mod native;
 use std::{fs::read_to_string, path::Path};
 
 use crate::errors::Error;
-use crate::native::{site_native::SiteNative, subject_native::SubjectNative};
+use crate::native::{
+    site_native::SiteNative, subject_native::SubjectNative, user_native::UserNative,
+};
 
 /// Parses a Prelude native XML file into a `Native` stuct.
 ///
@@ -123,7 +125,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 date_time_changed: None,
 ///                 form_title: "Site Demographics".to_string(),
 ///                 form_index: 1,
-///                 form_group: "Demographic".to_string(),
+///                 form_group: Some("Demographic".to_string()),
 ///                 form_state: "In-Work".to_string(),
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
@@ -144,7 +146,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "address".to_string(),
 ///                                 field_type: "text".to_string(),
-///                                 data_type: "string".to_string(),
+///                                 data_type: Some("string".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -157,7 +159,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "company".to_string(),
 ///                                 field_type: "text".to_string(),
-///                                 data_type: "string".to_string(),
+///                                 data_type: Some("string".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -184,7 +186,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "site_code_name".to_string(),
 ///                                 field_type: "hidden".to_string(),
-///                                 data_type: "string".to_string(),
+///                                 data_type: Some("string".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -255,7 +257,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "enrollment_closed_date".to_string(),
 ///                                 field_type: "popUpCalendar".to_string(),
-///                                 data_type: "date".to_string(),
+///                                 data_type: Some("date".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -268,7 +270,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "enrollment_open".to_string(),
 ///                                 field_type: "radio".to_string(),
-///                                 data_type: "string".to_string(),
+///                                 data_type: Some("string".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -295,7 +297,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             Field {
 ///                                 name: "enrollment_open_date".to_string(),
 ///                                 field_type: "popUpCalendar".to_string(),
-///                                 data_type: "date".to_string(),
+///                                 data_type: Some("date".to_string()),
 ///                                 error_code: "valid".to_string(),
 ///                                 when_created: DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
@@ -337,7 +339,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 date_time_changed: None,
 ///                 form_title: "Site Demographics".to_string(),
 ///                 form_index: 1,
-///                 form_group: "Demographic".to_string(),
+///                 form_group: Some("Demographic".to_string()),
 ///                 form_state: "In-Work".to_string(),
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
@@ -356,7 +358,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                     fields: vec![Field {
 ///                         name: "address".to_string(),
 ///                         field_type: "text".to_string(),
-///                         data_type: "string".to_string(),
+///                         data_type: Some("string".to_string()),
 ///                         error_code: "valid".to_string(),
 ///                         when_created: DateTime::parse_from_rfc3339("2023-08-07T15:09:54Z")
 ///                             .unwrap()
@@ -479,7 +481,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 date_time_changed: None,
 ///                 form_title: "Demographics".to_string(),
 ///                 form_index: 1,
-///                 form_group: "Day 0".to_string(),
+///                 form_group: Some("Day 0".to_string()),
 ///                 form_state: "In-Work".to_string(),
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
@@ -498,7 +500,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     fields: vec![Field {
 ///                         name: "breed".to_string(),
 ///                         field_type: "combo-box".to_string(),
-///                         data_type: "string".to_string(),
+///                         data_type: Some("string".to_string()),
 ///                         error_code: "valid".to_string(),
 ///                         when_created: DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
 ///                             .unwrap()
@@ -547,7 +549,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 date_time_changed: None,
 ///                 form_title: "Demographics".to_string(),
 ///                 form_index: 1,
-///                 form_group: "Day 0".to_string(),
+///                 form_group: Some("Day 0".to_string()),
 ///                 form_state: "In-Work".to_string(),
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
@@ -566,7 +568,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     fields: vec![Field {
 ///                         name: "breed".to_string(),
 ///                         field_type: "combo-box".to_string(),
-///                         data_type: "string".to_string(),
+///                         data_type: Some("string".to_string()),
 ///                         error_code: "valid".to_string(),
 ///                         when_created: DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
 ///                             .unwrap()
@@ -596,6 +598,197 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// ```
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
     let native: SubjectNative = serde_xml_rs::from_str(xml_str)?;
+
+    Ok(native)
+}
+
+/// Parses a Prelude native user XML file into a `UserNative` stuct.
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+///
+/// use prelude_xml_parser::parse_user_native_file;
+///
+/// let file_path = Path::new("tests/assets/user_native.xml");
+/// let native = parse_user_native_file(&file_path).unwrap();
+///
+/// assert!(native.users.len() >= 1, "Vector length is less than 1");
+/// ```
+pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
+    if !xml_path.exists() {
+        return Err(Error::FileNotFound(xml_path.to_path_buf()));
+    }
+
+    let xml_file = read_to_string(xml_path)?;
+    let native = parse_user_native_string(&xml_file)?;
+
+    Ok(native)
+}
+
+/// Parse a string of Preliude native user XML into a `UserNative` struct.
+///
+/// # Example
+///
+/// ```
+/// use chrono::{DateTime, Utc};
+/// use prelude_xml_parser::parse_user_native_string;
+/// use prelude_xml_parser::native::user_native::*;
+///
+/// let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+///   <export_from_vision_EDC date="02-Jun-2024 06:59 -0500" createdBy="Paul Sanders" role="Project Manager" numberSubjectsProcessed="3">
+///     <user uniqueId="1691421275437" lastLanguage="" creator="Paul Sanders(1681162687395)" numberOfForms="1">
+///       <form name="form.name.demographics" lastModified="2023-08-07 10:15:41 -0500" whoLastModifiedName="Paul Sanders" whoLastModifiedRole="Project Manager" whenCreated="1691421341578" hasErrors="false" hasWarnings="false" locked="false" user="" dateTimeChanged="" formTitle="User Demographics" formIndex="1" formGroup="" formState="In-Work">
+///         <state value="form.state.in.work" signer="Paul Sanders - Project Manager" signerUniqueId="1681162687395" dateSigned="2023-08-07 10:15:41 -0500" />
+///         <category name="demographics" type="normal" highestIndex="0">
+///           <field name="address" type="text" dataType="string" errorCode="undefined" whenCreated="2024-01-12 14:14:09 -0600" keepHistory="true" />
+///           <field name="email" type="text" dataType="string" errorCode="undefined" whenCreated="2023-08-07 10:15:41 -0500" keepHistory="true">
+///             <entry id="1">
+///               <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-08-07 10:15:41 -0500" xml:space="preserve">jazz@artemis.com</value>
+///             </entry>
+///           </field>
+///         </category>
+///         <category name="Administrative" type="normal" highestIndex="0">
+///           <field name="study_assignment" type="text" dataType="" errorCode="undefined" whenCreated="2023-08-07 10:15:41 -0500" keepHistory="true">
+///             <entry id="1">
+///               <value by="set from calculation" byUniqueId="" role="System" when="2023-08-07 10:15:41 -0500" xml:space="preserve">On 07-Aug-2023 10:15 -0500, Paul Sanders assigned user from another study</value>
+///               <reason by="set from calculation" byUniqueId="" role="System" when="2023-08-07 10:15:41 -0500" xml:space="preserve">calculated value</reason>
+///             </entry>
+///           </field>
+///         </category>
+///       </form>
+///     </user>
+///   </export_from_vision_EDC>
+/// "#;
+///
+/// let expected = UserNative {
+///     users: vec![User {
+///         unique_id: "1691421275437".to_string(),
+///         last_language: None,
+///         creator: "Paul Sanders(1681162687395)".to_string(),
+///         number_of_forms: 1,
+///         forms: Some(vec![Form {
+///             name: "form.name.demographics".to_string(),
+///             last_modified: Some(
+///                 DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                     .unwrap()
+///                     .with_timezone(&Utc),
+///             ),
+///             who_last_modified_name: Some("Paul Sanders".to_string()),
+///             who_last_modified_role: Some("Project Manager".to_string()),
+///             when_created: 1691421341578,
+///             has_errors: false,
+///             has_warnings: false,
+///             locked: false,
+///             user: None,
+///             date_time_changed: None,
+///             form_title: "User Demographics".to_string(),
+///             form_index: 1,
+///             form_group: None,
+///             form_state: "In-Work".to_string(),
+///             states: Some(vec![State {
+///                 value: "form.state.in.work".to_string(),
+///                 signer: "Paul Sanders - Project Manager".to_string(),
+///                 signer_unique_id: "1681162687395".to_string(),
+///                 date_signed: Some(
+///                     DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                         .unwrap()
+///                         .with_timezone(&Utc),
+///                 ),
+///             }]),
+///             categories: Some(vec![
+///                         Category {
+///                             name: "demographics".to_string(),
+///                             category_type: "normal".to_string(),
+///                             highest_index: 0,
+///                             fields: vec![
+///                                 Field {
+///                                     name: "address".to_string(),
+///                                     field_type: "text".to_string(),
+///                                     data_type: Some("string".to_string()),
+///                                     error_code: "undefined".to_string(),
+///                                     when_created: DateTime::parse_from_rfc3339("2024-01-12T20:14:09Z")
+///                                         .unwrap()
+///                                         .with_timezone(&Utc),
+///                                     keep_history: true,
+///                                     entries: None,
+///                                 },
+///                                 Field {
+///                                     name: "email".to_string(),
+///                                     field_type: "text".to_string(),
+///                                     data_type: Some("string".to_string()),
+///                                     error_code: "undefined".to_string(),
+///                                     when_created: DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                                         .unwrap()
+///                                         .with_timezone(&Utc),
+///                                     keep_history: true,
+///                                     entries: Some(vec![Entry {
+///                                         entry_id: "1".to_string(),
+///                                         value: Some(Value {
+///                                             by: "Paul Sanders".to_string(),
+///                                             by_unique_id: Some("1681162687395".to_string()),
+///                                             role: "Project Manager".to_string(),
+///                                             when: DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                                                 .unwrap()
+///                                                 .with_timezone(&Utc),
+///                                             value: "jazz@artemis.com".to_string(),
+///                                         }),
+///                                         reason: None,
+///                                     }]),
+///                                 },
+///                             ],
+///                         },
+///                         Category {
+///                             name: "Administrative".to_string(),
+///                             category_type: "normal".to_string(),
+///                             highest_index: 0,
+///                             fields: vec![
+///                                 Field {
+///                                     name: "study_assignment".to_string(),
+///                                     field_type: "text".to_string(),
+///                                     data_type: None,
+///                                     error_code: "undefined".to_string(),
+///                                     when_created: DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                                         .unwrap()
+///                                         .with_timezone(&Utc),
+///                                     keep_history: true,
+///                                     entries: Some(vec![
+///                                         Entry {
+///                                             entry_id: "1".to_string(),
+///                                             value: Some(Value {
+///                                                 by: "set from calculation".to_string(),
+///                                                 by_unique_id: None,
+///                                                 role: "System".to_string(),
+///                                                 when: DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                                                     .unwrap()
+///                                                     .with_timezone(&Utc),
+///                                                 value: "On 07-Aug-2023 10:15 -0500, Paul Sanders assigned user from another study".to_string(),
+///                                             }),
+///                                             reason: Some(Reason {
+///                                                 by: "set from calculation".to_string(),
+///                                                 by_unique_id: None,
+///                                                 role: "System".to_string(),
+///                                                 when: DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
+///                                                     .unwrap()
+///                                                     .with_timezone(&Utc),
+///                                                 value: "calculated value".to_string(),
+///                                             }),
+///                                         },
+///                                     ]),
+///                                 },
+///                             ],
+///                         },
+///             ]),
+///         }]),
+///     }],
+/// };
+///
+/// let result = parse_user_native_string(xml).unwrap();
+/// assert_eq!(result, expected);
+/// ```
+pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
+    let native: UserNative = serde_xml_rs::from_str(xml_str)?;
 
     Ok(native)
 }
