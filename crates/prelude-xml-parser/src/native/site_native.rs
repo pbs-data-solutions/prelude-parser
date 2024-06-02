@@ -3,9 +3,6 @@ use chrono::{DateTime, Utc};
 #[cfg(feature = "python")]
 use pyo3::{prelude::*, types::PyDateTime};
 
-#[cfg(feature = "python")]
-use crate::native::deserializers::{to_py_datetime, to_py_datetime_option};
-
 use serde::Deserialize;
 
 pub use crate::native::common::{Category, Entry, Field, Reason, State, Value};
@@ -13,6 +10,9 @@ use crate::native::deserializers::{
     default_datetime_none, default_string_none, deserialize_empty_string_as_none,
     deserialize_empty_string_as_none_datetime,
 };
+
+#[cfg(feature = "python")]
+use crate::native::deserializers::{to_py_datetime, to_py_datetime_option};
 
 #[cfg(not(feature = "python"))]
 #[derive(Debug, Deserialize, PartialEq)]
@@ -37,6 +37,7 @@ pub struct Form {
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_role: Option<String>,
+
     pub when_created: usize,
     pub has_errors: bool,
     pub has_warnings: bool,
@@ -53,6 +54,7 @@ pub struct Form {
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
+
     pub form_title: String,
     pub form_index: usize,
     pub form_group: String,
@@ -89,6 +91,7 @@ pub struct Form {
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_role: Option<String>,
+
     pub when_created: usize,
     pub has_errors: bool,
     pub has_warnings: bool,
@@ -105,6 +108,7 @@ pub struct Form {
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
+
     pub form_title: String,
     pub form_index: usize,
     pub form_group: String,
@@ -191,16 +195,12 @@ impl Form {
     }
 
     #[getter]
-    fn state(&self) -> PyResult<Option<Vec<State>>> {
-        if let Some(states) = &self.states {
-            Ok(Some(states.clone()))
-        } else {
-            Ok(None)
-        }
+    fn states(&self) -> PyResult<Option<Vec<State>>> {
+        Ok(self.states.clone())
     }
 
     #[getter]
-    fn category(&self) -> PyResult<Option<Vec<Category>>> {
+    fn categories(&self) -> PyResult<Option<Vec<Category>>> {
         Ok(self.categories.clone())
     }
 }
@@ -208,20 +208,13 @@ impl Form {
 #[cfg(not(feature = "python"))]
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Patient {
-    pub patient_id: String,
+pub struct Site {
+    pub name: String,
     pub unique_id: String,
+    pub number_of_patients: usize,
+    pub count_of_randomized_patients: usize,
     pub when_created: DateTime<Utc>,
     pub creator: String,
-    pub site_name: String,
-    pub site_unique_id: String,
-
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub last_language: Option<String>,
-
     pub number_of_forms: usize,
 
     #[serde(rename = "form")]
@@ -232,20 +225,13 @@ pub struct Patient {
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
-pub struct Patient {
-    pub patient_id: String,
+pub struct Site {
+    pub name: String,
     pub unique_id: String,
+    pub number_of_patients: usize,
+    pub count_of_randomized_patients: usize,
     pub when_created: DateTime<Utc>,
     pub creator: String,
-    pub site_name: String,
-    pub site_unique_id: String,
-
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub last_language: Option<String>,
-
     pub number_of_forms: usize,
 
     #[serde(rename = "form")]
@@ -254,15 +240,25 @@ pub struct Patient {
 
 #[cfg(feature = "python")]
 #[pymethods]
-impl Patient {
+impl Site {
     #[getter]
-    fn patient_id(&self) -> PyResult<String> {
-        Ok(self.patient_id.clone())
+    fn name(&self) -> PyResult<String> {
+        Ok(self.name.clone())
     }
 
     #[getter]
     fn unique_id(&self) -> PyResult<String> {
         Ok(self.unique_id.clone())
+    }
+
+    #[getter]
+    fn number_of_patients(&self) -> PyResult<usize> {
+        Ok(self.number_of_patients)
+    }
+
+    #[getter]
+    fn count_of_randomized_patients(&self) -> PyResult<usize> {
+        Ok(self.count_of_randomized_patients)
     }
 
     #[getter]
@@ -273,21 +269,6 @@ impl Patient {
     #[getter]
     fn creator(&self) -> PyResult<String> {
         Ok(self.creator.clone())
-    }
-
-    #[getter]
-    fn site_name(&self) -> PyResult<String> {
-        Ok(self.site_name.clone())
-    }
-
-    #[getter]
-    fn site_unique_id(&self) -> PyResult<String> {
-        Ok(self.site_unique_id.clone())
-    }
-
-    #[getter]
-    fn last_language(&self) -> PyResult<Option<String>> {
-        Ok(self.last_language.clone())
     }
 
     #[getter]
@@ -302,20 +283,20 @@ impl Patient {
 }
 
 #[cfg(not(feature = "python"))]
-/// Contains the information from the Prelude native subject XML.
+/// Contains the information from the Prelude native site XML.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct SubjectNative {
-    #[serde(rename = "patient", default)]
-    pub patients: Vec<Patient>,
+pub struct SiteNative {
+    #[serde(rename = "site", default)]
+    pub sites: Vec<Site>,
 }
 
 #[cfg(feature = "python")]
-/// Contains the information from the Prelude native subject XML.
+/// Contains the information from the Prelude native site XML.
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
-pub struct SubjectNative {
-    #[serde(rename = "patient", default)]
-    pub patients: Vec<Patient>,
+pub struct SiteNative {
+    #[serde(rename = "site", default)]
+    pub sites: Vec<Site>,
 }
