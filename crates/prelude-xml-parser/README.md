@@ -10,4 +10,4 @@ deserializing to Python classes with PyO3.
 
 - [x] Subject native XML
 - [x] Site Native XML
-- [ ] User Native XML
+- [x] User Native XML
