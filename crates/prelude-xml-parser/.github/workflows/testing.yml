@@ -46,8 +46,8 @@ jobs:
         uses: Swatinem/rust-cache@v2.7.3
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
-  fmt-python:
-    name: Rustfmt-Python
+  check-python:
+    name: Check-Python
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2.7.3
       - name: Run cargo fmt
-        run: cargo fmt --all -F python -- --check
+        run: cargo check --all-targets -F python
   test:
     name: Tests
     strategy:
