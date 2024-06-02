@@ -6,9 +6,390 @@ pub mod native;
 use std::{fs::read_to_string, path::Path};
 
 use crate::errors::Error;
-use crate::native::subject_native::SubjectNative;
+use crate::native::{site_native::SiteNative, subject_native::SubjectNative};
 
 /// Parses a Prelude native XML file into a `Native` stuct.
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+///
+/// use prelude_xml_parser::parse_site_native_file;
+///
+/// let file_path = Path::new("tests/assets/site_native.xml");
+/// let native = parse_site_native_file(&file_path).unwrap();
+///
+/// assert!(native.sites.len() >= 1, "Vector length is less than 1");
+/// ```
+pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
+    if !xml_path.exists() {
+        return Err(Error::FileNotFound(xml_path.to_path_buf()));
+    }
+
+    let xml_file = read_to_string(xml_path)?;
+    let native = parse_site_native_string(&xml_file)?;
+
+    Ok(native)
+}
+
+/// Parse a string of Preliude native site XML into a `SiteNative` struct.
+///
+/// # Example
+///
+/// ```
+/// use chrono::{DateTime, Utc};
+/// use prelude_xml_parser::parse_site_native_string;
+/// use prelude_xml_parser::native::site_native::*;
+///
+/// let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+/// <export_from_vision_EDC date="01-Jun-2024 18:17 -0500" createdBy="Paul Sanders" role="Project Manager" numberSubjectsProcessed="2">
+///
+///   <site name="Some Site" uniqueId="1681574834910" numberOfPatients="4" countOfRandomizedPatients="0" whenCreated="2023-04-15 12:08:19 -0400" creator="Paul Sanders" numberOfForms="1">
+///     <form name="demographic.form.name.site.demographics" lastModified="2023-04-15 12:08:19 -0400" whoLastModifiedName="Paul Sanders" whoLastModifiedRole="Project Manager" whenCreated="1681574834930" hasErrors="false" hasWarnings="false" locked="false" user="" dateTimeChanged="" formTitle="Site Demographics" formIndex="1" formGroup="Demographic" formState="In-Work">
+///       <state value="form.state.in.work" signer="Paul Sanders - Project Manager" signerUniqueId="1681162687395" dateSigned="2023-04-15 12:08:19 -0400" />
+///       <category name="Demographics" type="normal" highestIndex="0">
+///         <field name="address" type="text" dataType="string" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true" />
+///         <field name="company" type="text" dataType="string" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true">
+///           <entry id="1">
+///             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:08:19 -0400" xml:space="preserve">Some Company</value>
+///           </entry>
+///         </field>
+///         <field name="site_code_name" type="hidden" dataType="string" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true">
+///           <entry id="1">
+///             <value by="set from calculation" byUniqueId="" role="System" when="2023-04-15 12:08:19 -0400" xml:space="preserve">ABC-Some Site</value>
+///             <reason by="set from calculation" byUniqueId="" role="System" when="2023-04-15 12:08:19 -0400" xml:space="preserve">calculated value</reason>
+///           </entry>
+///           <entry id="2">
+///             <value by="set from calculation" byUniqueId="" role="System" when="2023-04-15 12:07:24 -0400" xml:space="preserve">Some Site</value>
+///             <reason by="set from calculation" byUniqueId="" role="System" when="2023-04-15 12:07:24 -0400" xml:space="preserve">calculated value</reason>
+///           </entry>
+///         </field>
+///       </category>
+///       <category name="Enrollment" type="normal" highestIndex="0">
+///         <field name="enrollment_closed_date" type="popUpCalendar" dataType="date" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true" />
+///         <field name="enrollment_open" type="radio" dataType="string" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true">
+///           <entry id="1">
+///             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:08:19 -0400" xml:space="preserve">Yes</value>
+///           </entry>
+///         </field>
+///         <field name="enrollment_open_date" type="popUpCalendar" dataType="date" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true" />
+///       </category>
+///     </form>
+///   </site>
+///
+///   <site name="Artemis" uniqueId="1691420994591" numberOfPatients="0" countOfRandomizedPatients="0" whenCreated="2023-08-07 08:14:23 -0700" creator="Paul Sanders" numberOfForms="1">
+///     <form name="demographic.form.name.site.demographics" lastModified="2023-08-07 08:14:23 -0700" whoLastModifiedName="Paul Sanders" whoLastModifiedRole="Project Manager" whenCreated="1691420994611" hasErrors="false" hasWarnings="false" locked="false" user="" dateTimeChanged="" formTitle="Site Demographics" formIndex="1" formGroup="Demographic" formState="In-Work">
+///       <state value="form.state.in.work" signer="Paul Sanders - Project Manager" signerUniqueId="1681162687395" dateSigned="2023-08-07 08:14:23 -0700" />
+///       <category name="Demographics" type="normal" highestIndex="0">
+///         <field name="address" type="text" dataType="string" errorCode="valid" whenCreated="2023-08-07 10:09:54 -0500" keepHistory="true">
+///           <entry id="1">
+///             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-08-07 08:14:21 -0700" xml:space="preserve">1111 Moon Drive</value>
+///           </entry>
+///         </field>
+///       </category>
+///     </form>
+///   </site>
+///
+/// </export_from_vision_EDC>
+/// "#;
+///
+/// let expected = SiteNative {
+///     sites: vec![
+///         Site {
+///             name: "Some Site".to_string(),
+///             unique_id: "1681574834910".to_string(),
+///             number_of_patients: 4,
+///             count_of_randomized_patients: 0,
+///             when_created: DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
+///                 .unwrap()
+///                 .with_timezone(&Utc),
+///             creator: "Paul Sanders".to_string(),
+///             number_of_forms: 1,
+///             forms: Some(vec![Form {
+///                 name: "demographic.form.name.site.demographics".to_string(),
+///                 last_modified: Some(
+///                     DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
+///                         .unwrap()
+///                         .with_timezone(&Utc),
+///                 ),
+///                 who_last_modified_name: Some("Paul Sanders".to_string()),
+///                 who_last_modified_role: Some("Project Manager".to_string()),
+///                 when_created: 1681574834930,
+///                 has_errors: false,
+///                 has_warnings: false,
+///                 locked: false,
+///                 user: None,
+///                 date_time_changed: None,
+///                 form_title: "Site Demographics".to_string(),
+///                 form_index: 1,
+///                 form_group: "Demographic".to_string(),
+///                 form_state: "In-Work".to_string(),
+///                 states: Some(vec![State {
+///                     value: "form.state.in.work".to_string(),
+///                     signer: "Paul Sanders - Project Manager".to_string(),
+///                     signer_unique_id: "1681162687395".to_string(),
+///                     date_signed: Some(
+///                         DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
+///                             .unwrap()
+///                             .with_timezone(&Utc),
+///                     ),
+///                 }]),
+///                 categories: Some(vec![
+///                     Category {
+///                         name: "Demographics".to_string(),
+///                         category_type: "normal".to_string(),
+///                         highest_index: 0,
+///                         fields: vec![
+///                             Field {
+///                                 name: "address".to_string(),
+///                                 field_type: "text".to_string(),
+///                                 data_type: "string".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: None,
+///                             },
+///                             Field {
+///                                 name: "company".to_string(),
+///                                 field_type: "text".to_string(),
+///                                 data_type: "string".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: Some(vec![Entry {
+///                                     entry_id: "1".to_string(),
+///                                     value: Some(Value {
+///                                         by: "Paul Sanders".to_string(),
+///                                         by_unique_id: Some("1681162687395".to_string()),
+///                                         role: "Project Manager".to_string(),
+///                                         when: DateTime::parse_from_rfc3339(
+///                                             "2023-04-15T16:08:19Z",
+///                                         )
+///                                         .unwrap()
+///                                         .with_timezone(&Utc),
+///                                         value: "Some Company".to_string(),
+///                                     }),
+///                                     reason: None,
+///                                 }]),
+///                             },
+///                             Field {
+///                                 name: "site_code_name".to_string(),
+///                                 field_type: "hidden".to_string(),
+///                                 data_type: "string".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: Some(vec![
+///                                     Entry {
+///                                         entry_id: "1".to_string(),
+///                                         value: Some(Value {
+///                                             by: "set from calculation".to_string(),
+///                                             by_unique_id: None,
+///                                             role: "System".to_string(),
+///                                             when: DateTime::parse_from_rfc3339(
+///                                                 "2023-04-15T16:08:19Z",
+///                                             )
+///                                             .unwrap()
+///                                             .with_timezone(&Utc),
+///                                             value: "ABC-Some Site".to_string(),
+///                                         }),
+///                                         reason: Some(Reason {
+///                                             by: "set from calculation".to_string(),
+///                                             by_unique_id: None,
+///                                             role: "System".to_string(),
+///                                             when: DateTime::parse_from_rfc3339(
+///                                                 "2023-04-15T16:08:19Z",
+///                                             )
+///                                             .unwrap()
+///                                             .with_timezone(&Utc),
+///                                             value: "calculated value".to_string(),
+///                                         }),
+///                                     },
+///                                     Entry {
+///                                         entry_id: "2".to_string(),
+///                                         value: Some(Value {
+///                                             by: "set from calculation".to_string(),
+///                                             by_unique_id: None,
+///                                             role: "System".to_string(),
+///                                             when: DateTime::parse_from_rfc3339(
+///                                                 "2023-04-15T16:07:24Z",
+///                                             )
+///                                             .unwrap()
+///                                             .with_timezone(&Utc),
+///                                             value: "Some Site".to_string(),
+///                                         }),
+///                                         reason: Some(Reason {
+///                                             by: "set from calculation".to_string(),
+///                                             by_unique_id: None,
+///                                             role: "System".to_string(),
+///                                             when: DateTime::parse_from_rfc3339(
+///                                                 "2023-04-15T16:07:24Z",
+///                                             )
+///                                             .unwrap()
+///                                             .with_timezone(&Utc),
+///                                             value: "calculated value".to_string(),
+///                                         }),
+///                                     },
+///                                 ]),
+///                             },
+///                         ],
+///                     },
+///                     Category {
+///                         name: "Enrollment".to_string(),
+///                         category_type: "normal".to_string(),
+///                         highest_index: 0,
+///                         fields: vec![
+///                             Field {
+///                                 name: "enrollment_closed_date".to_string(),
+///                                 field_type: "popUpCalendar".to_string(),
+///                                 data_type: "date".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: None,
+///                             },
+///                             Field {
+///                                 name: "enrollment_open".to_string(),
+///                                 field_type: "radio".to_string(),
+///                                 data_type: "string".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: Some(vec![Entry {
+///                                     entry_id: "1".to_string(),
+///                                     value: Some(Value {
+///                                         by: "Paul Sanders".to_string(),
+///                                         by_unique_id: Some("1681162687395".to_string()),
+///                                         role: "Project Manager".to_string(),
+///                                         when: DateTime::parse_from_rfc3339(
+///                                             "2023-04-15T16:08:19Z",
+///                                         )
+///                                         .unwrap()
+///                                         .with_timezone(&Utc),
+///                                         value: "Yes".to_string(),
+///                                     }),
+///                                     reason: None,
+///                                 }]),
+///                             },
+///                             Field {
+///                                 name: "enrollment_open_date".to_string(),
+///                                 field_type: "popUpCalendar".to_string(),
+///                                 data_type: "date".to_string(),
+///                                 error_code: "valid".to_string(),
+///                                 when_created: DateTime::parse_from_rfc3339(
+///                                     "2023-04-15T16:07:14Z",
+///                                 )
+///                                 .unwrap()
+///                                 .with_timezone(&Utc),
+///                                 keep_history: true,
+///                                 entries: None,
+///                             },
+///                         ],
+///                     },
+///                 ]),
+///             }]),
+///         },
+///         Site {
+///             name: "Artemis".to_string(),
+///             unique_id: "1691420994591".to_string(),
+///             number_of_patients: 0,
+///             count_of_randomized_patients: 0,
+///             when_created: DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
+///                 .unwrap()
+///                 .with_timezone(&Utc),
+///             creator: "Paul Sanders".to_string(),
+///             number_of_forms: 1,
+///             forms: Some(vec![Form {
+///                 name: "demographic.form.name.site.demographics".to_string(),
+///                 last_modified: Some(
+///                     DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
+///                         .unwrap()
+///                         .with_timezone(&Utc),
+///                 ),
+///                 who_last_modified_name: Some("Paul Sanders".to_string()),
+///                 who_last_modified_role: Some("Project Manager".to_string()),
+///                 when_created: 1691420994611,
+///                 has_errors: false,
+///                 has_warnings: false,
+///                 locked: false,
+///                 user: None,
+///                 date_time_changed: None,
+///                 form_title: "Site Demographics".to_string(),
+///                 form_index: 1,
+///                 form_group: "Demographic".to_string(),
+///                 form_state: "In-Work".to_string(),
+///                 states: Some(vec![State {
+///                     value: "form.state.in.work".to_string(),
+///                     signer: "Paul Sanders - Project Manager".to_string(),
+///                     signer_unique_id: "1681162687395".to_string(),
+///                     date_signed: Some(
+///                         DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
+///                             .unwrap()
+///                             .with_timezone(&Utc),
+///                     ),
+///                 }]),
+///                 categories: Some(vec![Category {
+///                     name: "Demographics".to_string(),
+///                     category_type: "normal".to_string(),
+///                     highest_index: 0,
+///                     fields: vec![Field {
+///                         name: "address".to_string(),
+///                         field_type: "text".to_string(),
+///                         data_type: "string".to_string(),
+///                         error_code: "valid".to_string(),
+///                         when_created: DateTime::parse_from_rfc3339("2023-08-07T15:09:54Z")
+///                             .unwrap()
+///                             .with_timezone(&Utc),
+///                         keep_history: true,
+///                         entries: Some(vec![Entry {
+///                             entry_id: "1".to_string(),
+///                             value: Some(Value {
+///                                 by: "Paul Sanders".to_string(),
+///                                 by_unique_id: Some("1681162687395".to_string()),
+///                                 role: "Project Manager".to_string(),
+///                                 when: DateTime::parse_from_rfc3339("2023-08-07T15:14:21Z")
+///                                     .unwrap()
+///                                     .with_timezone(&Utc),
+///                                 value: "1111 Moon Drive".to_string(),
+///                             }),
+///                             reason: None,
+///                         }]),
+///                     }],
+///                 }]),
+///             }]),
+///         },
+///     ],
+/// };
+/// let result = parse_site_native_string(xml).unwrap();
+/// assert_eq!(result, expected);
+pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
+    let native: SiteNative = serde_xml_rs::from_str(xml_str)?;
+
+    Ok(native)
+}
+
+/// Parses a Prelude native subject XML file into a `SubjectNative` stuct.
 ///
 /// # Example
 ///
@@ -33,7 +414,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
     Ok(native)
 }
 
-/// Parse a string of Preliude native site XML into a `Native` struct.
+/// Parse a string of Preliude native subject XML into a `SubjectNative` struct.
 ///
 /// # Example
 ///
@@ -124,7 +505,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             .with_timezone(&Utc),
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
-///                             id: "1".to_string(),
+///                             entry_id: "1".to_string(),
 ///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
 ///                                 by_unique_id: Some("1681162687395".to_string()),
@@ -134,6 +515,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                                     .with_timezone(&Utc),
 ///                                 value: "Labrador".to_string(),
 ///                             }),
+///                             reason: None,
 ///                         }]),
 ///                     }],
 ///                 }]),
@@ -191,7 +573,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             .with_timezone(&Utc),
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
-///                             id: "1".to_string(),
+///                             entry_id: "1".to_string(),
 ///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
 ///                                 by_unique_id: Some("1681162687395".to_string()),
@@ -201,6 +583,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                                     .with_timezone(&Utc),
 ///                                 value: "Labrador".to_string(),
 ///                             }),
+///                             reason: None,
 ///                         }]),
 ///                     }],
 ///                 }]),
