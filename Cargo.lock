@@ -215,9 +215,9 @@ dependencies = [
 
 [[package]]
 name = "prelude-xml-parser"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a9e5ae0cce1103ba53d8734c23ba1de062665eb2ed26ef85bbbd9bab4e46aef"
+checksum = "e2378cfe8ae15437cb7f67ae9be297309876d8a7d3ba70c1c60e5234d9600eb1"
 dependencies = [
  "chrono",
  "pyo3",
