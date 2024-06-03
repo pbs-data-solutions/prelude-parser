@@ -25,9 +25,7 @@ use crate::native::{
 /// assert!(native.sites.len() >= 1, "Vector length is less than 1");
 /// ```
 pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
-    if !xml_path.exists() {
-        return Err(Error::FileNotFound(xml_path.to_path_buf()));
-    }
+    check_valid_xml_file(xml_path)?;
 
     let xml_file = read_to_string(xml_path)?;
     let native = parse_site_native_string(&xml_file)?;
@@ -406,9 +404,7 @@ pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
 /// assert!(native.patients.len() >= 1, "Vector length is less than 1");
 /// ```
 pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error> {
-    if !xml_path.exists() {
-        return Err(Error::FileNotFound(xml_path.to_path_buf()));
-    }
+    check_valid_xml_file(xml_path)?;
 
     let xml_file = read_to_string(xml_path)?;
     let native = parse_subject_native_string(&xml_file)?;
@@ -617,9 +613,7 @@ pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error
 /// assert!(native.users.len() >= 1, "Vector length is less than 1");
 /// ```
 pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
-    if !xml_path.exists() {
-        return Err(Error::FileNotFound(xml_path.to_path_buf()));
-    }
+    check_valid_xml_file(xml_path)?;
 
     let xml_file = read_to_string(xml_path)?;
     let native = parse_user_native_string(&xml_file)?;
@@ -791,4 +785,89 @@ pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
     let native: UserNative = serde_xml_rs::from_str(xml_str)?;
 
     Ok(native)
+}
+
+fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {
+    if !xml_path.exists() {
+        return Err(Error::FileNotFound(xml_path.to_path_buf()));
+    }
+
+    if let Some(extension) = xml_path.extension() {
+        if extension != "xml" {
+            return Err(Error::InvalidFileType(xml_path.to_owned()));
+        }
+    } else {
+        return Err(Error::Unknown);
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::{tempdir, Builder};
+
+    #[test]
+    fn test_site_file_not_found_error() {
+        let dir = tempdir().unwrap().path().to_path_buf();
+        let result = parse_site_native_file(&dir);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::FileNotFound(_))));
+    }
+
+    #[test]
+    fn test_site_invaid_file_type_error() {
+        let file = Builder::new()
+            .prefix("test")
+            .suffix(".csv")
+            .tempfile()
+            .unwrap();
+        let result = parse_site_native_file(file.path());
+
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::InvalidFileType(_))));
+    }
+
+    #[test]
+    fn test_subject_file_not_found_error() {
+        let dir = tempdir().unwrap().path().to_path_buf();
+        let result = parse_subject_native_file(&dir);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::FileNotFound(_))));
+    }
+
+    #[test]
+    fn test_subject_invaid_file_type_error() {
+        let file = Builder::new()
+            .prefix("test")
+            .suffix(".csv")
+            .tempfile()
+            .unwrap();
+        let result = parse_subject_native_file(file.path());
+
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::InvalidFileType(_))));
+    }
+
+    #[test]
+    fn test_user_file_not_found_error() {
+        let dir = tempdir().unwrap().path().to_path_buf();
+        let result = parse_user_native_file(&dir);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::FileNotFound(_))));
+    }
+
+    #[test]
+    fn test_user_invaid_file_type_error() {
+        let file = Builder::new()
+            .prefix("test")
+            .suffix(".csv")
+            .tempfile()
+            .unwrap();
+        let result = parse_user_native_file(file.path());
+
+        assert!(result.is_err());
+        assert!(matches!(result, Err(Error::InvalidFileType(_))));
+    }
 }
