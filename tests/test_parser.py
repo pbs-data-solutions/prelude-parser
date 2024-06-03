@@ -7,6 +7,7 @@ from prelude_parser import (
     parse_subject_native_file,
     parse_to_classes,
     parse_to_dict,
+    parse_user_native_file,
 )
 from prelude_parser._prelude_parser import FileNotFoundError, InvalidFileTypeError, ParsingError
 
@@ -21,6 +22,12 @@ def test_parse_subject_native(subject_native_xml):
     result = parse_subject_native_file(subject_native_xml)
 
     assert result.patients[0].patient_id == "ABC-001"
+
+
+def test_parse_user_native(user_native_xml):
+    result = parse_user_native_file(user_native_xml)
+
+    assert result.users[0].unique_id == "1691421275437"
 
 
 def test_parse_to_classes(test_file_1):
