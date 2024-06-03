@@ -2,8 +2,19 @@ from datetime import date
 
 import pytest
 
-from prelude_parser import parse_subject_native_file, parse_to_classes, parse_to_dict
+from prelude_parser import (
+    parse_site_native_file,
+    parse_subject_native_file,
+    parse_to_classes,
+    parse_to_dict,
+)
 from prelude_parser._prelude_parser import FileNotFoundError, InvalidFileTypeError, ParsingError
+
+
+def test_parse_site_native(site_native_xml):
+    result = parse_site_native_file(site_native_xml)
+
+    assert result.sites[0].name == "Some Site"
 
 
 def test_parse_subject_native(subject_native_xml):
