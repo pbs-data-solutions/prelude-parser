@@ -6,8 +6,8 @@ use std::fs::read_to_string;
 use std::path::PathBuf;
 
 use chrono::{Datelike, NaiveDate};
+pub use prelude_xml_parser::native::subject_native::SubjectNative;
 use prelude_xml_parser::parse_subject_native_file as parse_subject_native_file_rs;
-pub use prelude_xml_parser::subject_native::SubjectNative;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList};
 use roxmltree::Document;
