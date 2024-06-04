@@ -33,7 +33,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
     Ok(native)
 }
 
-/// Parse a string of Preliude native site XML into a `SiteNative` struct.
+/// Parse a string of Prelude native site XML into a `SiteNative` struct.
 ///
 /// # Example
 ///
@@ -412,7 +412,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
     Ok(native)
 }
 
-/// Parse a string of Preliude native subject XML into a `SubjectNative` struct.
+/// Parse a string of Prelude native subject XML into a `SubjectNative` struct.
 ///
 /// # Example
 ///
@@ -621,7 +621,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
     Ok(native)
 }
 
-/// Parse a string of Preliude native user XML into a `UserNative` struct.
+/// Parse a string of Prelude native user XML into a `UserNative` struct.
 ///
 /// # Example
 ///
