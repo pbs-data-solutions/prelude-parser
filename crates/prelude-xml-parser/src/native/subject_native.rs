@@ -6,7 +6,7 @@ use pyo3::{prelude::*, types::PyDateTime};
 #[cfg(feature = "python")]
 use crate::native::deserializers::to_py_datetime;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub use crate::native::{
     common::{Category, Entry, Field, Form, Reason, State, Value},
@@ -17,7 +17,7 @@ pub use crate::native::{
 };
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Patient {
     pub patient_id: String,
@@ -40,7 +40,7 @@ pub struct Patient {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Patient {
@@ -114,7 +114,7 @@ impl Patient {
 
 #[cfg(not(feature = "python"))]
 /// Contains the information from the Prelude native subject XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SubjectNative {
     #[serde(rename = "patient", default)]
@@ -123,7 +123,7 @@ pub struct SubjectNative {
 
 #[cfg(feature = "python")]
 /// Contains the information from the Prelude native subject XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct SubjectNative {

@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 #[cfg(feature = "python")]
 use pyo3::{prelude::*, types::PyDateTime};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub use crate::native::{
     common::{Category, Entry, Field, Form, Reason, State, Value},
@@ -17,7 +17,7 @@ pub use crate::native::{
 use crate::native::deserializers::to_py_datetime;
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Site {
     pub name: String,
@@ -33,7 +33,7 @@ pub struct Site {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Site {
@@ -95,7 +95,7 @@ impl Site {
 
 #[cfg(not(feature = "python"))]
 /// Contains the information from the Prelude native site XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteNative {
     #[serde(rename = "site", default)]
@@ -104,7 +104,7 @@ pub struct SiteNative {
 
 #[cfg(feature = "python")]
 /// Contains the information from the Prelude native site XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct SiteNative {
