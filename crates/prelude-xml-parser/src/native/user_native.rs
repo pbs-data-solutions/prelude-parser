@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
@@ -12,7 +12,7 @@ pub use crate::native::{
 };
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub unique_id: String,
@@ -30,7 +30,7 @@ pub struct User {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct User {
@@ -50,7 +50,7 @@ pub struct User {
 
 #[cfg(not(feature = "python"))]
 /// Contains the information from the Prelude native user XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserNative {
     #[serde(rename = "user", default)]
@@ -59,7 +59,7 @@ pub struct UserNative {
 
 #[cfg(feature = "python")]
 /// Contains the information from the Prelude native user XML.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct UserNative {

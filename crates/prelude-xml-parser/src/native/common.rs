@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
 use pyo3::{prelude::*, types::PyDateTime};
@@ -13,7 +13,7 @@ use crate::native::deserializers::{
 use crate::native::deserializers::{to_py_datetime, to_py_datetime_option};
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Value {
     pub by: String,
@@ -31,7 +31,7 @@ pub struct Value {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Value {
@@ -79,7 +79,7 @@ impl Value {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Reason {
     pub by: String,
@@ -98,7 +98,7 @@ pub struct Reason {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Reason {
@@ -147,7 +147,7 @@ impl Reason {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
     #[serde(alias = "id")]
@@ -157,7 +157,7 @@ pub struct Entry {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Entry {
@@ -168,7 +168,7 @@ pub struct Entry {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Field {
     pub name: String,
@@ -190,7 +190,7 @@ pub struct Field {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Field {
@@ -253,7 +253,7 @@ impl Field {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Category {
     pub name: String,
@@ -268,7 +268,7 @@ pub struct Category {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Category {
@@ -284,7 +284,7 @@ pub struct Category {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
     pub value: String,
@@ -299,7 +299,7 @@ pub struct State {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct State {
@@ -339,7 +339,7 @@ impl State {
 }
 
 #[cfg(not(feature = "python"))]
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Form {
     pub name: String,
@@ -398,7 +398,7 @@ pub struct Form {
 }
 
 #[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Form {
