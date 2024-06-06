@@ -14,14 +14,24 @@ pub fn deserialize_empty_string_as_none_datetime<'de, D>(
 where
     D: Deserializer<'de>,
 {
-    let s: String = Deserialize::deserialize(deserializer)?;
-    if s.is_empty() {
-        Ok(None)
-    } else {
-        // Parse the datetime with a fixed offset, then convert it to UTC
-        let dt_with_offset = DateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S %z")
-            .map_err(serde::de::Error::custom)?;
-        Ok(Some(dt_with_offset.with_timezone(&Utc)))
+    let s: Option<String> = Deserialize::deserialize(deserializer)?;
+    match s {
+        Some(v) => {
+            if v.is_empty() {
+                Ok(None)
+            } else {
+                // Parse the datetime with a fixed offset, then convert it to UTC
+
+                let dt_with_offset = if v.ends_with('Z') {
+                    DateTime::parse_from_rfc3339(&v).map_err(serde::de::Error::custom)?
+                } else {
+                    DateTime::parse_from_str(&v, "%Y-%m-%d %H:%M:%S %z")
+                        .map_err(serde::de::Error::custom)?
+                };
+                Ok(Some(dt_with_offset.with_timezone(&Utc)))
+            }
+        }
+        None => Ok(None),
     }
 }
 

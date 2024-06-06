@@ -26,7 +26,7 @@ pub struct Value {
     pub role: String,
     pub when: DateTime<Utc>,
 
-    #[serde(rename = "$value")]
+    #[serde(alias = "$value")]
     pub value: String,
 }
 
@@ -45,7 +45,7 @@ pub struct Value {
     pub role: String,
     pub when: DateTime<Utc>,
 
-    #[serde(rename = "$value")]
+    #[serde(alias = "$value")]
     pub value: String,
 }
 
@@ -93,7 +93,7 @@ pub struct Reason {
     pub role: String,
     pub when: DateTime<Utc>,
 
-    #[serde(rename = "$value")]
+    #[serde(alias = "$value")]
     pub value: String,
 }
 
@@ -113,7 +113,7 @@ pub struct Reason {
     pub role: String,
     pub when: DateTime<Utc>,
 
-    #[serde(rename = "$value")]
+    #[serde(alias = "$value")]
     pub value: String,
 }
 
@@ -185,7 +185,7 @@ pub struct Field {
     pub when_created: DateTime<Utc>,
     pub keep_history: bool,
 
-    #[serde(rename = "entry")]
+    #[serde(alias = "entry")]
     pub entries: Option<Vec<Entry>>,
 }
 
@@ -209,7 +209,7 @@ pub struct Field {
     pub when_created: DateTime<Utc>,
     pub keep_history: bool,
 
-    #[serde(rename = "entry")]
+    #[serde(alias = "entry")]
     pub entries: Option<Vec<Entry>>,
 }
 
@@ -263,8 +263,8 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "field", default)]
-    pub fields: Vec<Field>,
+    #[serde(alias = "field")]
+    pub fields: Option<Vec<Field>>,
 }
 
 #[cfg(feature = "python")]
@@ -279,7 +279,7 @@ pub struct Category {
 
     pub highest_index: usize,
 
-    #[serde(rename = "field", default)]
+    #[serde(alias = "field")]
     pub fields: Vec<Field>,
 }
 
@@ -390,10 +390,10 @@ pub struct Form {
 
     pub form_state: String,
 
-    #[serde(rename = "state", default)]
+    #[serde(alias = "state")]
     pub states: Option<Vec<State>>,
 
-    #[serde(rename = "category", default)]
+    #[serde(alias = "category")]
     pub categories: Option<Vec<Category>>,
 }
 
@@ -450,10 +450,10 @@ pub struct Form {
 
     pub form_state: String,
 
-    #[serde(rename = "state", default)]
+    #[serde(alias = "state")]
     pub states: Option<Vec<State>>,
 
-    #[serde(rename = "category", default)]
+    #[serde(alias = "category")]
     pub categories: Option<Vec<Category>>,
 }
 

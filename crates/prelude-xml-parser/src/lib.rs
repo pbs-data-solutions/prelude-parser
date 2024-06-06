@@ -140,7 +140,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                         name: "Demographics".to_string(),
 ///                         category_type: "normal".to_string(),
 ///                         highest_index: 0,
-///                         fields: vec![
+///                         fields: Some(vec![
 ///                             Field {
 ///                                 name: "address".to_string(),
 ///                                 field_type: "text".to_string(),
@@ -245,13 +245,13 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     },
 ///                                 ]),
 ///                             },
-///                         ],
+///                         ]),
 ///                     },
 ///                     Category {
 ///                         name: "Enrollment".to_string(),
 ///                         category_type: "normal".to_string(),
 ///                         highest_index: 0,
-///                         fields: vec![
+///                         fields: Some(vec![
 ///                             Field {
 ///                                 name: "enrollment_closed_date".to_string(),
 ///                                 field_type: "popUpCalendar".to_string(),
@@ -305,7 +305,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: None,
 ///                             },
-///                         ],
+///                         ]),
 ///                     },
 ///                 ]),
 ///             }]),
@@ -353,7 +353,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
-///                     fields: vec![Field {
+///                     fields: Some(vec![Field {
 ///                         name: "address".to_string(),
 ///                         field_type: "text".to_string(),
 ///                         data_type: Some("string".to_string()),
@@ -375,7 +375,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             }),
 ///                             reason: None,
 ///                         }]),
-///                     }],
+///                     }]),
 ///                 }]),
 ///             }]),
 ///         },
@@ -493,7 +493,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
-///                     fields: vec![Field {
+///                     fields: Some(vec![Field {
 ///                         name: "breed".to_string(),
 ///                         field_type: "combo-box".to_string(),
 ///                         data_type: Some("string".to_string()),
@@ -515,7 +515,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             }),
 ///                             reason: None,
 ///                         }]),
-///                     }],
+///                     }]),
 ///                 }]),
 ///             }]),
 ///         },
@@ -561,7 +561,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     name: "Demographics".to_string(),
 ///                     category_type: "normal".to_string(),
 ///                     highest_index: 0,
-///                     fields: vec![Field {
+///                     fields: Some(vec![Field {
 ///                         name: "breed".to_string(),
 ///                         field_type: "combo-box".to_string(),
 ///                         data_type: Some("string".to_string()),
@@ -583,13 +583,14 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             }),
 ///                             reason: None,
 ///                         }]),
-///                     }],
+///                     }]),
 ///                 }]),
 ///             }]),
 ///         },
 ///     ],
 /// };
 /// let result = parse_subject_native_string(xml).unwrap();
+///
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
@@ -696,7 +697,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                             name: "demographics".to_string(),
 ///                             category_type: "normal".to_string(),
 ///                             highest_index: 0,
-///                             fields: vec![
+///                             fields: Some(vec![
 ///                                 Field {
 ///                                     name: "address".to_string(),
 ///                                     field_type: "text".to_string(),
@@ -731,13 +732,13 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         reason: None,
 ///                                     }]),
 ///                                 },
-///                             ],
+///                             ]),
 ///                         },
 ///                         Category {
 ///                             name: "Administrative".to_string(),
 ///                             category_type: "normal".to_string(),
 ///                             highest_index: 0,
-///                             fields: vec![
+///                             fields: Some(vec![
 ///                                 Field {
 ///                                     name: "study_assignment".to_string(),
 ///                                     field_type: "text".to_string(),
@@ -771,7 +772,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         },
 ///                                     ]),
 ///                                 },
-///                             ],
+///                             ]),
 ///                         },
 ///             ]),
 ///         }]),
@@ -779,6 +780,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 /// };
 ///
 /// let result = parse_user_native_string(xml).unwrap();
+///
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
