@@ -280,7 +280,7 @@ pub struct Category {
     pub highest_index: usize,
 
     #[serde(alias = "field")]
-    pub fields: Vec<Field>,
+    pub fields: Option<Vec<Field>>,
 }
 
 #[cfg(not(feature = "python"))]
