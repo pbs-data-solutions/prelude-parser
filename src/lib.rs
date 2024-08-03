@@ -290,8 +290,6 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::assert_eq;
-
     use super::*;
 
     #[test]
