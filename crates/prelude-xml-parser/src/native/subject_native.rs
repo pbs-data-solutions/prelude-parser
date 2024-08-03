@@ -133,6 +133,8 @@ pub struct SubjectNative {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_yaml_snapshot;
+
     use super::*;
 
     #[test]
@@ -275,153 +277,8 @@ mod tests {
 }
         "#;
 
-        let expected = SubjectNative {
-            patients: vec![
-                Patient {
-                    patient_id: "ABC-001".to_string(),
-                    unique_id: "1681574905819".to_string(),
-                    when_created: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
-                        .unwrap()
-                        .with_timezone(&Utc),
-                    creator: "Paul Sanders".to_string(),
-                    site_name: "Some Site".to_string(),
-                    site_unique_id: "1681574834910".to_string(),
-                    last_language: Some("English".to_string()),
-                    number_of_forms: 6,
-                    forms: Some(vec![Form {
-                        name: "day.0.form.name.demographics".to_string(),
-                        last_modified: Some(
-                            DateTime::parse_from_rfc3339("2023-04-15T16:09:15Z")
-                                .unwrap()
-                                .with_timezone(&Utc),
-                        ),
-                        who_last_modified_name: Some("Paul Sanders".to_string()),
-                        who_last_modified_role: Some("Project Manager".to_string()),
-                        when_created: 1681574905839,
-                        has_errors: false,
-                        has_warnings: false,
-                        locked: false,
-                        user: None,
-                        date_time_changed: None,
-                        form_title: "Demographics".to_string(),
-                        form_index: 1,
-                        form_group: Some("Day 0".to_string()),
-                        form_state: "In-Work".to_string(),
-                        states: Some(vec![State {
-                            value: "form.state.in.work".to_string(),
-                            signer: "Paul Sanders - Project Manager".to_string(),
-                            signer_unique_id: "1681162687395".to_string(),
-                            date_signed: Some(
-                                DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
-                                    .unwrap()
-                                    .with_timezone(&Utc),
-                            ),
-                        }]),
-                        categories: Some(vec![Category {
-                            name: "Demographics".to_string(),
-                            category_type: "normal".to_string(),
-                            highest_index: 0,
-                            fields: Some(vec![Field {
-                                name: "breed".to_string(),
-                                field_type: "combo-box".to_string(),
-                                data_type: Some("string".to_string()),
-                                error_code: "valid".to_string(),
-                                when_created: DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
-                                    .unwrap()
-                                    .with_timezone(&Utc),
-                                keep_history: true,
-                                entries: Some(vec![Entry {
-                                    entry_id: "1".to_string(),
-                                    value: Some(Value {
-                                        by: "Paul Sanders".to_string(),
-                                        by_unique_id: Some("1681162687395".to_string()),
-                                        role: "Project Manager".to_string(),
-                                        when: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
-                                            .unwrap()
-                                            .with_timezone(&Utc),
-                                        value: "Labrador".to_string(),
-                                    }),
-                                    reason: None,
-                                }]),
-                            }]),
-                        }]),
-                    }]),
-                },
-                Patient {
-                    patient_id: "DEF-002".to_string(),
-                    unique_id: "1681574905820".to_string(),
-                    when_created: DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
-                        .unwrap()
-                        .with_timezone(&Utc),
-                    creator: "Wade Watts".to_string(),
-                    site_name: "Another Site".to_string(),
-                    site_unique_id: "1681574834911".to_string(),
-                    last_language: None,
-                    number_of_forms: 8,
-                    forms: Some(vec![Form {
-                        name: "day.0.form.name.demographics".to_string(),
-                        last_modified: Some(
-                            DateTime::parse_from_rfc3339("2023-04-16T16:10:15Z")
-                                .unwrap()
-                                .with_timezone(&Utc),
-                        ),
-                        who_last_modified_name: Some("Barney Rubble".to_string()),
-                        who_last_modified_role: Some("Technician".to_string()),
-                        when_created: 1681574905838,
-                        has_errors: false,
-                        has_warnings: false,
-                        locked: false,
-                        user: None,
-                        date_time_changed: None,
-                        form_title: "Demographics".to_string(),
-                        form_index: 1,
-                        form_group: Some("Day 0".to_string()),
-                        form_state: "In-Work".to_string(),
-                        states: Some(vec![State {
-                            value: "form.state.in.work".to_string(),
-                            signer: "Paul Sanders - Project Manager".to_string(),
-                            signer_unique_id: "1681162687395".to_string(),
-                            date_signed: Some(
-                                DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
-                                    .unwrap()
-                                    .with_timezone(&Utc),
-                            ),
-                        }]),
-                        categories: Some(vec![Category {
-                            name: "Demographics".to_string(),
-                            category_type: "normal".to_string(),
-                            highest_index: 0,
-                            fields: Some(vec![Field {
-                                name: "breed".to_string(),
-                                field_type: "combo-box".to_string(),
-                                data_type: Some("string".to_string()),
-                                error_code: "valid".to_string(),
-                                when_created: DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
-                                    .unwrap()
-                                    .with_timezone(&Utc),
-                                keep_history: true,
-                                entries: Some(vec![Entry {
-                                    entry_id: "1".to_string(),
-                                    value: Some(Value {
-                                        by: "Paul Sanders".to_string(),
-                                        by_unique_id: Some("1681162687395".to_string()),
-                                        role: "Project Manager".to_string(),
-                                        when: DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
-                                            .unwrap()
-                                            .with_timezone(&Utc),
-                                        value: "Labrador".to_string(),
-                                    }),
-                                    reason: None,
-                                }]),
-                            }]),
-                        }]),
-                    }]),
-                },
-            ],
-        };
-
         let result: SubjectNative = serde_json::from_str(json_str).unwrap();
 
-        assert_eq!(result, expected);
+        assert_yaml_snapshot!(result);
     }
 }
