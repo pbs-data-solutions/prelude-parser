@@ -24,4 +24,4 @@ thiserror = "1.0.63"
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["yaml"] }
-tempfile = "3.10.1"
+tempfile = "3.11.0"
