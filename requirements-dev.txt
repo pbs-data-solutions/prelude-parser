@@ -1,4 +1,4 @@
-maturin==1.7.0
+maturin==1.7.1
 mypy==1.11.1
 pandas-stubs==2.2.2.240807; python_version>"3.8"
 pytest==8.3.2
