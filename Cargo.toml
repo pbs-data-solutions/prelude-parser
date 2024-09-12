@@ -14,7 +14,7 @@ name = "_prelude_parser"
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.87"
+anyhow = "1.0.88"
 chrono = "0.4.38"
 prelude-xml-parser = { version = "0.6.0", features = ["python"] }
 pyo3 = { version = "0.21.2", features = ["extension-module"] }
