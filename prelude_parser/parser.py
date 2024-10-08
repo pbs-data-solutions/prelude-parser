@@ -30,7 +30,7 @@ def parse_to_dict(xml_file: str | Path, *, short_names: bool = False) -> dict[st
         >>> from prelude_parser import parse_to_dict
         >>> data = parse_to_dict("physical_examination.xml")
     """
-    return _parse_flat_file_to_dict(xml_file, short_names)
+    return _parse_flat_file_to_dict(xml_file, short_names=short_names)
 
 
 def parse_to_classes(xml_file: str | Path, short_names: bool = False) -> list[Any]:
