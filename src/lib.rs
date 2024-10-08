@@ -213,6 +213,7 @@ fn parse_xml_pandas<'py>(
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_file, *, short_names=false))]
 fn _parse_flat_file_to_dict(
     py: Python,
     xml_file: PathBuf,
@@ -225,6 +226,7 @@ fn _parse_flat_file_to_dict(
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_file, *, short_names=false))]
 fn _parse_flat_file_to_pandas_dict(
     py: Python,
     xml_file: PathBuf,
@@ -237,6 +239,7 @@ fn _parse_flat_file_to_pandas_dict(
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_file))]
 fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative> {
     match parse_site_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
@@ -248,6 +251,7 @@ fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_str))]
 fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> {
     match parse_site_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
@@ -256,6 +260,7 @@ fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> 
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_file))]
 fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SubjectNative> {
     match parse_subject_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
@@ -267,6 +272,7 @@ fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<Subject
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_str))]
 fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNative> {
     match parse_subject_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
@@ -275,6 +281,7 @@ fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNa
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_file))]
 fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative> {
     match parse_user_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
@@ -286,6 +293,7 @@ fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative
 }
 
 #[pyfunction]
+#[pyo3(signature = (xml_str))]
 fn parse_user_native_string(_py: Python, xml_str: &str) -> PyResult<UserNative> {
     match parse_user_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
