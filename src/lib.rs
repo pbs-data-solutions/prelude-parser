@@ -10,8 +10,11 @@ pub use prelude_xml_parser::native::{
     site_native::SiteNative, subject_native::SubjectNative, user_native::UserNative,
 };
 use prelude_xml_parser::parse_site_native_file as parse_site_native_file_rs;
+use prelude_xml_parser::parse_site_native_string as parse_site_native_string_rs;
 use prelude_xml_parser::parse_subject_native_file as parse_subject_native_file_rs;
+use prelude_xml_parser::parse_subject_native_string as parse_subject_native_string_rs;
 use prelude_xml_parser::parse_user_native_file as parse_user_native_file_rs;
+use prelude_xml_parser::parse_user_native_string as parse_user_native_string_rs;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList};
 use roxmltree::Document;
@@ -245,6 +248,14 @@ fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative
 }
 
 #[pyfunction]
+fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> {
+    match parse_site_native_string_rs(xml_str) {
+        Ok(native) => Ok(native),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
+    }
+}
+
+#[pyfunction]
 fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SubjectNative> {
     match parse_subject_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
@@ -252,6 +263,14 @@ fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<Subject
             "Error parsing xml file: {:?}",
             e
         ))),
+    }
+}
+
+#[pyfunction]
+fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNative> {
+    match parse_subject_native_string_rs(xml_str) {
+        Ok(native) => Ok(native),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
     }
 }
 
@@ -266,6 +285,14 @@ fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative
     }
 }
 
+#[pyfunction]
+fn parse_user_native_string(_py: Python, xml_str: &str) -> PyResult<UserNative> {
+    match parse_user_native_string_rs(xml_str) {
+        Ok(native) => Ok(native),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
+    }
+}
+
 #[pymodule]
 fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<SiteNative>()?;
@@ -274,8 +301,11 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
     m.add_function(wrap_pyfunction!(parse_site_native_file, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_site_native_string, m)?)?;
     m.add_function(wrap_pyfunction!(parse_subject_native_file, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_subject_native_string, m)?)?;
     m.add_function(wrap_pyfunction!(parse_user_native_file, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_user_native_string, m)?)?;
     m.add(
         "FileNotFoundError",
         py.get_type_bound::<FileNotFoundError>(),

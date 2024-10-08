@@ -4,28 +4,55 @@ import pytest
 
 from prelude_parser import (
     parse_site_native_file,
+    parse_site_native_string,
     parse_subject_native_file,
+    parse_subject_native_string,
     parse_to_classes,
     parse_to_dict,
     parse_user_native_file,
+    parse_user_native_string,
 )
 from prelude_parser._prelude_parser import FileNotFoundError, InvalidFileTypeError, ParsingError
 
 
-def test_parse_site_native(site_native_xml):
+def test_parse_site_native_file(site_native_xml):
     result = parse_site_native_file(site_native_xml)
 
     assert result.sites[0].name == "Some Site"
 
 
-def test_parse_subject_native(subject_native_xml):
+def test_parse_site_native_string(site_native_xml):
+    with open(site_native_xml) as f:
+        xml = f.read()
+    result = parse_site_native_string(xml)
+
+    assert result.sites[0].name == "Some Site"
+
+
+def test_parse_subject_native_file(subject_native_xml):
     result = parse_subject_native_file(subject_native_xml)
 
     assert result.patients[0].patient_id == "ABC-001"
 
 
-def test_parse_user_native(user_native_xml):
+def test_parse_subject_native_string(subject_native_xml):
+    with open(subject_native_xml) as f:
+        xml = f.read()
+    result = parse_subject_native_string(xml)
+
+    assert result.patients[0].patient_id == "ABC-001"
+
+
+def test_parse_user_native_file(user_native_xml):
     result = parse_user_native_file(user_native_xml)
+
+    assert result.users[0].unique_id == "1691421275437"
+
+
+def test_parse_user_native_string(user_native_xml):
+    with open(user_native_xml) as f:
+        xml = f.read()
+    result = parse_user_native_string(xml)
 
     assert result.users[0].unique_id == "1691421275437"
 
