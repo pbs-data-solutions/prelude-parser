@@ -1,3 +1,6 @@
+@_default:
+  just --list
+
 @develop:
   maturin develop -E all
 
