@@ -1,7 +1,10 @@
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
-use pyo3::{prelude::*, types::PyDateTime};
+use pyo3::{
+    prelude::*,
+    types::{PyDateTime, PyDict},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -91,6 +94,33 @@ impl Site {
     fn forms(&self) -> PyResult<Option<Vec<Form>>> {
         Ok(self.forms.clone())
     }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("name", &self.name)?;
+        dict.set_item("unique_id", &self.unique_id)?;
+        dict.set_item("number_of_patients", self.number_of_patients)?;
+        dict.set_item(
+            "count_of_randomized_patients",
+            self.count_of_randomized_patients,
+        )?;
+        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
+        dict.set_item("creator", &self.creator)?;
+        dict.set_item("number_of_forms", self.number_of_forms)?;
+
+        let mut form_dicts = Vec::new();
+        if let Some(forms) = &self.forms {
+            for form in forms {
+                let form_dict = form.to_dict(py)?;
+                form_dicts.push(form_dict.to_object(py));
+            }
+            dict.set_item("forms", form_dicts)?;
+        } else {
+            dict.set_item("forms", py.None())?;
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -111,6 +141,27 @@ pub struct SiteNative {
 pub struct SiteNative {
     #[serde(rename = "site")]
     pub sites: Vec<Site>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl SiteNative {
+    #[getter]
+    fn sites(&self) -> PyResult<Vec<Site>> {
+        Ok(self.sites.clone())
+    }
+
+    /// Convert the class instance to a dictionary
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        let mut site_dicts = Vec::new();
+        for site in &self.sites {
+            let site_dict = site.to_dict(py)?;
+            site_dicts.push(site_dict.to_object(py));
+        }
+        dict.set_item("sites", site_dicts)?;
+        Ok(dict)
+    }
 }
 
 #[cfg(test)]

@@ -2,7 +2,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
-use pyo3::{prelude::*, types::PyDateTime};
+use pyo3::{
+    prelude::*,
+    types::{PyDateTime, PyDict},
+};
 
 use crate::native::deserializers::{
     default_datetime_none, default_string_none, deserialize_empty_string_as_none,
@@ -76,6 +79,17 @@ impl Value {
     fn value(&self) -> PyResult<String> {
         Ok(self.value.clone())
     }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("by", &self.by)?;
+        dict.set_item("by_unique_id", &self.by_unique_id)?;
+        dict.set_item("role", &self.role)?;
+        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
+        dict.set_item("value", &self.value)?;
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -144,6 +158,17 @@ impl Reason {
     fn value(&self) -> PyResult<String> {
         Ok(self.value.clone())
     }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("by", &self.by)?;
+        dict.set_item("by_unique_id", &self.by_unique_id)?;
+        dict.set_item("role", &self.role)?;
+        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
+        dict.set_item("value", &self.value)?;
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -165,6 +190,42 @@ pub struct Entry {
     pub entry_id: String,
     pub value: Option<Value>,
     pub reason: Option<Reason>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl Entry {
+    #[getter]
+    fn entry_id(&self) -> PyResult<String> {
+        Ok(self.entry_id.clone())
+    }
+
+    #[getter]
+    fn value(&self) -> PyResult<Option<Value>> {
+        Ok(self.value.clone())
+    }
+
+    #[getter]
+    fn reason(&self) -> PyResult<Option<Reason>> {
+        Ok(self.reason.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("entry_id", &self.entry_id)?;
+        if let Some(value) = &self.value {
+            dict.set_item("value", value.to_dict(py)?)?;
+        } else {
+            dict.set_item("value", py.None())?;
+        }
+        if let Some(reason) = &self.reason {
+            dict.set_item("reason", reason.to_dict(py)?)?;
+        } else {
+            dict.set_item("reason", py.None())?;
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -250,6 +311,29 @@ impl Field {
     fn entries(&self) -> PyResult<Option<Vec<Entry>>> {
         Ok(self.entries.clone())
     }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("name", &self.name)?;
+        dict.set_item("field_type", &self.field_type)?;
+        dict.set_item("data_type", &self.data_type)?;
+        dict.set_item("error_code", &self.error_code)?;
+        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
+        dict.set_item("keep_history", self.keep_history)?;
+
+        let mut entry_dicts = Vec::new();
+        if let Some(entries) = &self.entries {
+            for entry in entries {
+                let entry_dict = entry.to_dict(py)?;
+                entry_dicts.push(entry_dict.to_object(py));
+            }
+            dict.set_item("entries", entry_dicts)?;
+        } else {
+            dict.set_item("entries", py.None())?;
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -281,6 +365,50 @@ pub struct Category {
 
     #[serde(alias = "field")]
     pub fields: Option<Vec<Field>>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl Category {
+    #[getter]
+    fn name(&self) -> PyResult<String> {
+        Ok(self.name.clone())
+    }
+
+    #[getter]
+    fn category_type(&self) -> PyResult<String> {
+        Ok(self.category_type.clone())
+    }
+
+    #[getter]
+    fn highest_index(&self) -> PyResult<usize> {
+        Ok(self.highest_index)
+    }
+
+    #[getter]
+    fn fields(&self) -> PyResult<Option<Vec<Field>>> {
+        Ok(self.fields.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("name", &self.name)?;
+        dict.set_item("category_type", &self.category_type)?;
+        dict.set_item("highest_index", self.highest_index)?;
+
+        let mut field_dicts = Vec::new();
+        if let Some(fields) = &self.fields {
+            for field in fields {
+                let field_dict = field.to_dict(py)?;
+                field_dicts.push(field_dict.to_object(py));
+            }
+            dict.set_item("fields", field_dicts)?;
+        } else {
+            dict.set_item("fields", py.None())?;
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -335,6 +463,16 @@ impl State {
     #[getter]
     fn date_signed<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
         to_py_datetime_option(py, &self.date_signed)
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("value", &self.value)?;
+        dict.set_item("signer", &self.signer)?;
+        dict.set_item("signer_unique_id", &self.signer_unique_id)?;
+        dict.set_item("date_signed", to_py_datetime_option(py, &self.date_signed)?)?;
+
+        Ok(dict)
     }
 }
 
@@ -538,5 +676,53 @@ impl Form {
     #[getter]
     fn categories(&self) -> PyResult<Option<Vec<Category>>> {
         Ok(self.categories.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("name", &self.name)?;
+        dict.set_item(
+            "last_modified",
+            to_py_datetime_option(py, &self.last_modified)?,
+        )?;
+        dict.set_item("who_last_modified_name", &self.who_last_modified_name)?;
+        dict.set_item("who_last_modified_role", &self.who_last_modified_role)?;
+        dict.set_item("when_created", self.when_created)?;
+        dict.set_item("has_errors", self.has_errors)?;
+        dict.set_item("has_warnings", self.has_warnings)?;
+        dict.set_item("locked", self.locked)?;
+        dict.set_item("user", &self.user)?;
+        dict.set_item(
+            "date_time_changed",
+            to_py_datetime_option(py, &self.date_time_changed)?,
+        )?;
+        dict.set_item("form_title", &self.form_title)?;
+        dict.set_item("form_index", self.form_index)?;
+        dict.set_item("form_group", &self.form_group)?;
+        dict.set_item("form_state", &self.form_state)?;
+
+        let mut state_dicts = Vec::new();
+        if let Some(states) = &self.states {
+            for state in states {
+                let state_dict = state.to_dict(py)?;
+                state_dicts.push(state_dict.to_object(py));
+            }
+            dict.set_item("states", state_dicts)?;
+        } else {
+            dict.set_item("states", py.None())?;
+        }
+
+        if let Some(categories) = &self.categories {
+            let mut category_dicts = Vec::new();
+            for category in categories {
+                let category_dict = category.to_dict(py)?;
+                category_dicts.push(category_dict.to_object(py));
+            }
+            dict.set_item("categories", category_dicts)?;
+        } else {
+            dict.set_item("categories", py.None())?;
+        }
+
+        Ok(dict)
     }
 }
