@@ -8,7 +8,7 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-D warnings"
-  PYTHON_VERSION: "3.9"
+  PYTHON_VERSION: "3.10" # Because of pandas types
 jobs:
   clippy:
     name: Clippy
