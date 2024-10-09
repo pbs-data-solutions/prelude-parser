@@ -175,7 +175,7 @@ impl SubjectNative {
             let patient_dict = patient.to_dict(py)?;
             patient_dicts.push(patient_dict.to_object(py));
         }
-        dict.set_item("sites", patient_dicts)?;
+        dict.set_item("patients", patient_dicts)?;
         Ok(dict)
     }
 }

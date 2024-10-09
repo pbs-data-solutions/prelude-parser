@@ -128,7 +128,7 @@ impl UserNative {
             let user_dict = user.to_dict(py)?;
             user_dicts.push(user_dict.to_object(py));
         }
-        dict.set_item("sites", user_dicts)?;
+        dict.set_item("users", user_dicts)?;
         Ok(dict)
     }
 }
