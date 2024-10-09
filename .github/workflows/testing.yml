@@ -8,6 +8,7 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-D warnings"
+  PYTHON_VERSION: "3.10" # Because of pandas types
 jobs:
   clippy:
     name: Clippy
@@ -33,11 +34,31 @@ jobs:
         uses: Swatinem/rust-cache@v2.7.3
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
+  python-linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Just
+        uses: taiki-e/install-action@just
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements-dev.txt
+          pip install -e .[all]
+          maturin build --out dist
+          pip install --no-index --find-links=dist/ prelude-parser
+      - name: mypy check
+        run: just mypy
   test:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:

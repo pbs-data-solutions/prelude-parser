@@ -4,14 +4,13 @@ build-backend = "maturin"
 
 [project]
 name = "prelude-parser"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 description = "Parses XML files exported from Prelude EDC into formats usable by Python."
 authors = [{name = "Paul Sanders", email = "paul@pbsdatasolutions.com"}]
 keywords = ["parser", "prelude-edc", "xml", "pandas", "polars"]
 classifiers = [
   "Programming Language :: Rust",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -29,9 +28,9 @@ documentation = "https://github.com/pbs-data-solutions/prelude-parser"
 dependencies = ["camel-converter>=3.0.0"]
 
 [project.optional-dependencies]
-pandas = ['pandas>=2.1.0; python_version>"3.8"']
+pandas = ["pandas>=2.1.0"]
 polars = ["polars>=0.17.14"]
-all = ['pandas>=2.1.0; python_version>"3.8"', "polars>=0.17.14"]
+all = ["pandas>=2.1.0", "polars>=0.17.14"]
 
 [tool.maturin]
 module-name = "prelude_parser._prelude_parser"
@@ -52,7 +51,7 @@ disallow_untyped_defs = false
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py39"
 fix = true
 
 [tool.ruff.lint]

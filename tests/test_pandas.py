@@ -1,14 +1,8 @@
-import sys
+import pandas as pd
 
-import pytest
-
-if sys.version_info >= (3, 9):
-    import pandas as pd
-
-    from prelude_parser.pandas import to_dataframe
+from prelude_parser.pandas import to_dataframe
 
 
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="Pandas only supports 3.9+")
 def test_pandas_to_dataframe(test_file_1):
     result = to_dataframe(test_file_1)
     data = {
@@ -32,7 +26,6 @@ def test_pandas_to_dataframe(test_file_1):
     assert expected.equals(result)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="Pandas only supports 3.9+")
 def test_pandas_to_dataframe_short_names(test_file_4):
     result = to_dataframe(test_file_4, short_names=True)
     data = {
