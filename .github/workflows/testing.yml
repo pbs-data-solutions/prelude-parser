@@ -45,8 +45,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
-      - name: Install Dependencies
-        run: just install
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r requirements-dev.txt
+          pip install -e .[all]
+          maturin build --out dist
+          pip install --no-index --find-links=dist/ prelude-parser
       - name: mypy check
         run: just mypy
   test:
