@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::PyDict};
 
 pub use crate::native::{
     common::{Category, Entry, Field, Form, Reason, State, Value},
@@ -48,6 +48,51 @@ pub struct User {
     pub forms: Option<Vec<Form>>,
 }
 
+#[cfg(feature = "python")]
+#[pymethods]
+impl User {
+    #[getter]
+    fn unique_id(&self) -> PyResult<String> {
+        Ok(self.unique_id.clone())
+    }
+
+    #[getter]
+    fn last_language(&self) -> PyResult<Option<String>> {
+        Ok(self.last_language.clone())
+    }
+
+    #[getter]
+    fn creator(&self) -> PyResult<String> {
+        Ok(self.creator.clone())
+    }
+
+    #[getter]
+    fn forms(&self) -> PyResult<Option<Vec<Form>>> {
+        Ok(self.forms.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("unique_id", &self.unique_id)?;
+        dict.set_item("last_language", &self.last_language)?;
+        dict.set_item("creator", &self.creator)?;
+        dict.set_item("number_of_forms", self.number_of_forms)?;
+
+        let mut form_dicts = Vec::new();
+        if let Some(forms) = &self.forms {
+            for form in forms {
+                let form_dict = form.to_dict(py)?;
+                form_dicts.push(form_dict.to_object(py));
+            }
+            dict.set_item("forms", form_dicts)?;
+        } else {
+            dict.set_item("forms", py.None())?;
+        }
+
+        Ok(dict)
+    }
+}
+
 #[cfg(not(feature = "python"))]
 /// Contains the information from the Prelude native user XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -65,6 +110,27 @@ pub struct UserNative {
 pub struct UserNative {
     #[serde(alias = "user")]
     pub users: Vec<User>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl UserNative {
+    #[getter]
+    fn users(&self) -> PyResult<Vec<User>> {
+        Ok(self.users.clone())
+    }
+
+    /// Convert the class instance to a dictionary
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        let mut user_dicts = Vec::new();
+        for user in &self.users {
+            let user_dict = user.to_dict(py)?;
+            user_dicts.push(user_dict.to_object(py));
+        }
+        dict.set_item("sites", user_dicts)?;
+        Ok(dict)
+    }
 }
 
 #[cfg(test)]
