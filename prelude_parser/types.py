@@ -1,5 +1,6 @@
-from datetime import date, datetime
-from typing import Dict, List, Union
+from __future__ import annotations
 
-FieldInfo = Union[str, int, float, date, datetime, None]
-FlatFormInfo = List[Dict[str, FieldInfo]]
+from datetime import date, datetime
+
+FieldInfo = str | int | float | date | datetime | None
+FlatFormInfo = list[dict[str, FieldInfo]]
