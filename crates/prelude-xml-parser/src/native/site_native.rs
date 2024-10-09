@@ -104,7 +104,7 @@ impl Site {
             "count_of_randomized_patients",
             self.count_of_randomized_patients,
         )?;
-        dict.set_item("when_created", self.when_created.to_rfc3339())?;
+        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
         dict.set_item("creator", &self.creator)?;
         dict.set_item("number_of_forms", self.number_of_forms)?;
 

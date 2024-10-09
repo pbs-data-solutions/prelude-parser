@@ -85,7 +85,7 @@ impl Value {
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
-        dict.set_item("when", self.when.to_rfc3339())?;
+        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
         Ok(dict)
@@ -164,7 +164,7 @@ impl Reason {
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
-        dict.set_item("when", self.when.to_rfc3339())?;
+        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
         Ok(dict)
@@ -318,7 +318,7 @@ impl Field {
         dict.set_item("field_type", &self.field_type)?;
         dict.set_item("data_type", &self.data_type)?;
         dict.set_item("error_code", &self.error_code)?;
-        dict.set_item("when_created", self.when_created.to_rfc3339())?;
+        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
         dict.set_item("keep_history", self.keep_history)?;
 
         let mut entry_dicts = Vec::new();
@@ -470,11 +470,7 @@ impl State {
         dict.set_item("value", &self.value)?;
         dict.set_item("signer", &self.signer)?;
         dict.set_item("signer_unique_id", &self.signer_unique_id)?;
-        if let Some(date_signed) = &self.date_signed {
-            dict.set_item("date_signed", date_signed.to_rfc3339())?;
-        } else {
-            dict.set_item("date_signed", py.None())?;
-        }
+        dict.set_item("date_signed", to_py_datetime_option(py, &self.date_signed)?)?;
 
         Ok(dict)
     }
@@ -685,11 +681,10 @@ impl Form {
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new_bound(py);
         dict.set_item("name", &self.name)?;
-        if let Some(last_modified) = &self.last_modified {
-            dict.set_item("last_modified", last_modified.to_rfc3339())?;
-        } else {
-            dict.set_item("last_modified", py.None())?;
-        }
+        dict.set_item(
+            "last_modified",
+            to_py_datetime_option(py, &self.last_modified)?,
+        )?;
         dict.set_item("who_last_modified_name", &self.who_last_modified_name)?;
         dict.set_item("who_last_modified_role", &self.who_last_modified_role)?;
         dict.set_item("when_created", self.when_created)?;
@@ -697,11 +692,10 @@ impl Form {
         dict.set_item("has_warnings", self.has_warnings)?;
         dict.set_item("locked", self.locked)?;
         dict.set_item("user", &self.user)?;
-        if let Some(date_time_changed) = &self.date_time_changed {
-            dict.set_item("date_time_changed", date_time_changed.to_rfc3339())?;
-        } else {
-            dict.set_item("date_time_changed", py.None())?;
-        }
+        dict.set_item(
+            "date_time_changed",
+            to_py_datetime_option(py, &self.date_time_changed)?,
+        )?;
         dict.set_item("form_title", &self.form_title)?;
         dict.set_item("form_index", self.form_index)?;
         dict.set_item("form_group", &self.form_group)?;
