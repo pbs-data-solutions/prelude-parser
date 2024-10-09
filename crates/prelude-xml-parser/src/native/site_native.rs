@@ -146,6 +146,11 @@ pub struct SiteNative {
 #[cfg(feature = "python")]
 #[pymethods]
 impl SiteNative {
+    #[getter]
+    fn sites(&self) -> PyResult<Vec<Site>> {
+        Ok(self.sites.clone())
+    }
+
     /// Convert the class instance to a dictionary
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new_bound(py);

@@ -1,7 +1,10 @@
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
-use pyo3::{prelude::*, types::PyDateTime};
+use pyo3::{
+    prelude::*,
+    types::{PyDateTime, PyDict},
+};
 
 #[cfg(feature = "python")]
 use crate::native::deserializers::to_py_datetime;
@@ -110,6 +113,31 @@ impl Patient {
     fn forms(&self) -> PyResult<Option<Vec<Form>>> {
         Ok(self.forms.clone())
     }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("patient_id", &self.patient_id)?;
+        dict.set_item("unique_id", &self.unique_id)?;
+        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
+        dict.set_item("creator", &self.creator)?;
+        dict.set_item("site_name", &self.site_name)?;
+        dict.set_item("site_unique_id", &self.site_unique_id)?;
+        dict.set_item("last_language", &self.last_language)?;
+        dict.set_item("number_of_forms", self.number_of_forms)?;
+
+        let mut form_dicts = Vec::new();
+        if let Some(forms) = &self.forms {
+            for form in forms {
+                let form_dict = form.to_dict(py)?;
+                form_dicts.push(form_dict.to_object(py));
+            }
+            dict.set_item("forms", form_dicts)?;
+        } else {
+            dict.set_item("forms", py.None())?;
+        }
+
+        Ok(dict)
+    }
 }
 
 #[cfg(not(feature = "python"))]
@@ -129,6 +157,27 @@ pub struct SubjectNative {
 pub struct SubjectNative {
     #[serde(alias = "patient")]
     pub patients: Vec<Patient>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl SubjectNative {
+    #[getter]
+    fn sites(&self) -> PyResult<Vec<Patient>> {
+        Ok(self.patients.clone())
+    }
+
+    /// Convert the class instance to a dictionary
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        let mut patient_dicts = Vec::new();
+        for patient in &self.patients {
+            let patient_dict = patient.to_dict(py)?;
+            patient_dicts.push(patient_dict.to_object(py));
+        }
+        dict.set_item("sites", patient_dicts)?;
+        Ok(dict)
+    }
 }
 
 #[cfg(test)]
