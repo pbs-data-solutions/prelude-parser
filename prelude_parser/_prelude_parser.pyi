@@ -11,6 +11,8 @@ class Value:
     role: str
     when: datetime
 
+    def to_dict(self) -> dict: ...
+
 class Reason:
     by: str
     by_unique_id: str | None
@@ -18,10 +20,14 @@ class Reason:
     when: datetime
     value: str
 
+    def to_dict(self) -> dict: ...
+
 class Entry:
     entry_id: str
     value: Value | None
     reason: Reason | None
+
+    def to_dict(self) -> dict: ...
 
 class Field:
     name: str
@@ -31,16 +37,22 @@ class Field:
     keep_history: bool
     entries: list[Entry] | None
 
+    def to_dict(self) -> dict: ...
+
 class Category:
     name: str
     category_type: str
     highest_index: int
     fields: list[Field] | None
 
+    def to_dict(self) -> dict: ...
+
 class State:
     value: str
     signer: str
     signer_unique_id: str
+
+    def to_dict(self) -> dict: ...
 
 class Form:
     name: str
@@ -60,6 +72,8 @@ class Form:
     states: list[State] | None
     categories: list[Category] | None
 
+    def to_dict(self) -> dict: ...
+
 class Patient:
     patient_id: str
     unique_id: str
@@ -69,6 +83,8 @@ class Patient:
     site_unique_id: str
     last_language: str | None
     forms: list[Form] | None
+
+    def to_dict(self) -> dict: ...
 
 class Site:
     name: str
@@ -80,6 +96,8 @@ class Site:
     number_of_forms: int
     forms: list[Form] | None
 
+    def to_dict(self) -> dict: ...
+
 class User:
     unique_id: str
     last_language: str | None
@@ -87,14 +105,22 @@ class User:
     number_of_forms: int
     forms: list[Form] | None
 
+    def to_dict(self) -> dict: ...
+
 class SiteNative:
     sites: list[Site]
+
+    def to_dict(self) -> dict: ...
 
 class SubjectNative:
     patients: list[Patient]
 
+    def to_dict(self) -> dict: ...
+
 class UserNative:
     users: list[User]
+
+    def to_dict(self) -> dict: ...
 
 def _parse_flat_file_to_dict(
     xml_file: str | Path, *, short_names: bool = False

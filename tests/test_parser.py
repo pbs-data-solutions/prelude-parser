@@ -29,6 +29,13 @@ def test_parse_site_native_string(site_native_xml):
     assert result.sites[0].name == "Some Site"
 
 
+def test_site_native_to_dict(site_native_xml):
+    result = parse_site_native_file(site_native_xml)
+    result_dict = result.to_dict()
+
+    assert result_dict["sites"][0]["name"] == "Some Site"
+
+
 def test_parse_subject_native_file(subject_native_xml):
     result = parse_subject_native_file(subject_native_xml)
 
@@ -43,6 +50,13 @@ def test_parse_subject_native_string(subject_native_xml):
     assert result.patients[0].patient_id == "ABC-001"
 
 
+def test_subject_native_to_dict(subject_native_xml):
+    result = parse_subject_native_file(subject_native_xml)
+    result_dict = result.to_dict()
+
+    assert result_dict["patients"][0]["patient_id"] == "ABC-001"
+
+
 def test_parse_user_native_file(user_native_xml):
     result = parse_user_native_file(user_native_xml)
 
@@ -55,6 +69,13 @@ def test_parse_user_native_string(user_native_xml):
     result = parse_user_native_string(xml)
 
     assert result.users[0].unique_id == "1691421275437"
+
+
+def test_user_native_to_dict(user_native_xml):
+    result = parse_user_native_file(user_native_xml)
+    result_dict = result.to_dict()
+
+    assert result_dict["users"][0]["unique_id"] == "1691421275437"
 
 
 def test_parse_to_classes(test_file_1):
