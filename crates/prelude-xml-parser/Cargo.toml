@@ -1,6 +1,6 @@
 [package]
 name = "prelude-xml-parser"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
 description = "Deserialize Prelude EDC native XML files into Rust stucts."
@@ -16,7 +16,7 @@ python = ["dep:pyo3"]
 
 [dependencies]
 chrono = { version = "0.4.38", features = ["serde"] }
-pyo3 = { version = "0.22.3", optional = true }
+pyo3 = { version = "0.22.4", optional = true }
 serde = { version = "1.0.210", features = ["derive"] }
 serde-xml-rs = "0.6.0"
 serde_json = "1.0.128"
