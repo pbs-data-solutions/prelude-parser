@@ -29,6 +29,12 @@ class Entry:
 
     def to_dict(self) -> dict: ...
 
+class Comment:
+    entry_id: str
+    value: Value | None
+
+    def to_dict(self) -> dict: ...
+
 class Field:
     name: str
     data_type: str | None
@@ -36,6 +42,7 @@ class Field:
     when_created: datetime
     keep_history: bool
     entries: list[Entry] | None
+    comments: list[Comment] | None
 
     def to_dict(self) -> dict: ...
 

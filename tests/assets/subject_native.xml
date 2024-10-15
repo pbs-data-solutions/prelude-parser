@@ -9,6 +9,9 @@
           <entry id="1">
             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:09:02 -0400" xml:space="preserve">Labrador</value>
           </entry>
+          <comment id="1">
+            <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:09:02 -0400" xml:space="preserve">Some comment</value>
+          </comment>
         </field>
         <field name="dob" type="popUpCalendar" dataType="date" errorCode="valid" whenCreated="2023-04-15 12:08:26 -0400" keepHistory="true">
           <entry id="1">

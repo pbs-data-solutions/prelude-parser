@@ -10,6 +10,9 @@
           <entry id="1">
             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:08:19 -0400" xml:space="preserve">Some Company</value>
           </entry>
+          <comment id="1">
+            <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:09:02 -0400" xml:space="preserve">Some comment</value>
+          </comment>
         </field>
         <field name="site_code_name" type="hidden" dataType="string" errorCode="valid" whenCreated="2023-04-15 11:07:14 -0500" keepHistory="true">
           <entry id="1">

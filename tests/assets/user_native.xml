@@ -10,6 +10,9 @@
           <entry id="1">
             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-08-07 10:15:41 -0500" xml:space="preserve">jazz@artemis.com</value>
           </entry>
+          <comment id="1">
+            <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-04-15 12:09:02 -0400" xml:space="preserve">Some comment</value>
+          </comment>
         </field>
       </category>
       <category name="Administrative" type="normal" highestIndex="0">
