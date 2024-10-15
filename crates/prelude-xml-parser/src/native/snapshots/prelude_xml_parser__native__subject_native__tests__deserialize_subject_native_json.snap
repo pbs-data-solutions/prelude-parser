@@ -51,6 +51,7 @@ patients:
                       when: "2023-04-15T16:09:02Z"
                       value: Labrador
                     reason: ~
+                comments: ~
   - patientId: DEF-002
     uniqueId: "1681574905820"
     whenCreated: "2023-04-16T16:10:02Z"
@@ -99,3 +100,4 @@ patients:
                       when: "2023-04-15T16:09:02Z"
                       value: Labrador
                     reason: ~
+                comments: ~

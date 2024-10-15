@@ -42,6 +42,7 @@ sites:
                 whenCreated: "2023-04-15T16:07:14Z"
                 keepHistory: true
                 entries: ~
+                comments: ~
               - name: company
                 fieldType: text
                 dataType: string
@@ -57,6 +58,7 @@ sites:
                       when: "2023-04-15T16:08:19Z"
                       value: Some Company
                     reason: ~
+                comments: ~
               - name: site_code_name
                 fieldType: hidden
                 dataType: string
@@ -90,6 +92,7 @@ sites:
                       role: System
                       when: "2023-04-15T16:07:24Z"
                       value: calculated value
+                comments: ~
           - name: Enrollment
             categoryType: normal
             highestIndex: 0
@@ -101,6 +104,7 @@ sites:
                 whenCreated: "2023-04-15T16:07:14Z"
                 keepHistory: true
                 entries: ~
+                comments: ~
               - name: enrollment_open
                 fieldType: radio
                 dataType: string
@@ -116,6 +120,7 @@ sites:
                       when: "2023-04-15T16:08:19Z"
                       value: "Yes"
                     reason: ~
+                comments: ~
               - name: enrollment_open_date
                 fieldType: popUpCalendar
                 dataType: date
@@ -123,6 +128,7 @@ sites:
                 whenCreated: "2023-04-15T16:07:14Z"
                 keepHistory: true
                 entries: ~
+                comments: ~
   - name: Artemis
     uniqueId: "1691420994591"
     numberOfPatients: 0
@@ -170,3 +176,4 @@ sites:
                       when: "2023-08-07T15:14:21Z"
                       value: 1111 Moon Drive
                     reason: ~
+                comments: ~

@@ -12,7 +12,7 @@ use crate::native::deserializers::to_py_datetime;
 use serde::{Deserialize, Serialize};
 
 pub use crate::native::{
-    common::{Category, Entry, Field, Form, Reason, State, Value},
+    common::{Category, Comment, Entry, Field, Form, Reason, State, Value},
     deserializers::{
         default_datetime_none, default_string_none, deserialize_empty_string_as_none,
         deserialize_empty_string_as_none_datetime,

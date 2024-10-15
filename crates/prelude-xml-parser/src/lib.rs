@@ -86,6 +86,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///           <entry id="1">
 ///             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-08-07 08:14:21 -0700" xml:space="preserve">1111 Moon Drive</value>
 ///           </entry>
+///           <comment id="1">
+///             <value by="Paul Sanders" byUniqueId="1681162687395" role="Project Manager" when="2023-08-07 08:14:21 -0700" xml:space="preserve">Some comment</value>
+///           </comment>
 ///         </field>
 ///       </category>
 ///     </form>
@@ -153,6 +156,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 .with_timezone(&Utc),
 ///                                 keep_history: true,
 ///                                 entries: None,
+///                                 comments: None,
 ///                             },
 ///                             Field {
 ///                                 name: "company".to_string(),
@@ -180,6 +184,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     }),
 ///                                     reason: None,
 ///                                 }]),
+///                                 comments: None,
 ///                             },
 ///                             Field {
 ///                                 name: "site_code_name".to_string(),
@@ -244,6 +249,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                         }),
 ///                                     },
 ///                                 ]),
+///                                 comments: None,
 ///                             },
 ///                         ]),
 ///                     },
@@ -264,6 +270,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 .with_timezone(&Utc),
 ///                                 keep_history: true,
 ///                                 entries: None,
+///                                 comments: None,
 ///                             },
 ///                             Field {
 ///                                 name: "enrollment_open".to_string(),
@@ -291,6 +298,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     }),
 ///                                     reason: None,
 ///                                 }]),
+///                                 comments: None,
 ///                             },
 ///                             Field {
 ///                                 name: "enrollment_open_date".to_string(),
@@ -304,6 +312,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 .with_timezone(&Utc),
 ///                                 keep_history: true,
 ///                                 entries: None,
+///                                 comments: None,
 ///                             },
 ///                         ]),
 ///                     },
@@ -374,6 +383,18 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 value: "1111 Moon Drive".to_string(),
 ///                             }),
 ///                             reason: None,
+///                         }]),
+///                         comments: Some(vec![Comment {
+///                             comment_id: "1".to_string(),
+///                             value: Some(Value {
+///                                 by: "Paul Sanders".to_string(),
+///                                 by_unique_id: Some("1681162687395".to_string()),
+///                                 role: "Project Manager".to_string(),
+///                                 when: DateTime::parse_from_rfc3339("2023-08-07T15:14:21Z")
+///                                     .unwrap()
+///                                     .with_timezone(&Utc),
+///                                 value: "Some comment".to_string(),
+///                             }),
 ///                         }]),
 ///                     }]),
 ///                 }]),
@@ -515,6 +536,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             }),
 ///                             reason: None,
 ///                         }]),
+///                         comments: None,
 ///                     }]),
 ///                 }]),
 ///             }]),
@@ -583,6 +605,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             }),
 ///                             reason: None,
 ///                         }]),
+///                         comments: None,
 ///                     }]),
 ///                 }]),
 ///             }]),
@@ -708,6 +731,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         .with_timezone(&Utc),
 ///                                     keep_history: true,
 ///                                     entries: None,
+///                                     comments: None,
 ///                                 },
 ///                                 Field {
 ///                                     name: "email".to_string(),
@@ -731,6 +755,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         }),
 ///                                         reason: None,
 ///                                     }]),
+///                                     comments: None,
 ///                                 },
 ///                             ]),
 ///                         },
@@ -771,6 +796,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                             }),
 ///                                         },
 ///                                     ]),
+///                                     comments: None,
 ///                                 },
 ///                             ]),
 ///                         },

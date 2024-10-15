@@ -231,6 +231,51 @@ impl Entry {
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
+pub struct Comment {
+    #[serde(alias = "id")]
+    pub comment_id: String,
+    pub value: Option<Value>,
+}
+
+#[cfg(feature = "python")]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[pyclass(get_all)]
+pub struct Comment {
+    #[serde(alias = "id")]
+    pub comment_id: String,
+    pub value: Option<Value>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl Comment {
+    #[getter]
+    fn comment_id(&self) -> PyResult<String> {
+        Ok(self.comment_id.clone())
+    }
+
+    #[getter]
+    fn value(&self) -> PyResult<Option<Value>> {
+        Ok(self.value.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new_bound(py);
+        dict.set_item("comment_id", &self.comment_id)?;
+        if let Some(value) = &self.value {
+            dict.set_item("value", value.to_dict(py)?)?;
+        } else {
+            dict.set_item("value", py.None())?;
+        }
+
+        Ok(dict)
+    }
+}
+
+#[cfg(not(feature = "python"))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Field {
     pub name: String,
 
@@ -248,6 +293,9 @@ pub struct Field {
 
     #[serde(alias = "entry")]
     pub entries: Option<Vec<Entry>>,
+
+    #[serde(alias = "comment")]
+    pub comments: Option<Vec<Comment>>,
 }
 
 #[cfg(feature = "python")]
@@ -272,6 +320,9 @@ pub struct Field {
 
     #[serde(alias = "entry")]
     pub entries: Option<Vec<Entry>>,
+
+    #[serde(alias = "comment")]
+    pub comments: Option<Vec<Comment>>,
 }
 
 #[cfg(feature = "python")]
@@ -312,6 +363,11 @@ impl Field {
         Ok(self.entries.clone())
     }
 
+    #[getter]
+    fn comments(&self) -> PyResult<Option<Vec<Comment>>> {
+        Ok(self.comments.clone())
+    }
+
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new_bound(py);
         dict.set_item("name", &self.name)?;
@@ -330,6 +386,17 @@ impl Field {
             dict.set_item("entries", entry_dicts)?;
         } else {
             dict.set_item("entries", py.None())?;
+        }
+
+        let mut comment_dicts = Vec::new();
+        if let Some(comments) = &self.comments {
+            for comment in comments {
+                let comment_dict = comment.to_dict(py)?;
+                comment_dicts.push(comment_dict.to_object(py));
+            }
+            dict.set_item("comments", comment_dicts)?;
+        } else {
+            dict.set_item("comments", py.None())?;
         }
 
         Ok(dict)
