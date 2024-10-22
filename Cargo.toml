@@ -19,6 +19,6 @@ chrono = "0.4.38"
 prelude-xml-parser = { version = "0.7.2", features = ["python"] }
 pyo3 = { version = "0.22.5", features = ["extension-module"] }
 roxmltree = "0.20.0"
-serde = { version = "1.0.210", features = ["derive"] }
+serde = { version = "1.0.211", features = ["derive"] }
 serde-xml-rs = "0.6.0"
 thiserror = "1.0.64"
