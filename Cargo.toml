@@ -21,4 +21,4 @@ pyo3 = { version = "0.22.5", features = ["extension-module"] }
 roxmltree = "0.20.0"
 serde = { version = "1.0.213", features = ["derive"] }
 serde-xml-rs = "0.6.0"
-thiserror = "1.0.64"
+thiserror = "1.0.65"
