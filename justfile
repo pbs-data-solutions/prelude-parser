@@ -34,5 +34,5 @@
 @ruff:
   ruff check . --fix
 
-@test:
-  pytest
+@test *args="":
+  pytest {{args}}
