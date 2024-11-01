@@ -50,7 +50,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
         run: |
-          uv sync --frozen
+          uv sync --frozen --all-extras
           uv run maturin build --out dist
       - name: mypy check
         run: just mypy
@@ -73,7 +73,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          uv sync --frozen
+          uv sync --frozen --all-extras
           uv run maturin build --out dist
       - name: Run tests
         run: uv run pytest --cov=prelude_parser --cov-report=xml
