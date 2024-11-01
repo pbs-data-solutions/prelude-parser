@@ -49,9 +49,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install dependencies
-        run: |
-          uv sync --frozen --all-extras
-          uv run maturin build --out dist
+        run: just install
       - name: mypy check
         run: just mypy
   test:
@@ -63,6 +61,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: install Just
+        uses: taiki-e/install-action@just
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -72,9 +72,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: |
-          uv sync --frozen --all-extras
-          uv run maturin build --out dist
+        run: just install
       - name: Run tests
         run: uv run pytest --cov=prelude_parser --cov-report=xml
       - name: Upload coverage
