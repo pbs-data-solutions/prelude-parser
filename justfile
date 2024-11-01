@@ -2,7 +2,7 @@
   just --list
 
 @develop:
-  maturin develop -E all
+  uv run maturin develop -E all
 
 @install: && develop
   uv sync --frozen --all-extras
