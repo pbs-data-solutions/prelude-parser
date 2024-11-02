@@ -24,7 +24,6 @@ readme = "README.md"
 repository = "https://github.com/pbs-data-solutions/prelude-parser"
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 documentation = "https://github.com/pbs-data-solutions/prelude-parser"
-dynamic = ["version"]
 dependencies = ["camel-converter>=3.0.0"]
 
 [project.optional-dependencies]
@@ -42,9 +41,6 @@ dev = [
   "ruff==0.7.1",
   "tomli==2.0.2; python_version<'3.11'",
 ]
-
-[tool.hatch.version]
-path = "prelude_parser/_version.py"
 
 [tool.maturin]
 module-name = "prelude_parser._prelude_parser"
