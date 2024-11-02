@@ -26,7 +26,11 @@ Please include:
 
 ## Working on the code
 
-In order to work on this project you will need to have [Rust](https://www.rust-lang.org/) and
+Note: This project uses uv to manage dependencies. If you do not already have uv installed you will
+need to install it with the instructions [here](https://docs.astral.sh/uv/getting-started/installation/)
+
+In order to work on this project you will need to have [Rust](https://www.rust-lang.org/),
+[uv](https://docs.astral.sh/uv/getting-started/installation/), and
 [just](https://github.com/casey/just) in addition to Python.
 
 ### Fork the project
@@ -48,7 +52,7 @@ This creates the directory prelude-parser and connects your repository to the up
 Next create a vitural environment and activate it.
 
 ```sh
-python -m venv .venv
+uv venv
 
 . .venv/bin/activate
 ```

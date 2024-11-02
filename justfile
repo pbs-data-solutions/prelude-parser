@@ -2,10 +2,13 @@
   just --list
 
 @develop:
-  maturin develop -E all
+  uv run maturin develop -E all
 
 @install: && develop
-  pip install -r requirements-dev.txt
+  uv sync --frozen --all-extras
+
+@lock:
+  uv lock
 
 @lint:
   echo cargo check
@@ -14,8 +17,10 @@
   just --justfile {{justfile()}} clippy
   echo cargo fmt
   just --justfile {{justfile()}} fmt
-  echo ruff
-  just --justfile {{justfile()}} ruff
+  echo ruff-check
+  just --justfile {{justfile()}} ruff-check
+  echo ruff-format
+  just --justfile {{justfile()}} ruff-format
   echo mypy
   just --justfile {{justfile()}} mypy
 
@@ -29,10 +34,13 @@
   cargo fmt
 
 @mypy:
-  mypy prelude_parser tests
+  uv run mypy prelude_parser tests
 
-@ruff:
-  ruff check . --fix
+@ruff-check:
+  uv run ruff check prelude_parser tests
+
+@ruff-format:
+  uv run ruff format prelude_parser tests
 
 @test *args="":
-  pytest {{args}}
+  uv run pytest {{args}}
