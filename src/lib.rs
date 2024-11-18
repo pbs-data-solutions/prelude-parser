@@ -50,7 +50,7 @@ fn py_list_append<'py>(
     value: Option<&str>,
     list: &'py Bound<'py, PyList>,
 ) -> PyResult<&'py Bound<'py, PyList>> {
-    let datetime = py.import_bound("datetime")?;
+    let datetime = py.import("datetime")?;
     let date = datetime.getattr("date")?;
 
     match value {
@@ -79,7 +79,7 @@ fn add_item<'py>(
     value: Option<&str>,
     form_data: &'py Bound<'py, PyDict>,
 ) -> PyResult<&'py Bound<'py, PyDict>> {
-    let datetime = py.import_bound("datetime")?;
+    let datetime = py.import("datetime")?;
     let date = datetime.getattr("date")?;
 
     match value {
@@ -122,7 +122,7 @@ fn parse_xml<'py>(
                     };
                     if !form_name.is_empty() {
                         if let Some(d) = data.get_mut(&form_name) {
-                            let form_data = PyDict::new_bound(py);
+                            let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = if short_names {
@@ -136,7 +136,7 @@ fn parse_xml<'py>(
                             d.push(form_data);
                         } else {
                             let mut items: Vec<Bound<'_, PyDict>> = Vec::new();
-                            let form_data = PyDict::new_bound(py);
+                            let form_data = PyDict::new(py);
                             for child in form.children() {
                                 if child.is_element() && child.tag_name().name() != "" {
                                     let key = if short_names {
@@ -147,12 +147,13 @@ fn parse_xml<'py>(
                                     add_item(py, &key, child.text(), &form_data)?;
                                 }
                             }
-                            items.push(form_data.into_py_dict_bound(py));
+                            items.push(form_data.into_py_dict(py)?);
                             data.insert(form_name, items);
                         }
                     }
                 }
-                return Ok(data.into_py_dict_bound(py));
+                let data_dict = data.into_py_dict(py)?;
+                Ok(data_dict)
             }
             Err(e) => Err(ParsingError::new_err(format!(
                 "Error parsing xml file: {:?}",
@@ -176,7 +177,7 @@ fn parse_xml_pandas<'py>(
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
-                let data = PyDict::new_bound(py);
+                let data = PyDict::new(py);
                 let tree = doc.root_element();
 
                 for form in tree.children() {
@@ -191,14 +192,15 @@ fn parse_xml_pandas<'py>(
                                 py_list_append(py, child.text(), &c.extract()?)?;
                                 data.set_item(column, c)?;
                             } else {
-                                let list = PyList::empty_bound(py);
+                                let list = PyList::empty(py);
                                 py_list_append(py, child.text(), &list)?;
                                 data.set_item(column, list)?;
                             }
                         }
                     }
                 }
-                return Ok(data.into_py_dict_bound(py));
+                let data_dict = data.into_py_dict(py)?;
+                Ok(data_dict)
             }
             Err(e) => Err(ParsingError::new_err(format!(
                 "Error parsing xml file: {:?}",
@@ -314,15 +316,12 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_subject_native_string, m)?)?;
     m.add_function(wrap_pyfunction!(parse_user_native_file, m)?)?;
     m.add_function(wrap_pyfunction!(parse_user_native_string, m)?)?;
-    m.add(
-        "FileNotFoundError",
-        py.get_type_bound::<FileNotFoundError>(),
-    )?;
+    m.add("FileNotFoundError", py.get_type::<FileNotFoundError>())?;
     m.add(
         "InvalidFileTypeError",
-        py.get_type_bound::<InvalidFileTypeError>(),
+        py.get_type::<InvalidFileTypeError>(),
     )?;
-    m.add("ParsingError", py.get_type_bound::<ParsingError>())?;
+    m.add("ParsingError", py.get_type::<ParsingError>())?;
     Ok(())
 }
 
