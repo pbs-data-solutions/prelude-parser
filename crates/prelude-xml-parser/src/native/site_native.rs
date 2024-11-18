@@ -96,7 +96,7 @@ impl Site {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("name", &self.name)?;
         dict.set_item("unique_id", &self.unique_id)?;
         dict.set_item("number_of_patients", self.number_of_patients)?;
@@ -112,7 +112,7 @@ impl Site {
         if let Some(forms) = &self.forms {
             for form in forms {
                 let form_dict = form.to_dict(py)?;
-                form_dicts.push(form_dict.to_object(py));
+                form_dicts.push(form_dict);
             }
             dict.set_item("forms", form_dicts)?;
         } else {
@@ -153,11 +153,11 @@ impl SiteNative {
 
     /// Convert the class instance to a dictionary
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         let mut site_dicts = Vec::new();
         for site in &self.sites {
             let site_dict = site.to_dict(py)?;
-            site_dicts.push(site_dict.to_object(py));
+            site_dicts.push(site_dict);
         }
         dict.set_item("sites", site_dicts)?;
         Ok(dict)
