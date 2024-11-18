@@ -115,7 +115,7 @@ impl Patient {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("patient_id", &self.patient_id)?;
         dict.set_item("unique_id", &self.unique_id)?;
         dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
@@ -129,7 +129,7 @@ impl Patient {
         if let Some(forms) = &self.forms {
             for form in forms {
                 let form_dict = form.to_dict(py)?;
-                form_dicts.push(form_dict.to_object(py));
+                form_dicts.push(form_dict);
             }
             dict.set_item("forms", form_dicts)?;
         } else {
@@ -169,11 +169,11 @@ impl SubjectNative {
 
     /// Convert the class instance to a dictionary
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         let mut patient_dicts = Vec::new();
         for patient in &self.patients {
             let patient_dict = patient.to_dict(py)?;
-            patient_dicts.push(patient_dict.to_object(py));
+            patient_dicts.push(patient_dict);
         }
         dict.set_item("patients", patient_dicts)?;
         Ok(dict)

@@ -60,7 +60,7 @@ pub fn to_py_datetime<'py>(
     py: Python<'py>,
     date_time: &DateTime<Utc>,
 ) -> PyResult<Bound<'py, PyDateTime>> {
-    let py_datetime = PyDateTime::new_bound(
+    let py_datetime = PyDateTime::new(
         py,
         date_time.year(),
         date_time.month() as u8,
@@ -80,7 +80,7 @@ pub fn to_py_datetime_option<'py>(
     date_time: &Option<DateTime<Utc>>,
 ) -> PyResult<Option<Bound<'py, PyDateTime>>> {
     if let Some(d) = date_time {
-        let py_datetime = Some(PyDateTime::new_bound(
+        let py_datetime = Some(PyDateTime::new(
             py,
             d.year(),
             d.month() as u8,

@@ -72,7 +72,7 @@ impl User {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("unique_id", &self.unique_id)?;
         dict.set_item("last_language", &self.last_language)?;
         dict.set_item("creator", &self.creator)?;
@@ -82,7 +82,7 @@ impl User {
         if let Some(forms) = &self.forms {
             for form in forms {
                 let form_dict = form.to_dict(py)?;
-                form_dicts.push(form_dict.to_object(py));
+                form_dicts.push(form_dict);
             }
             dict.set_item("forms", form_dicts)?;
         } else {
@@ -122,11 +122,11 @@ impl UserNative {
 
     /// Convert the class instance to a dictionary
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         let mut user_dicts = Vec::new();
         for user in &self.users {
             let user_dict = user.to_dict(py)?;
-            user_dicts.push(user_dict.to_object(py));
+            user_dicts.push(user_dict);
         }
         dict.set_item("users", user_dicts)?;
         Ok(dict)

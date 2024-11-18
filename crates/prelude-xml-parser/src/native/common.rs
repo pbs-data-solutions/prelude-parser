@@ -81,7 +81,7 @@ impl Value {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
@@ -160,7 +160,7 @@ impl Reason {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
@@ -211,7 +211,7 @@ impl Entry {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("entry_id", &self.entry_id)?;
         if let Some(value) = &self.value {
             dict.set_item("value", value.to_dict(py)?)?;
@@ -261,7 +261,7 @@ impl Comment {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("comment_id", &self.comment_id)?;
         if let Some(value) = &self.value {
             dict.set_item("value", value.to_dict(py)?)?;
@@ -369,7 +369,7 @@ impl Field {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("name", &self.name)?;
         dict.set_item("field_type", &self.field_type)?;
         dict.set_item("data_type", &self.data_type)?;
@@ -381,7 +381,7 @@ impl Field {
         if let Some(entries) = &self.entries {
             for entry in entries {
                 let entry_dict = entry.to_dict(py)?;
-                entry_dicts.push(entry_dict.to_object(py));
+                entry_dicts.push(entry_dict);
             }
             dict.set_item("entries", entry_dicts)?;
         } else {
@@ -392,7 +392,7 @@ impl Field {
         if let Some(comments) = &self.comments {
             for comment in comments {
                 let comment_dict = comment.to_dict(py)?;
-                comment_dicts.push(comment_dict.to_object(py));
+                comment_dicts.push(comment_dict);
             }
             dict.set_item("comments", comment_dicts)?;
         } else {
@@ -458,7 +458,7 @@ impl Category {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("name", &self.name)?;
         dict.set_item("category_type", &self.category_type)?;
         dict.set_item("highest_index", self.highest_index)?;
@@ -467,7 +467,7 @@ impl Category {
         if let Some(fields) = &self.fields {
             for field in fields {
                 let field_dict = field.to_dict(py)?;
-                field_dicts.push(field_dict.to_object(py));
+                field_dicts.push(field_dict);
             }
             dict.set_item("fields", field_dicts)?;
         } else {
@@ -533,7 +533,7 @@ impl State {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("value", &self.value)?;
         dict.set_item("signer", &self.signer)?;
         dict.set_item("signer_unique_id", &self.signer_unique_id)?;
@@ -746,7 +746,7 @@ impl Form {
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("name", &self.name)?;
         dict.set_item(
             "last_modified",
@@ -772,7 +772,7 @@ impl Form {
         if let Some(states) = &self.states {
             for state in states {
                 let state_dict = state.to_dict(py)?;
-                state_dicts.push(state_dict.to_object(py));
+                state_dicts.push(state_dict);
             }
             dict.set_item("states", state_dicts)?;
         } else {
@@ -783,7 +783,7 @@ impl Form {
             let mut category_dicts = Vec::new();
             for category in categories {
                 let category_dict = category.to_dict(py)?;
-                category_dicts.push(category_dict.to_object(py));
+                category_dicts.push(category_dict);
             }
             dict.set_item("categories", category_dicts)?;
         } else {
