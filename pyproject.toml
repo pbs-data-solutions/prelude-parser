@@ -21,6 +21,7 @@ classifiers = [
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
+dynamic = ["version"]
 repository = "https://github.com/pbs-data-solutions/prelude-parser"
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 documentation = "https://github.com/pbs-data-solutions/prelude-parser"
