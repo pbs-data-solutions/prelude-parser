@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
 use pyo3::{
+    exceptions::PyValueError,
     prelude::*,
     types::{PyDateTime, PyDict},
 };
@@ -149,6 +150,31 @@ pub struct SubjectNative {
     pub patients: Vec<Patient>,
 }
 
+#[cfg(not(feature = "python"))]
+impl SubjectNative {
+    /// Convert to a JSON string
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::path::Path;
+    ///
+    /// use prelude_xml_parser::parse_subject_native_file;
+    ///
+    /// let file_path = Path::new("tests/assets/subject_native_small.xml");
+    /// let native = parse_subject_native_file(&file_path).unwrap();
+    /// let expected = r#"{"patients":[{"patientId":"ABC-001","uniqueId":"1681574905819","whenCreated":"2023-04-15T16:09:02Z","creator":"Paul Sanders","siteName":"Some Site","siteUniqueId":"1681574834910","lastLanguage":null,"numberOfForms":6,"forms":[{"name":"day.0.form.name.demographics","lastModified":"2023-04-15T16:09:15Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574905839,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Demographics","formIndex":1,"formGroup":"Day 0","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:09:02Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"breed","fieldType":"combo-box","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:08:26Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Labrador"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some Comment"}}]}]}]}]}]}"#;
+    /// let json = native.to_json().unwrap();
+    ///
+    /// assert_eq!(json, expected);
+    /// ```
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        let json = serde_json::to_string(&self)?;
+
+        Ok(json)
+    }
+}
+
 #[cfg(feature = "python")]
 /// Contains the information from the Prelude native subject XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -177,6 +203,12 @@ impl SubjectNative {
         }
         dict.set_item("patients", patient_dicts)?;
         Ok(dict)
+    }
+
+    /// Convert the class instance to a JSON string
+    fn to_json(&self) -> PyResult<String> {
+        serde_json::to_string(&self)
+            .map_err(|_| PyErr::new::<PyValueError, _>("Error converting to JSON"))
     }
 }
 

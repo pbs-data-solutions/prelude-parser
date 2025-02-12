@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
 use pyo3::{
+    exceptions::PyValueError,
     prelude::*,
     types::{PyDateTime, PyDict},
 };
@@ -133,6 +134,32 @@ pub struct SiteNative {
     pub sites: Vec<Site>,
 }
 
+#[cfg(not(feature = "python"))]
+impl SiteNative {
+    /// Convert to a JSON string
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::path::Path;
+    ///
+    /// use prelude_xml_parser::parse_site_native_file;
+    ///
+    /// let file_path = Path::new("tests/assets/site_native_small.xml");
+    /// let native = parse_site_native_file(&file_path).unwrap();
+    /// let json = native.to_json().unwrap();
+    /// println!("{json}");
+    /// let expected = r#"{"sites":[{"name":"Some Site","uniqueId":"1681574834910","numberOfPatients":4,"countOfRandomizedPatients":0,"whenCreated":"2023-04-15T16:08:19Z","creator":"Paul Sanders","numberOfForms":1,"forms":[{"name":"demographic.form.name.site.demographics","lastModified":"2023-04-15T16:08:19Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574834930,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Site Demographics","formIndex":1,"formGroup":"Demographic","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:08:19Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"address","fieldType":"text","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:07:14Z","keepHistory":true,"entries":null,"comments":null},{"name":"company","fieldType":"text","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:07:14Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:08:19Z","value":"Some Company"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some Comment"}}]}]}]}]}]}"#;;
+    ///
+    /// assert_eq!(json, expected);
+    /// ```
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        let json = serde_json::to_string(&self)?;
+
+        Ok(json)
+    }
+}
+
 #[cfg(feature = "python")]
 /// Contains the information from the Prelude native site XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -161,6 +188,12 @@ impl SiteNative {
         }
         dict.set_item("sites", site_dicts)?;
         Ok(dict)
+    }
+
+    /// Convert the class instance to a JSON string
+    fn to_json(&self) -> PyResult<String> {
+        serde_json::to_string(&self)
+            .map_err(|_| PyErr::new::<PyValueError, _>("Error converting to JSON"))
     }
 }
 
