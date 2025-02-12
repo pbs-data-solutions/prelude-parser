@@ -1,6 +1,6 @@
 [package]
 name = "prelude-xml-parser"
-version = "0.7.3"
+version = "0.8.0"
 edition = "2021"
 authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
 description = "Deserialize Prelude EDC native XML files into Rust stucts."
