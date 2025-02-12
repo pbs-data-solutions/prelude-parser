@@ -118,16 +118,19 @@ class SiteNative:
     sites: list[Site]
 
     def to_dict(self) -> dict: ...
+    def to_json(self) -> str: ...
 
 class SubjectNative:
     patients: list[Patient]
 
     def to_dict(self) -> dict: ...
+    def to_json(self) -> str: ...
 
 class UserNative:
     users: list[User]
 
     def to_dict(self) -> dict: ...
+    def to_json(self) -> str: ...
 
 def _parse_flat_file_to_dict(
     xml_file: str | Path, *, short_names: bool = False

@@ -328,7 +328,6 @@ wheels = [
 
 [[package]]
 name = "prelude-parser"
-version = "0.12.1"
 source = { editable = "." }
 dependencies = [
     { name = "camel-converter" },

@@ -36,6 +36,16 @@ def test_site_native_to_dict(site_native_xml):
     assert result_dict["sites"][0]["name"] == "Some Site"
 
 
+def test_site_native_to_json(site_native_small_xml):
+    result = parse_site_native_file(site_native_small_xml)
+    result_json = result.to_json()
+
+    assert (
+        result_json
+        == '{"site":[{"name":"Some Site","uniqueId":"1681574834910","numberOfPatients":4,"countOfRandomizedPatients":0,"whenCreated":"2023-04-15T16:08:19Z","creator":"Paul Sanders","numberOfForms":1,"form":[{"name":"demographic.form.name.site.demographics","lastModified":"2023-04-15T16:08:19Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574834930,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Site Demographics","formIndex":1,"formGroup":"Demographic","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:08:19Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"company","fieldType":"text","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:07:14Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:08:19Z","value":"Some Company"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some comment"}}]}]}]}]}]}'
+    )
+
+
 def test_parse_subject_native_file(subject_native_xml):
     result = parse_subject_native_file(subject_native_xml)
 
@@ -57,6 +67,16 @@ def test_subject_native_to_dict(subject_native_xml):
     assert result_dict["patients"][0]["patient_id"] == "ABC-001"
 
 
+def test_subject_native_to_json(subject_native_small_xml):
+    result = parse_subject_native_file(subject_native_small_xml)
+    result_json = result.to_json()
+
+    assert (
+        result_json
+        == '{"patients":[{"patientId":"ABC-001","uniqueId":"1681574905819","whenCreated":"2023-04-15T16:09:02Z","creator":"Paul Sanders","siteName":"Some Site","siteUniqueId":"1681574834910","lastLanguage":null,"numberOfForms":6,"forms":[{"name":"day.0.form.name.demographics","lastModified":"2023-04-15T16:09:15Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574905839,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Demographics","formIndex":1,"formGroup":"Day 0","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:09:02Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"breed","fieldType":"combo-box","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:08:26Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Labrador"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some comment"}}]}]}]}]}]}'
+    )
+
+
 def test_parse_user_native_file(user_native_xml):
     result = parse_user_native_file(user_native_xml)
 
@@ -76,6 +96,16 @@ def test_user_native_to_dict(user_native_xml):
     result_dict = result.to_dict()
 
     assert result_dict["users"][0]["unique_id"] == "1691421275437"
+
+
+def test_user_native_to_json(user_native_small_xml):
+    result = parse_user_native_file(user_native_small_xml)
+    result_json = result.to_json()
+
+    assert (
+        result_json
+        == '{"users":[{"uniqueId":"1691421275437","lastLanguage":null,"creator":"Paul Sanders(1681162687395)","numberOfForms":1,"forms":[{"name":"form.name.demographics","lastModified":"2023-08-07T15:15:41Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1691421341578,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"User Demographics","formIndex":1,"formGroup":null,"formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-08-07T15:15:41Z"}],"categories":[{"name":"demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"email","fieldType":"text","dataType":"string","errorCode":"undefined","whenCreated":"2023-08-07T15:15:41Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-08-07T15:15:41Z","value":"jazz@artemis.com"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some comment"}}]}]}]}]}]}'
+    )
 
 
 def test_parse_to_classes(test_file_1):
