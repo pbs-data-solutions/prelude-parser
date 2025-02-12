@@ -186,9 +186,9 @@ dependencies = [
 
 [[package]]
 name = "prelude-xml-parser"
-version = "0.7.3"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d339af820967c38918e82593dc2640606f1cc0434b0fa453dfdbbd1e51885579"
+checksum = "9f6003c19d0393b656ef10931f45bab5c869013abd1aee0e20012d1090efcc3c"
 dependencies = [
  "chrono",
  "pyo3",
@@ -325,9 +325,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.133"
+version = "1.0.138"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7fceb2473b9166b2294ef05efcb65a3db80803f0b03ef86a5fc88a2b85ee377"
+checksum = "d434192e7da787e94a6ea7e9670b26a036d0ca41e0b7efb2676dd32bae872949"
 dependencies = [
  "itoa",
  "memchr",
