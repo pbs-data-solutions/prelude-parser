@@ -180,7 +180,7 @@ dependencies = [
  "pyo3",
  "roxmltree",
  "serde",
- "serde-xml-rs",
+ "serde-xml-rs 0.7.0",
  "thiserror 2.0.12",
 ]
 
@@ -193,7 +193,7 @@ dependencies = [
  "chrono",
  "pyo3",
  "serde",
- "serde-xml-rs",
+ "serde-xml-rs 0.6.0",
  "serde_json",
  "thiserror 2.0.12",
 ]
@@ -305,6 +305,18 @@ name = "serde-xml-rs"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb3aa78ecda1ebc9ec9847d5d3aba7d618823446a049ba2491940506da6e2782"
+dependencies = [
+ "log",
+ "serde",
+ "thiserror 1.0.69",
+ "xml-rs",
+]
+
+[[package]]
+name = "serde-xml-rs"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12ef8209566c27b96b10a096e25abc534e08e9bbbcf8e444b92640f1416dd1c6"
 dependencies = [
  "log",
  "serde",
