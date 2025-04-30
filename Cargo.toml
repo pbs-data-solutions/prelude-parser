@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.98"
-chrono = "0.4.40"
+chrono = "0.4.41"
 prelude-xml-parser = { version = "0.8.0", features = ["python"] }
 pyo3 = { version = "0.23.5", features = ["extension-module"] }
 roxmltree = "0.20.0"
