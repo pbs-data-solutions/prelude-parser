@@ -29,14 +29,12 @@ fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
         match e {
             XmlFileValidationError::FileNotFound(_) => {
                 return Err(FileNotFoundError::new_err(format!(
-                    "File not found: {:?}",
-                    xml_file
+                    "File not found: {xml_file:?}"
                 )))
             }
             XmlFileValidationError::InvalidFileType(_) => {
                 return Err(InvalidFileTypeError::new_err(format!(
-                    "{:?} is not an xml file",
-                    xml_file
+                    "{xml_file:?} is not an xml file"
                 )))
             }
         };
@@ -156,13 +154,11 @@ fn parse_xml<'py>(
                 Ok(data_dict)
             }
             Err(e) => Err(ParsingError::new_err(format!(
-                "Error parsing xml file: {:?}",
-                e
+                "Error parsing xml file: {e:?}"
             ))),
         },
         Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {:?}",
-            e
+            "Error parsing xml file: {e:?}"
         ))),
     }
 }
@@ -203,13 +199,11 @@ fn parse_xml_pandas<'py>(
                 Ok(data_dict)
             }
             Err(e) => Err(ParsingError::new_err(format!(
-                "Error parsing xml file: {:?}",
-                e
+                "Error parsing xml file: {e:?}"
             ))),
         },
         Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {:?}",
-            e
+            "Error parsing xml file: {e:?}"
         ))),
     }
 }
@@ -246,8 +240,7 @@ fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative
     match parse_site_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {:?}",
-            e
+            "Error parsing xml file: {e:?}"
         ))),
     }
 }
@@ -257,7 +250,7 @@ fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative
 fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> {
     match parse_site_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
 }
 
@@ -267,8 +260,7 @@ fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<Subject
     match parse_subject_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {:?}",
-            e
+            "Error parsing xml file: {e:?}"
         ))),
     }
 }
@@ -278,7 +270,7 @@ fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<Subject
 fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNative> {
     match parse_subject_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
 }
 
@@ -288,8 +280,7 @@ fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative
     match parse_user_native_file_rs(&xml_file) {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {:?}",
-            e
+            "Error parsing xml file: {e:?}"
         ))),
     }
 }
@@ -299,7 +290,7 @@ fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative
 fn parse_user_native_string(_py: Python, xml_str: &str) -> PyResult<UserNative> {
     match parse_user_native_string_rs(xml_str) {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {:?}", e))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
 }
 
