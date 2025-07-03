@@ -1,6 +1,6 @@
 [package]
 name = "prelude-parser"
-version = "0.13.0"
+version = "0.13.1"
 description = "Parses XML files exported from Prelude EDC into formats usable by Python."
 edition = "2021"
 license = "MIT"
