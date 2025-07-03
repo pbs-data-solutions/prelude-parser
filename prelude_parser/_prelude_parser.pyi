@@ -5,6 +5,8 @@ from pathlib import Path
 
 from prelude_parser.types import FlatFormInfo
 
+__version__: str
+
 class Value:
     by: str
     by_unique_id: str | None

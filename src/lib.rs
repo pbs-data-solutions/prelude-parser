@@ -313,6 +313,7 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
         py.get_type::<InvalidFileTypeError>(),
     )?;
     m.add("ParsingError", py.get_type::<ParsingError>())?;
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }
 
