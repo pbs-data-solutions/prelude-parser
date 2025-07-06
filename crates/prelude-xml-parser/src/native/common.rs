@@ -17,38 +17,44 @@ use crate::native::deserializers::{to_py_datetime, to_py_datetime_option};
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Value {
+    #[serde(alias = "@by")]
     pub by: String,
 
     #[serde(
+        alias = "@byUniqueId",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub by_unique_id: Option<String>,
+    #[serde(alias = "@role")]
     pub role: String,
+    #[serde(alias = "@when")]
     pub when: DateTime<Utc>,
 
-    #[serde(alias = "$value")]
+    #[serde(alias = "#text")]
     pub value: String,
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Value {
+    #[serde(alias = "@by")]
     pub by: String,
 
     #[serde(
+        alias = "@byUniqueId",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub by_unique_id: Option<String>,
+    #[serde(alias = "@role")]
     pub role: String,
+    #[serde(alias = "@when")]
     pub when: DateTime<Utc>,
 
-    #[serde(alias = "$value")]
+    #[serde(alias = "#text")]
     pub value: String,
 }
 
@@ -94,40 +100,48 @@ impl Value {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Reason {
+    #[serde(rename = "@by", alias = "by")]
     pub by: String,
 
     #[serde(
+        rename = "@byUniqueId",
+        alias = "byUniqueId",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub by_unique_id: Option<String>,
 
+    #[serde(rename = "@role", alias = "role")]
     pub role: String,
+    #[serde(rename = "@when", alias = "when")]
     pub when: DateTime<Utc>,
 
-    #[serde(alias = "$value")]
+    #[serde(rename = "#text", alias = "value")]
     pub value: String,
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Reason {
+    #[serde(rename = "@by", alias = "by")]
     pub by: String,
 
     #[serde(
+        rename = "@byUniqueId",
+        alias = "byUniqueId",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub by_unique_id: Option<String>,
 
+    #[serde(rename = "@role", alias = "role")]
     pub role: String,
+    #[serde(rename = "@when", alias = "when")]
     pub when: DateTime<Utc>,
 
-    #[serde(alias = "$value")]
+    #[serde(rename = "#text", alias = "value")]
     pub value: String,
 }
 
@@ -173,9 +187,8 @@ impl Reason {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Entry {
-    #[serde(alias = "id")]
+    #[serde(rename = "@id", alias = "entryId")]
     pub entry_id: String,
     pub value: Option<Value>,
     pub reason: Option<Reason>,
@@ -183,10 +196,9 @@ pub struct Entry {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Entry {
-    #[serde(alias = "id")]
+    #[serde(rename = "@id", alias = "entryId")]
     pub entry_id: String,
     pub value: Option<Value>,
     pub reason: Option<Reason>,
@@ -230,19 +242,17 @@ impl Entry {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Comment {
-    #[serde(alias = "id")]
+    #[serde(rename = "@id", alias = "commentId")]
     pub comment_id: String,
     pub value: Option<Value>,
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Comment {
-    #[serde(alias = "id")]
+    #[serde(rename = "@id", alias = "commentId")]
     pub comment_id: String,
     pub value: Option<Value>,
 }
@@ -275,20 +285,25 @@ impl Comment {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Field {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
-    #[serde(alias = "type")]
+    #[serde(rename = "@type", alias = "fieldType")]
     pub field_type: String,
 
     #[serde(
+        rename = "@dataType",
+        alias = "dataType",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub data_type: Option<String>,
+    #[serde(rename = "@errorCode", alias = "errorCode")]
     pub error_code: String,
+    #[serde(rename = "@whenCreated", alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
+    #[serde(rename = "@keepHistory", alias = "keepHistory")]
     pub keep_history: bool,
 
     #[serde(alias = "entry")]
@@ -300,22 +315,27 @@ pub struct Field {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Field {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
-    #[serde(alias = "type")]
+    #[serde(rename = "@type", alias = "fieldType")]
     pub field_type: String,
 
     #[serde(
+        rename = "@dataType",
+        alias = "dataType",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub data_type: Option<String>,
 
+    #[serde(rename = "@errorCode", alias = "errorCode")]
     pub error_code: String,
+    #[serde(rename = "@whenCreated", alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
+    #[serde(rename = "@keepHistory", alias = "keepHistory")]
     pub keep_history: bool,
 
     #[serde(alias = "entry")]
@@ -405,13 +425,14 @@ impl Field {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Category {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
-    #[serde(alias = "type")]
+    #[serde(rename = "@type", alias = "categoryType")]
     pub category_type: String,
 
+    #[serde(rename = "@highestIndex", alias = "highestIndex")]
     pub highest_index: usize,
 
     #[serde(alias = "field")]
@@ -420,14 +441,15 @@ pub struct Category {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct Category {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
-    #[serde(alias = "type")]
+    #[serde(rename = "@type", alias = "categoryType")]
     pub category_type: String,
 
+    #[serde(rename = "@highestIndex", alias = "highestIndex")]
     pub highest_index: usize,
 
     #[serde(alias = "field")]
@@ -480,13 +502,17 @@ impl Category {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct State {
+    #[serde(rename = "@value", alias = "value")]
     pub value: String,
+    #[serde(rename = "@signer", alias = "signer")]
     pub signer: String,
+    #[serde(rename = "@signerUniqueId", alias = "signerUniqueId")]
     pub signer_unique_id: String,
 
     #[serde(
+        rename = "@dateSigned",
+        alias = "dateSigned",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
@@ -495,14 +521,18 @@ pub struct State {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct State {
+    #[serde(rename = "@value", alias = "value")]
     pub value: String,
+    #[serde(rename = "@signer", alias = "signer")]
     pub signer: String,
+    #[serde(rename = "@signerUniqueId", alias = "signerUniqueId")]
     pub signer_unique_id: String,
 
     #[serde(
+        rename = "@dateSigned",
+        alias = "dateSigned",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
@@ -545,54 +575,73 @@ impl State {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 pub struct Form {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
     #[serde(
+        rename = "@lastModified",
+        alias = "lastModified",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub last_modified: Option<DateTime<Utc>>,
 
     #[serde(
+        rename = "@whoLastModifiedName",
+        alias = "whoLastModifiedName",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_name: Option<String>,
 
     #[serde(
+        rename = "@whoLastModifiedRole",
+        alias = "whoLastModifiedRole",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_role: Option<String>,
 
+    #[serde(rename = "@whenCreated", alias = "whenCreated")]
     pub when_created: usize,
+    #[serde(rename = "@hasErrors", alias = "hasErrors")]
     pub has_errors: bool,
+    #[serde(rename = "@hasWarnings", alias = "hasWarnings")]
     pub has_warnings: bool,
+    #[serde(rename = "@locked", alias = "locked")]
     pub locked: bool,
 
     #[serde(
+        rename = "@user",
+        alias = "user",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub user: Option<String>,
 
     #[serde(
+        rename = "@dateTimeChanged",
+        alias = "dateTimeChanged",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
 
+    #[serde(rename = "@formTitle", alias = "formTitle")]
     pub form_title: String,
+    #[serde(rename = "@formIndex", alias = "formIndex")]
     pub form_index: usize,
 
     #[serde(
+        rename = "@formGroup",
+        alias = "formGroup",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub form_group: Option<String>,
 
+    #[serde(rename = "@formState", alias = "formState")]
     pub form_state: String,
 
     #[serde(alias = "state")]
@@ -604,55 +653,74 @@ pub struct Form {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Form {
+    #[serde(rename = "@name", alias = "name")]
     pub name: String,
 
     #[serde(
+        rename = "@lastModified",
+        alias = "lastModified",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub last_modified: Option<DateTime<Utc>>,
 
     #[serde(
+        rename = "@whoLastModifiedName",
+        alias = "whoLastModifiedName",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_name: Option<String>,
 
     #[serde(
+        rename = "@whoLastModifiedRole",
+        alias = "whoLastModifiedRole",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub who_last_modified_role: Option<String>,
 
+    #[serde(rename = "@whenCreated", alias = "whenCreated")]
     pub when_created: usize,
+    #[serde(rename = "@hasErrors", alias = "hasErrors")]
     pub has_errors: bool,
+    #[serde(rename = "@hasWarnings", alias = "hasWarnings")]
     pub has_warnings: bool,
+    #[serde(rename = "@locked", alias = "locked")]
     pub locked: bool,
 
     #[serde(
+        rename = "@user",
+        alias = "user",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub user: Option<String>,
 
     #[serde(
+        rename = "@dateTimeChanged",
+        alias = "dateTimeChanged",
         default = "default_datetime_none",
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
 
+    #[serde(rename = "@formTitle", alias = "formTitle")]
     pub form_title: String,
+    #[serde(rename = "@formIndex", alias = "formIndex")]
     pub form_index: usize,
 
     #[serde(
+        rename = "@formGroup",
+        alias = "formGroup",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub form_group: Option<String>,
 
+    #[serde(rename = "@formState", alias = "formState")]
     pub form_state: String,
 
     #[serde(alias = "state")]
