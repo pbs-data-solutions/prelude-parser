@@ -18,24 +18,34 @@ use crate::native::deserializers::to_py_datetime;
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Site {
-    #[serde(rename = "@name", alias = "name")]
+    #[serde(alias = "@name")]
+    #[serde(alias = "name")]
     pub name: String,
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
-    #[serde(rename = "@numberOfPatients", alias = "numberOfPatients")]
+    #[serde(rename = "numberOfPatients")]
+    #[serde(alias = "@numberOfPatients")]
+    #[serde(alias = "numberOfPatients")]
     pub number_of_patients: usize,
-    #[serde(
-        rename = "@countOfRandomizedPatients",
-        alias = "countOfRandomizedPatients"
-    )]
+    #[serde(rename = "countOfRandomizedPatients")]
+    #[serde(alias = "@countOfRandomizedPatients")]
+    #[serde(alias = "countOfRandomizedPatients")]
     pub count_of_randomized_patients: usize,
-    #[serde(rename = "@whenCreated", alias = "whenCreated")]
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
+    #[serde(rename = "form")]
     #[serde(alias = "form")]
     pub forms: Option<Vec<Form>>,
 }
@@ -45,24 +55,34 @@ pub struct Site {
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Site {
-    #[serde(rename = "@name", alias = "name")]
+    #[serde(alias = "@name")]
+    #[serde(alias = "name")]
     pub name: String,
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
-    #[serde(rename = "@numberOfPatients", alias = "numberOfPatients")]
+    #[serde(rename = "numberOfPatients")]
+    #[serde(alias = "@numberOfPatients")]
+    #[serde(alias = "numberOfPatients")]
     pub number_of_patients: usize,
-    #[serde(
-        rename = "@countOfRandomizedPatients",
-        alias = "countOfRandomizedPatients"
-    )]
+    #[serde(rename = "countOfRandomizedPatients")]
+    #[serde(alias = "@countOfRandomizedPatients")]
+    #[serde(alias = "countOfRandomizedPatients")]
     pub count_of_randomized_patients: usize,
-    #[serde(rename = "@whenCreated", alias = "whenCreated")]
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
+    #[serde(rename = "form")]
     #[serde(alias = "form")]
     pub forms: Option<Vec<Form>>,
 }

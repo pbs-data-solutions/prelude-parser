@@ -10,19 +10,26 @@ use crate::native::deserializers::{default_string_none, deserialize_empty_string
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
 
+    #[serde(rename = "lastLanguage")]
+    #[serde(alias = "@lastLanguage")]
+    #[serde(alias = "lastLanguage")]
     #[serde(
-        rename = "@lastLanguage",
-        alias = "lastLanguage",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub last_language: Option<String>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(rename = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
@@ -34,19 +41,26 @@ pub struct User {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct User {
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
 
+    #[serde(rename = "lastLanguage")]
+    #[serde(alias = "@lastLanguage")]
+    #[serde(alias = "lastLanguage")]
     #[serde(
-        rename = "@lastLanguage",
-        alias = "lastLanguage",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub last_language: Option<String>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(rename = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
@@ -120,12 +134,9 @@ impl UserNative {
     ///
     /// let file_path = Path::new("tests/assets/user_native_small.xml");
     /// let native = parse_user_native_file(&file_path).unwrap();
-    /// // Note: The expected JSON format now uses @-prefixed field names for XML attributes
-    /// // and #text for element content due to serde-xml-rs 0.8.0 compatibility requirements
     /// let json = native.to_json().unwrap();
-    /// // Since the JSON format includes complex nested structures with many @-prefixed fields,
-    /// // we'll just verify it's valid JSON and contains the expected user data
-    /// assert!(json.contains("@uniqueId\":\"1691421275437\""));
+    /// // Verify it's valid JSON and contains the expected user data
+    /// assert!(json.contains("uniqueId\":\"1691421275437\""));
     /// assert!(json.contains("\"value\":\"jazz@artemis.com\""));
     /// ```
     pub fn to_json(&self) -> serde_json::Result<String> {
