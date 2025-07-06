@@ -20,28 +20,43 @@ use crate::native::deserializers::{default_string_none, deserialize_empty_string
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Patient {
-    #[serde(rename = "@patientId", alias = "patientId")]
+    #[serde(rename = "patientId")]
+    #[serde(alias = "@patientId")]
+    #[serde(alias = "patientId")]
     pub patient_id: String,
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
-    #[serde(rename = "@whenCreated", alias = "whenCreated")]
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(rename = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@siteName", alias = "siteName")]
+    #[serde(rename = "siteName")]
+    #[serde(alias = "@siteName")]
+    #[serde(alias = "siteName")]
     pub site_name: String,
-    #[serde(rename = "@siteUniqueId", alias = "siteUniqueId")]
+    #[serde(rename = "siteUniqueId")]
+    #[serde(alias = "@siteUniqueId")]
+    #[serde(alias = "siteUniqueId")]
     pub site_unique_id: String,
 
+    #[serde(rename = "lastLanguage")]
+    #[serde(alias = "@lastLanguage")]
+    #[serde(alias = "lastLanguage")]
     #[serde(
-        rename = "@lastLanguage",
-        alias = "lastLanguage",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub last_language: Option<String>,
 
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
@@ -53,28 +68,43 @@ pub struct Patient {
 #[serde(rename_all = "camelCase")]
 #[pyclass]
 pub struct Patient {
-    #[serde(rename = "@patientId", alias = "patientId")]
+    #[serde(rename = "patientId")]
+    #[serde(alias = "@patientId")]
+    #[serde(alias = "patientId")]
     pub patient_id: String,
-    #[serde(rename = "@uniqueId", alias = "uniqueId")]
+    #[serde(rename = "uniqueId")]
+    #[serde(alias = "@uniqueId")]
+    #[serde(alias = "uniqueId")]
     pub unique_id: String,
-    #[serde(rename = "@whenCreated", alias = "whenCreated")]
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
     pub when_created: DateTime<Utc>,
-    #[serde(rename = "@creator", alias = "creator")]
+    #[serde(rename = "creator")]
+    #[serde(alias = "@creator")]
+    #[serde(alias = "creator")]
     pub creator: String,
-    #[serde(rename = "@siteName", alias = "siteName")]
+    #[serde(rename = "siteName")]
+    #[serde(alias = "@siteName")]
+    #[serde(alias = "siteName")]
     pub site_name: String,
-    #[serde(rename = "@siteUniqueId", alias = "siteUniqueId")]
+    #[serde(rename = "siteUniqueId")]
+    #[serde(alias = "@siteUniqueId")]
+    #[serde(alias = "siteUniqueId")]
     pub site_unique_id: String,
 
+    #[serde(rename = "lastLanguage")]
+    #[serde(alias = "@lastLanguage")]
+    #[serde(alias = "lastLanguage")]
     #[serde(
-        rename = "@lastLanguage",
-        alias = "lastLanguage",
         default = "default_string_none",
         deserialize_with = "deserialize_empty_string_as_none"
     )]
     pub last_language: Option<String>,
 
-    #[serde(rename = "@numberOfForms", alias = "numberOfForms")]
+    #[serde(rename = "numberOfForms")]
+    #[serde(alias = "@numberOfForms")]
+    #[serde(alias = "numberOfForms")]
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]

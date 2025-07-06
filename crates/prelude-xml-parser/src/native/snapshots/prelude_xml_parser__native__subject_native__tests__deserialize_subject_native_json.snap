@@ -3,99 +3,99 @@ source: src/native/subject_native.rs
 expression: result
 ---
 patients:
-  - "@patientId": ABC-001
-    "@uniqueId": "1681574905819"
-    "@whenCreated": "2023-04-15T16:09:02Z"
-    "@creator": Paul Sanders
-    "@siteName": Some Site
-    "@siteUniqueId": "1681574834910"
-    "@lastLanguage": English
-    "@numberOfForms": 6
+  - patientId: ABC-001
+    uniqueId: "1681574905819"
+    whenCreated: "2023-04-15T16:09:02Z"
+    creator: Paul Sanders
+    siteName: Some Site
+    siteUniqueId: "1681574834910"
+    lastLanguage: English
+    numberOfForms: 6
     forms:
-      - "@name": day.0.form.name.demographics
-        "@lastModified": "2023-04-15T16:09:15Z"
-        "@whoLastModifiedName": Paul Sanders
-        "@whoLastModifiedRole": Project Manager
-        "@whenCreated": 1681574905839
-        "@hasErrors": false
-        "@hasWarnings": false
-        "@locked": false
-        "@user": ~
-        "@dateTimeChanged": ~
-        "@formTitle": Demographics
-        "@formIndex": 1
-        "@formGroup": Day 0
-        "@formState": In-Work
+      - name: day.0.form.name.demographics
+        lastModified: "2023-04-15T16:09:15Z"
+        whoLastModifiedName: Paul Sanders
+        whoLastModifiedRole: Project Manager
+        whenCreated: 1681574905839
+        hasErrors: false
+        hasWarnings: false
+        locked: false
+        user: ~
+        dateTimeChanged: ~
+        formTitle: Demographics
+        formIndex: 1
+        formGroup: Day 0
+        formState: In-Work
         states:
-          - "@value": form.state.in.work
-            "@signer": Paul Sanders - Project Manager
-            "@signerUniqueId": "1681162687395"
-            "@dateSigned": "2023-04-15T16:09:02Z"
+          - value: form.state.in.work
+            signer: Paul Sanders - Project Manager
+            signerUniqueId: "1681162687395"
+            dateSigned: "2023-04-15T16:09:02Z"
         categories:
-          - "@name": Demographics
-            "@type": normal
-            "@highestIndex": 0
+          - name: Demographics
+            categoryType: normal
+            highestIndex: 0
             fields:
-              - "@name": breed
-                "@type": combo-box
-                "@dataType": string
-                "@errorCode": valid
-                "@whenCreated": "2023-04-15T16:08:26Z"
-                "@keepHistory": true
+              - name: breed
+                fieldType: combo-box
+                dataType: string
+                errorCode: valid
+                whenCreated: "2023-04-15T16:08:26Z"
+                keepHistory: true
                 entries:
-                  - "@id": "1"
+                  - entryId: "1"
                     value:
                       by: Paul Sanders
-                      by_unique_id: ~
+                      byUniqueId: "1681162687395"
                       role: Project Manager
                       when: "2023-04-15T16:09:02Z"
                       value: Labrador
                     reason: ~
                 comments: ~
-  - "@patientId": DEF-002
-    "@uniqueId": "1681574905820"
-    "@whenCreated": "2023-04-16T16:10:02Z"
-    "@creator": Wade Watts
-    "@siteName": Another Site
-    "@siteUniqueId": "1681574834911"
-    "@lastLanguage": ~
-    "@numberOfForms": 8
+  - patientId: DEF-002
+    uniqueId: "1681574905820"
+    whenCreated: "2023-04-16T16:10:02Z"
+    creator: Wade Watts
+    siteName: Another Site
+    siteUniqueId: "1681574834911"
+    lastLanguage: ~
+    numberOfForms: 8
     forms:
-      - "@name": day.0.form.name.demographics
-        "@lastModified": "2023-04-16T16:10:15Z"
-        "@whoLastModifiedName": Barney Rubble
-        "@whoLastModifiedRole": Technician
-        "@whenCreated": 1681574905838
-        "@hasErrors": false
-        "@hasWarnings": false
-        "@locked": false
-        "@user": ~
-        "@dateTimeChanged": ~
-        "@formTitle": Demographics
-        "@formIndex": 1
-        "@formGroup": Day 0
-        "@formState": In-Work
+      - name: day.0.form.name.demographics
+        lastModified: "2023-04-16T16:10:15Z"
+        whoLastModifiedName: Barney Rubble
+        whoLastModifiedRole: Technician
+        whenCreated: 1681574905838
+        hasErrors: false
+        hasWarnings: false
+        locked: false
+        user: ~
+        dateTimeChanged: ~
+        formTitle: Demographics
+        formIndex: 1
+        formGroup: Day 0
+        formState: In-Work
         states:
-          - "@value": form.state.in.work
-            "@signer": Paul Sanders - Project Manager
-            "@signerUniqueId": "1681162687395"
-            "@dateSigned": "2023-04-16T16:10:02Z"
+          - value: form.state.in.work
+            signer: Paul Sanders - Project Manager
+            signerUniqueId: "1681162687395"
+            dateSigned: "2023-04-16T16:10:02Z"
         categories:
-          - "@name": Demographics
-            "@type": normal
-            "@highestIndex": 0
+          - name: Demographics
+            categoryType: normal
+            highestIndex: 0
             fields:
-              - "@name": breed
-                "@type": combo-box
-                "@dataType": string
-                "@errorCode": valid
-                "@whenCreated": "2023-04-15T16:08:26Z"
-                "@keepHistory": true
+              - name: breed
+                fieldType: combo-box
+                dataType: string
+                errorCode: valid
+                whenCreated: "2023-04-15T16:08:26Z"
+                keepHistory: true
                 entries:
-                  - "@id": "1"
+                  - entryId: "1"
                     value:
                       by: Paul Sanders
-                      by_unique_id: ~
+                      byUniqueId: "1681162687395"
                       role: Project Manager
                       when: "2023-04-15T16:09:02Z"
                       value: Labrador
