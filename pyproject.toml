@@ -34,7 +34,7 @@ all = ["pandas>=2.1.0", "polars>=0.17.14"]
 
 [dependency-groups]
 dev = [
-  "maturin==1.9.2",
+  "maturin==1.9.3",
   "mypy==1.17.1",
   "pandas-stubs==2.3.0.250703",
   "pytest==8.4.1",
