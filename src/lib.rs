@@ -210,11 +210,11 @@ fn parse_xml_pandas<'py>(
 
 #[pyfunction]
 #[pyo3(signature = (xml_file, *, short_names=false))]
-fn _parse_flat_file_to_dict(
-    py: Python,
+fn _parse_flat_file_to_dict<'py>(
+    py: Python<'py>,
     xml_file: PathBuf,
     short_names: bool,
-) -> PyResult<Bound<'_, PyDict>> {
+) -> PyResult<Bound<'py, PyDict>> {
     check_valid_file(&xml_file)?;
     let data = parse_xml(py, &xml_file, short_names)?;
 
@@ -223,11 +223,11 @@ fn _parse_flat_file_to_dict(
 
 #[pyfunction]
 #[pyo3(signature = (xml_file, *, short_names=false))]
-fn _parse_flat_file_to_pandas_dict(
-    py: Python,
+fn _parse_flat_file_to_pandas_dict<'py>(
+    py: Python<'py>,
     xml_file: PathBuf,
     short_names: bool,
-) -> PyResult<Bound<'_, PyDict>> {
+) -> PyResult<Bound<'py, PyDict>> {
     check_valid_file(&xml_file)?;
     let data = parse_xml_pandas(py, &xml_file, short_names)?;
 
