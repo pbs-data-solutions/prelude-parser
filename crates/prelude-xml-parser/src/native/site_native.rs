@@ -36,7 +36,7 @@ pub struct Site {
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
-    pub when_created: DateTime<Utc>,
+    pub when_created: Option<DateTime<Utc>>,
     #[serde(alias = "@creator")]
     #[serde(alias = "creator")]
     pub creator: String,
@@ -73,7 +73,7 @@ pub struct Site {
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
-    pub when_created: DateTime<Utc>,
+    pub when_created: Option<DateTime<Utc>>,
     #[serde(alias = "@creator")]
     #[serde(alias = "creator")]
     pub creator: String,
@@ -111,8 +111,11 @@ impl Site {
     }
 
     #[getter]
-    fn when_created<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDateTime>> {
-        to_py_datetime(py, &self.when_created)
+    fn when_created<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        self.when_created
+            .as_ref()
+            .map(|dt| to_py_datetime(py, dt))
+            .transpose()
     }
 
     #[getter]
@@ -139,7 +142,13 @@ impl Site {
             "count_of_randomized_patients",
             self.count_of_randomized_patients,
         )?;
-        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
+        dict.set_item(
+            "when_created",
+            self.when_created
+                .as_ref()
+                .map(|dt| to_py_datetime(py, dt))
+                .transpose()?,
+        )?;
         dict.set_item("creator", &self.creator)?;
         dict.set_item("number_of_forms", self.number_of_forms)?;
 
@@ -164,7 +173,6 @@ impl Site {
 #[serde(rename_all = "camelCase")]
 pub struct SiteNative {
     #[serde(alias = "site")]
-    // #[serde(alias = "site")]
     pub sites: Vec<Site>,
 }
 
@@ -201,7 +209,7 @@ impl SiteNative {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all)]
 pub struct SiteNative {
-    #[serde(rename = "site")]
+    #[serde(alias = "site")]
     pub sites: Vec<Site>,
 }
 
