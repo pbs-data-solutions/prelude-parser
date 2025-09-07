@@ -7,7 +7,10 @@ use std::path::PathBuf;
 
 use chrono::{Datelike, NaiveDate};
 pub use prelude_xml_parser::native::{
-    site_native::SiteNative, subject_native::SubjectNative, user_native::UserNative,
+    common::{Category, Comment, Entry, Field, Form, Reason, State, Value},
+    site_native::SiteNative,
+    subject_native::SubjectNative,
+    user_native::UserNative,
 };
 use prelude_xml_parser::parse_site_native_file as parse_site_native_file_rs;
 use prelude_xml_parser::parse_site_native_string as parse_site_native_string_rs;
@@ -296,9 +299,17 @@ fn parse_user_native_string(_py: Python, xml_str: &str) -> PyResult<UserNative> 
 
 #[pymodule]
 fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<Category>()?;
+    m.add_class::<Comment>()?;
+    m.add_class::<Entry>()?;
+    m.add_class::<Field>()?;
+    m.add_class::<Form>()?;
+    m.add_class::<Reason>()?;
     m.add_class::<SiteNative>()?;
+    m.add_class::<State>()?;
     m.add_class::<SubjectNative>()?;
     m.add_class::<UserNative>()?;
+    m.add_class::<Value>()?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
     m.add_function(wrap_pyfunction!(parse_site_native_file, m)?)?;
