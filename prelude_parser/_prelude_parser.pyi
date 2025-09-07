@@ -12,6 +12,7 @@ class Value:
     by_unique_id: str | None
     role: str
     when: datetime | None
+    value: str
 
     def to_dict(self) -> dict: ...
 
