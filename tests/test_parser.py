@@ -42,7 +42,7 @@ def test_site_native_to_json(site_native_small_xml):
 
     assert (
         result_json
-        == '{"site":[{"name":"Some Site","uniqueId":"1681574834910","numberOfPatients":4,"countOfRandomizedPatients":0,"whenCreated":"2023-04-15T16:08:19Z","creator":"Paul Sanders","numberOfForms":1,"form":[{"name":"demographic.form.name.site.demographics","lastModified":"2023-04-15T16:08:19Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574834930,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Site Demographics","formIndex":1,"formGroup":"Demographic","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:08:19Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"company","fieldType":"text","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:07:14Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:08:19Z","value":"Some Company"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some comment"}}]}]}]}]}]}'
+        == '{"sites":[{"name":"Some Site","uniqueId":"1681574834910","numberOfPatients":4,"countOfRandomizedPatients":0,"whenCreated":"2023-04-15T16:08:19Z","creator":"Paul Sanders","numberOfForms":1,"form":[{"name":"demographic.form.name.site.demographics","lastModified":"2023-04-15T16:08:19Z","whoLastModifiedName":"Paul Sanders","whoLastModifiedRole":"Project Manager","whenCreated":1681574834930,"hasErrors":false,"hasWarnings":false,"locked":false,"user":null,"dateTimeChanged":null,"formTitle":"Site Demographics","formIndex":1,"formGroup":"Demographic","formState":"In-Work","states":[{"value":"form.state.in.work","signer":"Paul Sanders - Project Manager","signerUniqueId":"1681162687395","dateSigned":"2023-04-15T16:08:19Z"}],"categories":[{"name":"Demographics","categoryType":"normal","highestIndex":0,"fields":[{"name":"company","fieldType":"text","dataType":"string","errorCode":"valid","whenCreated":"2023-04-15T16:07:14Z","keepHistory":true,"entries":[{"entryId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:08:19Z","value":"Some Company"},"reason":null}],"comments":[{"commentId":"1","value":{"by":"Paul Sanders","byUniqueId":"1681162687395","role":"Project Manager","when":"2023-04-15T16:09:02Z","value":"Some comment"}}]}]}]}]}]}'
     )
 
 
@@ -50,6 +50,7 @@ def test_parse_subject_native_file(subject_native_xml):
     result = parse_subject_native_file(subject_native_xml)
 
     assert result.patients[0].patient_id == "ABC-001"
+    assert result.patients[0].forms is not None
 
 
 def test_parse_subject_native_string(subject_native_xml):

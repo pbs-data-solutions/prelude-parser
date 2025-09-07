@@ -11,7 +11,7 @@ class Value:
     by: str
     by_unique_id: str | None
     role: str
-    when: datetime
+    when: datetime | None
 
     def to_dict(self) -> dict: ...
 
@@ -19,7 +19,7 @@ class Reason:
     by: str
     by_unique_id: str | None
     role: str
-    when: datetime
+    when: datetime | None
     value: str
 
     def to_dict(self) -> dict: ...
@@ -41,7 +41,7 @@ class Field:
     name: str
     data_type: str | None
     error_code: str
-    when_created: datetime
+    when_created: datetime | None
     keep_history: bool
     entries: list[Entry] | None
     comments: list[Comment] | None
@@ -86,7 +86,7 @@ class Form:
 class Patient:
     patient_id: str
     unique_id: str
-    when_created: datetime
+    when_created: datetime | None
     creator: str
     site_name: str
     site_unique_id: str
@@ -100,7 +100,7 @@ class Site:
     unique_id: str
     number_of_patients: int
     count_of_randomized_patients: int
-    when_created: datetime
+    when_created: datetime | None
     creator: str
     number_of_forms: int
     forms: list[Form] | None
