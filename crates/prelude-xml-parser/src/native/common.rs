@@ -38,11 +38,13 @@ pub struct Value {
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
-    pub when: DateTime<Utc>,
+    pub when: Option<DateTime<Utc>>,
 
     #[serde(rename = "value")]
+    #[serde(alias = "$text")]
     #[serde(alias = "#text")]
     #[serde(alias = "value")]
+    #[serde(default)]
     pub value: String,
 }
 
@@ -70,11 +72,13 @@ pub struct Value {
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
-    pub when: DateTime<Utc>,
+    pub when: Option<DateTime<Utc>>,
 
     #[serde(rename = "value")]
+    #[serde(alias = "$text")]
     #[serde(alias = "#text")]
     #[serde(alias = "value")]
+    #[serde(default)]
     pub value: String,
 }
 
@@ -97,8 +101,8 @@ impl Value {
     }
 
     #[getter]
-    fn when<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDateTime>> {
-        to_py_datetime(py, &self.when)
+    fn when<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.when)
     }
 
     #[getter]
@@ -111,7 +115,7 @@ impl Value {
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
-        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
+        dict.set_item("when", to_py_datetime_option(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
         Ok(dict)
@@ -142,11 +146,13 @@ pub struct Reason {
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
-    pub when: DateTime<Utc>,
+    pub when: Option<DateTime<Utc>>,
 
     #[serde(rename = "value")]
+    #[serde(alias = "$text")]
     #[serde(alias = "#text")]
     #[serde(alias = "value")]
+    #[serde(default)]
     pub value: String,
 }
 
@@ -175,11 +181,13 @@ pub struct Reason {
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
-    pub when: DateTime<Utc>,
+    pub when: Option<DateTime<Utc>>,
 
     #[serde(rename = "value")]
+    #[serde(alias = "$text")]
     #[serde(alias = "#text")]
     #[serde(alias = "value")]
+    #[serde(default)]
     pub value: String,
 }
 
@@ -202,8 +210,8 @@ impl Reason {
     }
 
     #[getter]
-    fn when<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDateTime>> {
-        to_py_datetime(py, &self.when)
+    fn when<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.when)
     }
 
     #[getter]
@@ -216,7 +224,7 @@ impl Reason {
         dict.set_item("by", &self.by)?;
         dict.set_item("by_unique_id", &self.by_unique_id)?;
         dict.set_item("role", &self.role)?;
-        dict.set_item("when", to_py_datetime(py, &self.when)?)?;
+        dict.set_item("when", to_py_datetime_option(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
         Ok(dict)
@@ -357,7 +365,7 @@ pub struct Field {
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
-    pub when_created: DateTime<Utc>,
+    pub when_created: Option<DateTime<Utc>>,
     #[serde(rename = "keepHistory")]
     #[serde(alias = "@keepHistory")]
     #[serde(alias = "keepHistory")]
@@ -400,7 +408,7 @@ pub struct Field {
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
-    pub when_created: DateTime<Utc>,
+    pub when_created: Option<DateTime<Utc>>,
     #[serde(rename = "keepHistory")]
     #[serde(alias = "@keepHistory")]
     #[serde(alias = "keepHistory")]
@@ -437,8 +445,11 @@ impl Field {
     }
 
     #[getter]
-    fn when_created<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDateTime>> {
-        to_py_datetime(py, &self.when_created)
+    fn when_created<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        self.when_created
+            .as_ref()
+            .map(|dt| to_py_datetime(py, dt))
+            .transpose()
     }
 
     #[getter]
@@ -462,7 +473,13 @@ impl Field {
         dict.set_item("field_type", &self.field_type)?;
         dict.set_item("data_type", &self.data_type)?;
         dict.set_item("error_code", &self.error_code)?;
-        dict.set_item("when_created", to_py_datetime(py, &self.when_created)?)?;
+        dict.set_item(
+            "when_created",
+            self.when_created
+                .as_ref()
+                .map(|dt| to_py_datetime(py, dt))
+                .transpose()?,
+        )?;
         dict.set_item("keep_history", self.keep_history)?;
 
         let mut entry_dicts = Vec::new();
@@ -577,6 +594,102 @@ impl Category {
         }
 
         Ok(dict)
+    }
+}
+
+impl Form {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let name = attrs.get("name").cloned().unwrap_or_default();
+
+        let last_modified = if let Some(lm) = attrs.get("lastModified") {
+            if lm.is_empty() {
+                None
+            } else {
+                parse_datetime_internal(lm).ok()
+            }
+        } else {
+            None
+        };
+
+        let who_last_modified_name = attrs
+            .get("whoLastModifiedName")
+            .filter(|s| !s.is_empty())
+            .cloned();
+        let who_last_modified_role = attrs
+            .get("whoLastModifiedRole")
+            .filter(|s| !s.is_empty())
+            .cloned();
+
+        let when_created = attrs
+            .get("whenCreated")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let has_errors = attrs.get("hasErrors").map(|s| s == "true").unwrap_or(false);
+
+        let has_warnings = attrs
+            .get("hasWarnings")
+            .map(|s| s == "true")
+            .unwrap_or(false);
+
+        let locked = attrs.get("locked").map(|s| s == "true").unwrap_or(false);
+
+        let user = attrs.get("user").filter(|s| !s.is_empty()).cloned();
+
+        let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
+            if dtc.is_empty() {
+                None
+            } else {
+                parse_datetime_internal(dtc).ok()
+            }
+        } else {
+            None
+        };
+
+        let form_title = attrs.get("formTitle").cloned().unwrap_or_default();
+
+        let form_index = attrs
+            .get("formIndex")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let form_group = attrs.get("formGroup").filter(|s| !s.is_empty()).cloned();
+        let form_state = attrs.get("formState").cloned().unwrap_or_default();
+
+        Ok(Form {
+            name,
+            last_modified,
+            who_last_modified_name,
+            who_last_modified_role,
+            when_created,
+            has_errors,
+            has_warnings,
+            locked,
+            user,
+            date_time_changed,
+            form_title,
+            form_index,
+            form_group,
+            form_state,
+            states: None,
+            categories: None,
+        })
+    }
+}
+
+fn parse_datetime_internal(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
+    if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(s) {
+        Ok(dt.with_timezone(&Utc))
+    } else {
+        Err(crate::errors::Error::ParsingError(
+            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
+        ))
     }
 }
 
@@ -997,5 +1110,163 @@ impl Form {
         }
 
         Ok(dict)
+    }
+}
+
+impl State {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let value = attrs.get("value").cloned().unwrap_or_default();
+        let signer = attrs.get("signer").cloned().unwrap_or_default();
+        let signer_unique_id = attrs.get("signerUniqueId").cloned().unwrap_or_default();
+
+        let date_signed = if let Some(ds) = attrs.get("dateSigned") {
+            if ds.is_empty() {
+                None
+            } else {
+                parse_datetime_internal(ds).ok()
+            }
+        } else {
+            None
+        };
+
+        Ok(State {
+            value,
+            signer,
+            signer_unique_id,
+            date_signed,
+        })
+    }
+}
+
+impl Category {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let name = attrs.get("name").cloned().unwrap_or_default();
+        let category_type = attrs.get("type").cloned().unwrap_or_default();
+        let highest_index = attrs
+            .get("highestIndex")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        Ok(Category {
+            name,
+            category_type,
+            highest_index,
+            fields: None,
+        })
+    }
+}
+
+impl Field {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let name = attrs.get("name").cloned().unwrap_or_default();
+        let field_type = attrs.get("type").cloned().unwrap_or_default();
+        let data_type = attrs.get("dataType").filter(|s| !s.is_empty()).cloned();
+        let error_code = attrs.get("errorCode").cloned().unwrap_or_default();
+
+        let when_created = if let Some(wc) = attrs.get("whenCreated") {
+            if wc.is_empty() {
+                None
+            } else {
+                Some(parse_datetime_internal(wc)?)
+            }
+        } else {
+            None
+        };
+
+        let keep_history = attrs
+            .get("keepHistory")
+            .map(|s| s == "true")
+            .unwrap_or(false);
+
+        Ok(Field {
+            name,
+            field_type,
+            data_type,
+            error_code,
+            when_created,
+            keep_history,
+            entries: None,
+            comments: None,
+        })
+    }
+}
+
+impl Entry {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let entry_id = attrs
+            .get("id")
+            .or_else(|| attrs.get("entryId"))
+            .cloned()
+            .unwrap_or_default();
+
+        Ok(Entry {
+            entry_id,
+            value: None,
+            reason: None,
+        })
+    }
+}
+
+impl Value {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let by = attrs.get("by").cloned().unwrap_or_default();
+        let by_unique_id = attrs.get("byUniqueId").filter(|s| !s.is_empty()).cloned();
+        let role = attrs.get("role").cloned().unwrap_or_default();
+
+        let when = if let Some(w) = attrs.get("when") {
+            if w.is_empty() {
+                None
+            } else {
+                Some(parse_datetime_internal(w)?)
+            }
+        } else {
+            None
+        };
+
+        Ok(Value {
+            by,
+            by_unique_id,
+            role,
+            when,
+            value: String::new(),
+        })
+    }
+}
+
+impl Reason {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let by = attrs.get("by").cloned().unwrap_or_default();
+        let by_unique_id = attrs.get("byUniqueId").filter(|s| !s.is_empty()).cloned();
+        let role = attrs.get("role").cloned().unwrap_or_default();
+
+        let when = if let Some(w) = attrs.get("when") {
+            if w.is_empty() {
+                None
+            } else {
+                Some(parse_datetime_internal(w)?)
+            }
+        } else {
+            None
+        };
+
+        Ok(Reason {
+            by,
+            by_unique_id,
+            role,
+            when,
+            value: String::new(),
+        })
     }
 }

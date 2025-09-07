@@ -20,7 +20,7 @@ pub enum Error {
 
     /// A parsing error occurred.
     #[error(transparent)]
-    ParsingError(#[from] serde_xml_rs::Error),
+    ParsingError(#[from] quick_xml::de::DeError),
 
     /// An unknown error occurred.
     #[error("Unknown error")]
