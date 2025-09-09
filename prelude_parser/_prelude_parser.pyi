@@ -33,13 +33,14 @@ class Entry:
     def to_dict(self) -> dict: ...
 
 class Comment:
-    entry_id: str
+    comment_id: str
     value: Value | None
 
     def to_dict(self) -> dict: ...
 
 class Field:
     name: str
+    field_type: str
     data_type: str | None
     error_code: str
     when_created: datetime | None
@@ -61,13 +62,14 @@ class State:
     value: str
     signer: str
     signer_unique_id: str
+    date_signed: datetime | None
 
     def to_dict(self) -> dict: ...
 
 class Form:
     name: str
     last_modified: datetime | None
-    who_last_modified: str | None
+    who_last_modified_name: str | None
     who_last_modified_role: str | None
     when_created: int
     has_errors: bool
@@ -92,6 +94,7 @@ class Patient:
     site_name: str
     site_unique_id: str
     last_language: str | None
+    number_of_forms: int
     forms: list[Form] | None
 
     def to_dict(self) -> dict: ...
