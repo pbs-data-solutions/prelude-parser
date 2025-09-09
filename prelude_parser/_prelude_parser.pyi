@@ -38,6 +38,12 @@ class Comment:
 
     def to_dict(self) -> dict: ...
 
+class LockState:
+    locked: bool
+    user: str | None
+    user_unique_id: str | None
+    date_time_changed: datetime | None
+
 class Field:
     name: str
     field_type: str
@@ -45,6 +51,7 @@ class Field:
     error_code: str
     when_created: datetime | None
     keep_history: bool
+    lock_state: LockState | None
     entries: list[Entry] | None
     comments: list[Comment] | None
 
