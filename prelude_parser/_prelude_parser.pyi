@@ -88,6 +88,7 @@ class Form:
     form_index: int
     form_group: str | None
     form_state: str
+    lock_state: LockState | None
     states: list[State] | None
     categories: list[Category] | None
 
