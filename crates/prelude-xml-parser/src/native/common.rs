@@ -272,7 +272,7 @@ pub struct Entry {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all)]
+#[pyclass]
 pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
@@ -348,7 +348,10 @@ impl Entry {
         dict.set_item("entry_id", &self.entry_id)?;
         dict.set_item("reviewed_by", &self.reviewed_by)?;
         dict.set_item("reviewed_by_unique_id", &self.reviewed_by_unique_id)?;
-        dict.set_item("reviewed_by_when", to_py_datetime_option(py, &self.reviewed_by_when)?)?;
+        dict.set_item(
+            "reviewed_by_when",
+            to_py_datetime_option(py, &self.reviewed_by_when)?,
+        )?;
         if let Some(value) = &self.value {
             dict.set_item("value", value.to_dict(py)?)?;
         } else {
@@ -1437,8 +1440,11 @@ impl Entry {
             .unwrap_or_default();
 
         let reviewed_by = attrs.get("reviewedBy").filter(|s| !s.is_empty()).cloned();
-        let reviewed_by_unique_id = attrs.get("reviewedByUniqueId").filter(|s| !s.is_empty()).cloned();
-        
+        let reviewed_by_unique_id = attrs
+            .get("reviewedByUniqueId")
+            .filter(|s| !s.is_empty())
+            .cloned();
+
         let reviewed_by_when = if let Some(rbw) = attrs.get("reviewedByWhen") {
             if rbw.is_empty() {
                 None
