@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use chrono::{Datelike, NaiveDate};
 pub use prelude_xml_parser::native::{
-    common::{Category, Comment, Entry, Field, Form, Reason, State, Value},
+    common::{Category, Comment, Entry, Field, Form, LockState, Reason, State, Value},
     site_native::SiteNative,
     subject_native::SubjectNative,
     user_native::UserNative,
@@ -304,6 +304,7 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Entry>()?;
     m.add_class::<Field>()?;
     m.add_class::<Form>()?;
+    m.add_class::<LockState>()?;
     m.add_class::<Reason>()?;
     m.add_class::<SiteNative>()?;
     m.add_class::<State>()?;
