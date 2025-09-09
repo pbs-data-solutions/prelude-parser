@@ -10,6 +10,7 @@ use std::{
 
 use crate::errors::Error;
 use crate::native::{
+    common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
     site_native::SiteNative,
     subject_native::{Form, Patient, SubjectNative},
     user_native::UserNative,
@@ -135,6 +136,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 form_index: 1,
 ///                 form_group: Some("Demographic".to_string()),
 ///                 form_state: "In-Work".to_string(),
+///                 lock_state: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
@@ -355,6 +357,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 form_index: 1,
 ///                 form_group: Some("Demographic".to_string()),
 ///                 form_state: "In-Work".to_string(),
+///                 lock_state: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
@@ -446,6 +449,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// ```
 /// use chrono::{DateTime, Utc};
 /// use prelude_xml_parser::parse_subject_native_string;
+/// use prelude_xml_parser::native::common::LockState;
 /// use prelude_xml_parser::native::subject_native::*;
 ///
 /// let xml = r#"<export_from_vision_EDC date="30-May-2024 10:35 -0500" createdBy="Paul Sanders" role="Project Manager" numberSubjectsProcessed="4">
@@ -506,6 +510,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 form_index: 1,
 ///                 form_group: Some("Day 0".to_string()),
 ///                 form_state: "In-Work".to_string(),
+///                 lock_state: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
@@ -575,6 +580,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 form_index: 1,
 ///                 form_group: Some("Day 0".to_string()),
 ///                 form_state: "In-Work".to_string(),
+///                 lock_state: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".to_string(),
 ///                     signer: "Paul Sanders - Project Manager".to_string(),
@@ -625,8 +631,6 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
     parse_subject_native_streaming(Cursor::new(xml_str.as_bytes()))
 }
-
-use crate::native::common::{Category, Comment, Entry, Field, Reason, State, Value};
 
 fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<SubjectNative, Error> {
     let mut xml_reader = Reader::from_reader(reader);
@@ -837,6 +841,13 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                             let state = State::from_attributes(attrs)?;
                             current_states.push(state);
                         }
+                        "lockState" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            let lock_state = LockState::from_attributes(attrs)?;
+                            if let Some(ref mut form) = current_form {
+                                form.lock_state = Some(lock_state);
+                            }
+                        }
                         "value" if in_entry => {
                             let attrs = extract_attributes(e)?;
                             let value = Value::from_attributes(attrs)?;
@@ -964,6 +975,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///             form_index: 1,
 ///             form_group: None,
 ///             form_state: "In-Work".to_string(),
+///             lock_state: None,
 ///             states: Some(vec![State {
 ///                 value: "form.state.in.work".to_string(),
 ///                 signer: "Paul Sanders - Project Manager".to_string(),
