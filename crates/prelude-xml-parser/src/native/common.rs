@@ -674,6 +674,7 @@ impl Form {
             form_group,
             form_state,
             states: None,
+            lock_state: None,
             categories: None,
         })
     }
@@ -782,6 +783,116 @@ impl State {
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct LockState {
+    #[serde(rename = "locked")]
+    #[serde(alias = "@locked")]
+    #[serde(alias = "locked")]
+    pub locked: bool,
+
+    #[serde(rename = "user")]
+    #[serde(alias = "@user")]
+    #[serde(alias = "user")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub user: Option<String>,
+
+    #[serde(rename = "userUniqueId")]
+    #[serde(alias = "@userUniqueId")]
+    #[serde(alias = "userUniqueId")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub user_unique_id: Option<String>,
+
+    #[serde(rename = "dateTimeChanged")]
+    #[serde(alias = "@dateTimeChanged")]
+    #[serde(alias = "dateTimeChanged")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub date_time_changed: Option<DateTime<Utc>>,
+}
+
+#[cfg(feature = "python")]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[pyclass]
+pub struct LockState {
+    #[serde(rename = "locked")]
+    #[serde(alias = "@locked")]
+    #[serde(alias = "locked")]
+    pub locked: bool,
+
+    #[serde(rename = "user")]
+    #[serde(alias = "@user")]
+    #[serde(alias = "user")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub user: Option<String>,
+
+    #[serde(rename = "userUniqueId")]
+    #[serde(alias = "@userUniqueId")]
+    #[serde(alias = "userUniqueId")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub user_unique_id: Option<String>,
+
+    #[serde(rename = "dateTimeChanged")]
+    #[serde(alias = "@dateTimeChanged")]
+    #[serde(alias = "dateTimeChanged")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub date_time_changed: Option<DateTime<Utc>>,
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl LockState {
+    #[getter]
+    fn locked(&self) -> PyResult<bool> {
+        Ok(self.locked)
+    }
+
+    #[getter]
+    fn user(&self) -> PyResult<Option<String>> {
+        Ok(self.user.clone())
+    }
+
+    #[getter]
+    fn user_unique_id(&self) -> PyResult<Option<String>> {
+        Ok(self.user_unique_id.clone())
+    }
+
+    #[getter]
+    fn date_time_changed<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.date_time_changed)
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("locked", self.locked)?;
+        dict.set_item("user", &self.user)?;
+        dict.set_item("user_unique_id", &self.user_unique_id)?;
+        dict.set_item(
+            "date_time_changed",
+            to_py_datetime_option(py, &self.date_time_changed)?,
+        )?;
+
+        Ok(dict)
+    }
+}
+
+#[cfg(not(feature = "python"))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Form {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -875,6 +986,9 @@ pub struct Form {
 
     #[serde(alias = "state")]
     pub states: Option<Vec<State>>,
+
+    #[serde(alias = "lockState")]
+    pub lock_state: Option<LockState>,
 
     #[serde(alias = "category")]
     pub categories: Option<Vec<Category>>,
@@ -977,6 +1091,9 @@ pub struct Form {
     #[serde(alias = "state")]
     pub states: Option<Vec<State>>,
 
+    #[serde(alias = "lockState")]
+    pub lock_state: Option<LockState>,
+
     #[serde(alias = "category")]
     pub categories: Option<Vec<Category>>,
 }
@@ -1060,6 +1177,11 @@ impl Form {
     }
 
     #[getter]
+    fn lock_state(&self) -> PyResult<Option<LockState>> {
+        Ok(self.lock_state.clone())
+    }
+
+    #[getter]
     fn categories(&self) -> PyResult<Option<Vec<Category>>> {
         Ok(self.categories.clone())
     }
@@ -1096,6 +1218,12 @@ impl Form {
             dict.set_item("states", state_dicts)?;
         } else {
             dict.set_item("states", py.None())?;
+        }
+
+        if let Some(lock_state) = &self.lock_state {
+            dict.set_item("lock_state", lock_state.to_dict(py)?)?;
+        } else {
+            dict.set_item("lock_state", py.None())?;
         }
 
         if let Some(categories) = &self.categories {
@@ -1136,6 +1264,33 @@ impl State {
             signer,
             signer_unique_id,
             date_signed,
+        })
+    }
+}
+
+impl LockState {
+    pub fn from_attributes(
+        attrs: std::collections::HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let locked = attrs.get("locked").map(|s| s == "true").unwrap_or(false);
+        let user = attrs.get("user").filter(|s| !s.is_empty()).cloned();
+        let user_unique_id = attrs.get("userUniqueId").filter(|s| !s.is_empty()).cloned();
+
+        let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
+            if dtc.is_empty() {
+                None
+            } else {
+                parse_datetime_internal(dtc).ok()
+            }
+        } else {
+            None
+        };
+
+        Ok(LockState {
+            locked,
+            user,
+            user_unique_id,
+            date_time_changed,
         })
     }
 }

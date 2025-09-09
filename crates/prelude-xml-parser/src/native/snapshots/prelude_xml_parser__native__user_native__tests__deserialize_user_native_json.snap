@@ -27,6 +27,7 @@ users:
             signer: Paul Sanders - Project Manager
             signerUniqueId: "1681162687395"
             dateSigned: "2023-08-07T15:15:41Z"
+        lock_state: ~
         categories:
           - name: demographics
             categoryType: normal
