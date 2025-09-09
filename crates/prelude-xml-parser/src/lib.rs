@@ -180,6 +180,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: Some(vec![Entry {
 ///                                     entry_id: "1".to_string(),
+///                                     reviewed_by: None,
+///                                     reviewed_by_unique_id: None,
+///                                     reviewed_by_when: None,
 ///                                     value: Some(Value {
 ///                                         by: "Paul Sanders".to_string(),
 ///                                         by_unique_id: Some("1681162687395".to_string()),
@@ -209,6 +212,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 entries: Some(vec![
 ///                                     Entry {
 ///                                         entry_id: "1".to_string(),
+///                                         reviewed_by: None,
+///                                         reviewed_by_unique_id: None,
+///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
 ///                                             by: "set from calculation".to_string(),
 ///                                             by_unique_id: None,
@@ -234,6 +240,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     },
 ///                                     Entry {
 ///                                         entry_id: "2".to_string(),
+///                                         reviewed_by: None,
+///                                         reviewed_by_unique_id: None,
+///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
 ///                                             by: "set from calculation".to_string(),
 ///                                             by_unique_id: None,
@@ -294,6 +303,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: Some(vec![Entry {
 ///                                     entry_id: "1".to_string(),
+///                                     reviewed_by: None,
+///                                     reviewed_by_unique_id: None,
+///                                     reviewed_by_when: None,
 ///                                     value: Some(Value {
 ///                                         by: "Paul Sanders".to_string(),
 ///                                         by_unique_id: Some("1681162687395".to_string()),
@@ -383,6 +395,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
 ///                             entry_id: "1".to_string(),
+///                             reviewed_by: None,
+///                             reviewed_by_unique_id: None,
+///                             reviewed_by_when: None,
 ///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
 ///                                 by_unique_id: Some("1681162687395".to_string()),
@@ -536,6 +551,9 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
 ///                             entry_id: "1".to_string(),
+///                             reviewed_by: None,
+///                             reviewed_by_unique_id: None,
+///                             reviewed_by_when: None,
 ///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
 ///                                 by_unique_id: Some("1681162687395".to_string()),
@@ -606,6 +624,9 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
 ///                             entry_id: "1".to_string(),
+///                             reviewed_by: None,
+///                             reviewed_by_unique_id: None,
+///                             reviewed_by_when: None,
 ///                             value: Some(Value {
 ///                                 by: "Paul Sanders".to_string(),
 ///                                 by_unique_id: Some("1681162687395".to_string()),
@@ -1015,6 +1036,9 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                     keep_history: true,
 ///                                     entries: Some(vec![Entry {
 ///                                         entry_id: "1".to_string(),
+///                                         reviewed_by: None,
+///                                         reviewed_by_unique_id: None,
+///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
 ///                                             by: "Paul Sanders".to_string(),
 ///                                             by_unique_id: Some("1681162687395".to_string()),
@@ -1047,6 +1071,9 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                     entries: Some(vec![
 ///                                         Entry {
 ///                                             entry_id: "1".to_string(),
+///                                             reviewed_by: None,
+///                                             reviewed_by_unique_id: None,
+///                                             reviewed_by_when: None,
 ///                                             value: Some(Value {
 ///                                                 by: "set from calculation".to_string(),
 ///                                                 by_unique_id: None,

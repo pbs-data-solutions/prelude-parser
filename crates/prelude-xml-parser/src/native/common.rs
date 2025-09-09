@@ -238,18 +238,74 @@ pub struct Entry {
     #[serde(alias = "@id")]
     #[serde(alias = "entryId")]
     pub entry_id: String,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
     pub value: Option<Value>,
     pub reason: Option<Reason>,
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all)]
+#[pyclass]
 pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
     #[serde(alias = "entryId")]
     pub entry_id: String,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(
+        default = "default_string_none",
+        deserialize_with = "deserialize_empty_string_as_none"
+    )]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default = "default_datetime_none",
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
     pub value: Option<Value>,
     pub reason: Option<Reason>,
 }
@@ -260,6 +316,21 @@ impl Entry {
     #[getter]
     fn entry_id(&self) -> PyResult<String> {
         Ok(self.entry_id.clone())
+    }
+
+    #[getter]
+    fn reviewed_by(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_unique_id(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by_unique_id.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_when<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.reviewed_by_when)
     }
 
     #[getter]
@@ -275,6 +346,12 @@ impl Entry {
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
         dict.set_item("entry_id", &self.entry_id)?;
+        dict.set_item("reviewed_by", &self.reviewed_by)?;
+        dict.set_item("reviewed_by_unique_id", &self.reviewed_by_unique_id)?;
+        dict.set_item(
+            "reviewed_by_when",
+            to_py_datetime_option(py, &self.reviewed_by_when)?,
+        )?;
         if let Some(value) = &self.value {
             dict.set_item("value", value.to_dict(py)?)?;
         } else {
@@ -1362,8 +1439,27 @@ impl Entry {
             .cloned()
             .unwrap_or_default();
 
+        let reviewed_by = attrs.get("reviewedBy").filter(|s| !s.is_empty()).cloned();
+        let reviewed_by_unique_id = attrs
+            .get("reviewedByUniqueId")
+            .filter(|s| !s.is_empty())
+            .cloned();
+
+        let reviewed_by_when = if let Some(rbw) = attrs.get("reviewedByWhen") {
+            if rbw.is_empty() {
+                None
+            } else {
+                parse_datetime_internal(rbw).ok()
+            }
+        } else {
+            None
+        };
+
         Ok(Entry {
             entry_id,
+            reviewed_by,
+            reviewed_by_unique_id,
+            reviewed_by_when,
             value: None,
             reason: None,
         })
