@@ -27,6 +27,9 @@ class Reason:
 
 class Entry:
     entry_id: str
+    reviewed_by: str | None
+    reviewed_by_unique_id: str | None
+    reviewed_by_when: datetime | None
     value: Value | None
     reason: Reason | None
 
