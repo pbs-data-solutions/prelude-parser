@@ -49,6 +49,9 @@ users:
                 keepHistory: true
                 entries:
                   - entryId: "1"
+                    reviewedBy: ~
+                    reviewedByUniqueId: ~
+                    reviewedByWhen: ~
                     value:
                       by: Paul Sanders
                       byUniqueId: "1681162687395"
@@ -69,6 +72,9 @@ users:
                 keepHistory: true
                 entries:
                   - entryId: "1"
+                    reviewedBy: ~
+                    reviewedByUniqueId: ~
+                    reviewedByWhen: ~
                     value:
                       by: set from calculation
                       byUniqueId: ~
