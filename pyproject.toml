@@ -15,6 +15,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Rust",
   "License :: OSI Approved :: MIT License",
   "Typing :: Typed",
@@ -34,7 +35,7 @@ all = ["pandas>=2.1.0", "polars>=0.17.14"]
 
 [dependency-groups]
 dev = [
-  "maturin==1.9.3",
+  "maturin==1.9.6",
   "mypy==1.17.1",
   "pandas-stubs==2.3.0.250703",
   "pytest==8.4.1",
@@ -62,7 +63,7 @@ disallow_untyped_defs = false
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 fix = true
 
 [tool.ruff.lint]
