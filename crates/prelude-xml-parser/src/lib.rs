@@ -18,7 +18,7 @@ use crate::native::{
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 
-/// Parses a Prelude native XML file into a `Native` stuct.
+/// Parses a Prelude native XML file into a `Native` struct.
 ///
 /// # Example
 ///
@@ -435,7 +435,7 @@ pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
     Ok(native)
 }
 
-/// Parses a Prelude native subject XML file into a `SubjectNative` stuct.
+/// Parses a Prelude native subject XML file into a `SubjectNative` struct.
 ///
 /// # Example
 ///
@@ -913,7 +913,7 @@ fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> 
     Ok(attrs)
 }
 
-/// Parses a Prelude native user XML file into a `UserNative` stuct.
+/// Parses a Prelude native user XML file into a `UserNative` struct.
 ///
 /// # Example
 ///
@@ -1143,7 +1143,7 @@ mod tests {
     }
 
     #[test]
-    fn test_site_invaid_file_type_error() {
+    fn test_site_invalid_file_type_error() {
         let file = Builder::new()
             .prefix("test")
             .suffix(".csv")
@@ -1164,7 +1164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_subject_invaid_file_type_error() {
+    fn test_subject_invalid_file_type_error() {
         let file = Builder::new()
             .prefix("test")
             .suffix(".csv")
@@ -1185,7 +1185,7 @@ mod tests {
     }
 
     #[test]
-    fn test_user_invaid_file_type_error() {
+    fn test_user_invalid_file_type_error() {
         let file = Builder::new()
             .prefix("test")
             .suffix(".csv")
