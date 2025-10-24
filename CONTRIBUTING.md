@@ -49,7 +49,7 @@ git remote add upstream git@github.com:pbs-data-solutions/prelude-parser
 This creates the directory prelude-parser and connects your repository to the upstream
 (main project) repository.
 
-Next create a vitural environment and activate it.
+Next create a virtual environment and activate it.
 
 ```sh
 uv venv
@@ -160,7 +160,7 @@ the code coverage by running:
 just test
 ```
 
-In additon to mainting the coverage percentage please ensure that all tests are passing before
+In addition to mainting the coverage percentage please ensure that all tests are passing before
 submitting a pull request.
 
 ## Committing your code
@@ -247,7 +247,7 @@ git fetch upstream
 git rebase upstream/main
 ```
 
-There may be some merge conficts that need to be resolved. After the feature branch has been update
+There may be some merge conflicts that need to be resolved. After the feature branch has been update
 locally, you can now update your pull request by pushing to the branch on GitHub:
 
 ```sh
