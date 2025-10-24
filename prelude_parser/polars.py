@@ -15,7 +15,7 @@ except ImportError as e:  # pragma: no cover
 def to_dataframe(xml_file: str | Path, *, short_names: bool = False) -> pl.DataFrame:
     """Parse a Prelude flat XML file into a Polars DataFrame.
 
-    This works for Prelude flat XML files that were exported with the "write tables to seperate
+    This works for Prelude flat XML files that were exported with the "write tables to separate
     files" option.
 
     Args:

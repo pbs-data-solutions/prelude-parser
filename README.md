@@ -51,7 +51,7 @@ data = parse_to_classes("physical_examination.xml")
 ```
 
 Parse a Prelude flat XML file into a Pandas DataFrame. This works for Prelude flat XML files that
-were exported with the "write tables to seperate files" option. In order to use this option
+were exported with the "write tables to separate files" option. In order to use this option
 `prelude-parser` either needs to be installed with the `pandas` extra or the `all` extras.
 
 ```py
@@ -60,7 +60,7 @@ df = to_dataframe("physical_examination.xml")
 ```
 
 Parse a Prelude flat XML file into a Polars DataFrame. This works for Prelude flat XML files that
-were exported with the "write tables to seperate files" option. In order to use this option
+were exported with the "write tables to separate files" option. In order to use this option
 `prelude-parser` either needs to be installed with the `polars` extra or the `all` extras.
 
 ```py
