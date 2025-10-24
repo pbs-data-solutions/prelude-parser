@@ -10,7 +10,7 @@ pub enum Error {
     #[error("File {:?} is not a XML file.", 0)]
     InvalidFileType(PathBuf),
 
-    /// The file was not found at the specififed path.
+    /// The file was not found at the specified path.
     #[error("File was not found at the specified path: {:?}.", 0)]
     FileNotFound(PathBuf),
 
