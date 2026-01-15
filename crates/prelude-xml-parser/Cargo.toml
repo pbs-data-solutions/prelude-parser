@@ -15,7 +15,7 @@ license = "MIT"
 python = ["dep:pyo3"]
 
 [dependencies]
-chrono = { version = "0.4.42", features = ["serde"] }
+chrono = { version = "0.4.43", features = ["serde"] }
 pyo3 = { version = "0.27.2", optional = true }
 quick-xml = { version = "0.39.0", features = ["serde", "serialize"] }
 serde = { version = "1.0.228", features = ["derive"] }
