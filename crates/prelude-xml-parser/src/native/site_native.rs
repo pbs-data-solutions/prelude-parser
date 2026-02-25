@@ -53,7 +53,7 @@ pub struct Site {
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Site {
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
@@ -207,7 +207,7 @@ impl SiteNative {
 /// Contains the information from the Prelude native site XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct SiteNative {
     #[serde(alias = "site")]
     pub sites: Vec<Site>,

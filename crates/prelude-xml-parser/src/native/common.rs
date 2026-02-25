@@ -50,7 +50,7 @@ pub struct Value {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Value {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
@@ -158,7 +158,7 @@ pub struct Reason {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Reason {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
@@ -272,7 +272,7 @@ pub struct Entry {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
@@ -379,7 +379,7 @@ pub struct Comment {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct Comment {
     #[serde(rename = "commentId")]
     #[serde(alias = "@id")]
@@ -457,7 +457,7 @@ pub struct Field {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Field {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -609,7 +609,7 @@ pub struct Category {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct Category {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -799,7 +799,7 @@ pub struct State {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct State {
     #[serde(rename = "value")]
     #[serde(alias = "@value")]
@@ -896,7 +896,7 @@ pub struct LockState {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct LockState {
     #[serde(rename = "locked")]
     #[serde(alias = "@locked")]
@@ -1073,7 +1073,7 @@ pub struct Form {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Form {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
