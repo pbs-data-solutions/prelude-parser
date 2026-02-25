@@ -122,7 +122,7 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass]
+#[pyclass(skip_from_py_object)]
 pub struct Patient {
     #[serde(rename = "patientId")]
     #[serde(alias = "@patientId")]
@@ -287,7 +287,7 @@ impl SubjectNative {
 /// Contains the information from the Prelude native subject XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct SubjectNative {
     #[serde(alias = "patient")]
     pub patients: Vec<Patient>,

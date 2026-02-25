@@ -39,7 +39,7 @@ pub struct User {
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct User {
     #[serde(rename = "uniqueId")]
     #[serde(alias = "@uniqueId")]
@@ -150,7 +150,7 @@ impl UserNative {
 /// Contains the information from the Prelude native user XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[pyclass(get_all, skip_from_py_object)]
 pub struct UserNative {
     #[serde(alias = "user")]
     pub users: Vec<User>,
