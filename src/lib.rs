@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use chrono::{Datelike, NaiveDate};
 pub use prelude_xml_parser::native::{
     common::{Category, Comment, Entry, Field, Form, LockState, Reason, State, Value},
-    site_native::SiteNative,
-    subject_native::SubjectNative,
-    user_native::UserNative,
+    site_native::{Site, SiteNative},
+    subject_native::{Patient, SubjectNative},
+    user_native::{User, UserNative},
 };
 use prelude_xml_parser::parse_site_native_file as parse_site_native_file_rs;
 use prelude_xml_parser::parse_site_native_string as parse_site_native_string_rs;
@@ -305,10 +305,13 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Field>()?;
     m.add_class::<Form>()?;
     m.add_class::<LockState>()?;
+    m.add_class::<Patient>()?;
     m.add_class::<Reason>()?;
+    m.add_class::<Site>()?;
     m.add_class::<SiteNative>()?;
     m.add_class::<State>()?;
     m.add_class::<SubjectNative>()?;
+    m.add_class::<User>()?;
     m.add_class::<UserNative>()?;
     m.add_class::<Value>()?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
