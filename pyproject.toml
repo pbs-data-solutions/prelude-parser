@@ -38,7 +38,7 @@ dev = [
   "maturin==1.9.6",
   "mypy==1.20.0",
   "pandas-stubs==2.3.3.260113",
-  "pytest==8.4.1",
+  "pytest==9.0.2",
   "pytest-cov==7.1.0",
   "ruff==0.15.9",
   "tomli==2.0.2; python_version<'3.11'",
