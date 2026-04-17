@@ -40,7 +40,7 @@ dev = [
   "pandas-stubs==2.3.3.260113",
   "pytest==9.0.3",
   "pytest-cov==7.1.0",
-  "ruff==0.15.10",
+  "ruff==0.15.11",
   "tomli==2.0.2; python_version<'3.11'",
 ]
 
