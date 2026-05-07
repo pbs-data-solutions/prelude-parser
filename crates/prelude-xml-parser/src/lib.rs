@@ -755,10 +755,8 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                 }
             }
 
-            Ok(Event::Text(e)) => {
-                if in_value || in_reason {
-                    text_content.push_str(&String::from_utf8_lossy(&e));
-                }
+            Ok(Event::Text(e)) if (in_value || in_reason) => {
+                text_content.push_str(&String::from_utf8_lossy(&e));
             }
 
             Ok(Event::End(ref e)) => {
