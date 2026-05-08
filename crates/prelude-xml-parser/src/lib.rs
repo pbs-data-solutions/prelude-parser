@@ -1,12 +1,9 @@
 pub mod errors;
 pub mod native;
 
-use std::{
-    collections::HashMap,
-    fs::{read_to_string, File},
-    io::{BufReader, Cursor},
-    path::Path,
-};
+use std::{collections::HashMap, fs::read_to_string, io::Cursor, path::Path};
+
+use rayon::prelude::*;
 
 use crate::errors::Error;
 use crate::native::{
@@ -452,9 +449,13 @@ pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
 pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error> {
     check_valid_xml_file(xml_path)?;
 
-    let file = File::open(xml_path)?;
-    let buf_reader = BufReader::new(file);
-    parse_subject_native_streaming(buf_reader)
+    let xml_str = read_to_string(xml_path)?;
+    let chunks = extract_patient_chunks(&xml_str);
+    let patients = chunks
+        .into_par_iter()
+        .map(parse_patient_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SubjectNative { patients })
 }
 
 /// Parse a string of Prelude native subject XML into a `SubjectNative` struct.
@@ -650,16 +651,56 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
-    parse_subject_native_streaming(Cursor::new(xml_str.as_bytes()))
+    let chunks = extract_patient_chunks(xml_str);
+    let patients = chunks
+        .into_par_iter()
+        .map(parse_patient_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SubjectNative { patients })
 }
 
-fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<SubjectNative, Error> {
-    let mut xml_reader = Reader::from_reader(reader);
-    xml_reader.config_mut().trim_text(true);
+fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> {
+    let mut attrs = HashMap::new();
+    for attr in e.attributes() {
+        let attr = attr.map_err(|e| {
+            Error::ParsingError(quick_xml::de::DeError::Custom(format!(
+                "Attribute error: {}",
+                e
+            )))
+        })?;
+        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
+        let value = String::from_utf8_lossy(&attr.value).to_string();
+        attrs.insert(key, value);
+    }
+    Ok(attrs)
+}
 
-    let mut patients = Vec::new();
-    let mut buf = Vec::new();
-    let mut text_content = String::new();
+fn extract_patient_chunks(xml: &str) -> Vec<&str> {
+    let mut chunks = Vec::new();
+    let mut pos = 0;
+    loop {
+        match xml[pos..].find("<patient ") {
+            None => break,
+            Some(rel) => {
+                let start = pos + rel;
+                match xml[start..].find("</patient>") {
+                    None => break,
+                    Some(rel_end) => {
+                        let end = start + rel_end + "</patient>".len();
+                        chunks.push(&xml[start..end]);
+                        pos = end;
+                    }
+                }
+            }
+        }
+    }
+    chunks
+}
+
+fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
+    let wrapped = format!("<r>{}</r>", patient_xml);
+    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    xml_reader.config_mut().trim_text(true);
 
     let mut current_patient: Option<Patient> = None;
     let mut current_forms: Vec<Form> = Vec::new();
@@ -675,8 +716,7 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
     let mut current_comment: Option<Comment> = None;
     let mut current_value: Option<Value> = None;
     let mut current_reason: Option<Reason> = None;
-
-    let mut in_patient = false;
+    let mut text_content = String::new();
     let mut in_form = false;
     let mut in_category = false;
     let mut in_field = false;
@@ -684,6 +724,7 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
     let mut in_comment = false;
     let mut in_value = false;
     let mut in_reason = false;
+    let mut buf = Vec::new();
 
     loop {
         match xml_reader.read_event_into(&mut buf) {
@@ -701,10 +742,9 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                         "patient" => {
                             let attrs = extract_attributes(e)?;
                             current_patient = Some(Patient::from_attributes(attrs)?);
-                            in_patient = true;
                             current_forms.clear();
                         }
-                        "form" if in_patient => {
+                        "form" if current_patient.is_some() => {
                             let attrs = extract_attributes(e)?;
                             current_form = Some(Form::from_attributes(attrs)?);
                             in_form = true;
@@ -768,10 +808,8 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                                 if !current_forms.is_empty() {
                                     patient.set_forms(current_forms.clone());
                                 }
-                                patients.push(patient);
+                                current_patient = Some(patient);
                             }
-                            in_patient = false;
-                            current_forms.clear();
                         }
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
@@ -892,23 +930,11 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
         buf.clear();
     }
 
-    Ok(SubjectNative { patients })
-}
-
-fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> {
-    let mut attrs = HashMap::new();
-    for attr in e.attributes() {
-        let attr = attr.map_err(|e| {
-            Error::ParsingError(quick_xml::de::DeError::Custom(format!(
-                "Attribute error: {}",
-                e
-            )))
-        })?;
-        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-        let value = String::from_utf8_lossy(&attr.value).to_string();
-        attrs.insert(key, value);
-    }
-    Ok(attrs)
+    current_patient.ok_or_else(|| {
+        Error::ParsingError(quick_xml::de::DeError::Custom(
+            "No patient found in chunk".to_string(),
+        ))
+    })
 }
 
 /// Parses a Prelude native user XML file into a `UserNative` struct.
