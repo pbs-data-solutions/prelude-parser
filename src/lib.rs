@@ -239,8 +239,9 @@ fn _parse_flat_file_to_pandas_dict<'py>(
 
 #[pyfunction]
 #[pyo3(signature = (xml_file))]
-fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative> {
-    match parse_site_native_file_rs(&xml_file) {
+fn parse_site_native_file(py: Python, xml_file: PathBuf) -> PyResult<SiteNative> {
+    let result = py.detach(|| parse_site_native_file_rs(&xml_file));
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
             "Error parsing xml file: {e:?}"
@@ -250,8 +251,10 @@ fn parse_site_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SiteNative
 
 #[pyfunction]
 #[pyo3(signature = (xml_str))]
-fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> {
-    match parse_site_native_string_rs(xml_str) {
+fn parse_site_native_string(py: Python, xml_str: &str) -> PyResult<SiteNative> {
+    let result = py.detach(|| parse_site_native_string_rs(xml_str));
+
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
@@ -259,8 +262,10 @@ fn parse_site_native_string(_py: Python, xml_str: &str) -> PyResult<SiteNative> 
 
 #[pyfunction]
 #[pyo3(signature = (xml_file))]
-fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<SubjectNative> {
-    match parse_subject_native_file_rs(&xml_file) {
+fn parse_subject_native_file(py: Python, xml_file: PathBuf) -> PyResult<SubjectNative> {
+    let result = py.detach(|| parse_subject_native_file_rs(&xml_file));
+
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
             "Error parsing xml file: {e:?}"
@@ -270,8 +275,9 @@ fn parse_subject_native_file(_py: Python, xml_file: PathBuf) -> PyResult<Subject
 
 #[pyfunction]
 #[pyo3(signature = (xml_str))]
-fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNative> {
-    match parse_subject_native_string_rs(xml_str) {
+fn parse_subject_native_string(py: Python, xml_str: &str) -> PyResult<SubjectNative> {
+    let result = py.detach(|| parse_subject_native_string_rs(xml_str));
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
@@ -279,8 +285,10 @@ fn parse_subject_native_string(_py: Python, xml_str: &str) -> PyResult<SubjectNa
 
 #[pyfunction]
 #[pyo3(signature = (xml_file))]
-fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative> {
-    match parse_user_native_file_rs(&xml_file) {
+fn parse_user_native_file(py: Python, xml_file: PathBuf) -> PyResult<UserNative> {
+    let result = py.detach(|| parse_user_native_file_rs(&xml_file));
+
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!(
             "Error parsing xml file: {e:?}"
@@ -290,8 +298,10 @@ fn parse_user_native_file(_py: Python, xml_file: PathBuf) -> PyResult<UserNative
 
 #[pyfunction]
 #[pyo3(signature = (xml_str))]
-fn parse_user_native_string(_py: Python, xml_str: &str) -> PyResult<UserNative> {
-    match parse_user_native_string_rs(xml_str) {
+fn parse_user_native_string(py: Python, xml_str: &str) -> PyResult<UserNative> {
+    let result = py.detach(|| parse_user_native_string_rs(xml_str));
+
+    match result {
         Ok(native) => Ok(native),
         Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
     }
