@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -50,6 +52,83 @@ pub struct Site {
     pub forms: Option<Vec<Form>>,
 }
 
+#[cfg(not(feature = "python"))]
+impl Site {
+    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
+        let name = attrs.get("name").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing name".to_string(),
+            ))
+        })?;
+
+        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing uniqueId".to_string(),
+            ))
+        })?;
+
+        let number_of_patients = attrs
+            .get("numberOfPatients")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let count_of_randomized_patients = attrs
+            .get("countOfRandomizedPatients")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
+            if wc_str.is_empty() {
+                None
+            } else {
+                Some(parse_datetime(wc_str)?)
+            }
+        } else {
+            None
+        };
+
+        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing creator".to_string(),
+            ))
+        })?;
+
+        let number_of_forms = attrs
+            .get("numberOfForms")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        Ok(Site {
+            name,
+            unique_id,
+            number_of_patients,
+            count_of_randomized_patients,
+            when_created,
+            creator,
+            number_of_forms,
+            forms: None,
+        })
+    }
+
+    pub fn set_forms(&mut self, forms: Vec<Form>) {
+        self.forms = if forms.is_empty() { None } else { Some(forms) };
+    }
+}
+
+fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
+    if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(s) {
+        Ok(dt.with_timezone(&Utc))
+    } else {
+        Err(crate::errors::Error::ParsingError(
+            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
+        ))
+    }
+}
+
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -85,6 +164,69 @@ pub struct Site {
     #[serde(rename = "form")]
     #[serde(alias = "form")]
     pub forms: Option<Vec<Form>>,
+}
+
+#[cfg(feature = "python")]
+impl Site {
+    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
+        let name = attrs.get("name").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing name".to_string(),
+            ))
+        })?;
+
+        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing uniqueId".to_string(),
+            ))
+        })?;
+
+        let number_of_patients = attrs
+            .get("numberOfPatients")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let count_of_randomized_patients = attrs
+            .get("countOfRandomizedPatients")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
+            if wc_str.is_empty() {
+                None
+            } else {
+                Some(parse_datetime(wc_str)?)
+            }
+        } else {
+            None
+        };
+
+        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing creator".to_string(),
+            ))
+        })?;
+
+        let number_of_forms = attrs
+            .get("numberOfForms")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        Ok(Site {
+            name,
+            unique_id,
+            number_of_patients,
+            count_of_randomized_patients,
+            when_created,
+            creator,
+            number_of_forms,
+            forms: None,
+        })
+    }
+
+    pub fn set_forms(&mut self, forms: Vec<Form>) {
+        self.forms = if forms.is_empty() { None } else { Some(forms) };
+    }
 }
 
 #[cfg(feature = "python")]
