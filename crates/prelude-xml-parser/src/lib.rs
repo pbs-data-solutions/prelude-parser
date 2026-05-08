@@ -10,7 +10,7 @@ use crate::native::{
     common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
     site_native::{Site, SiteNative},
     subject_native::{Form, Patient, SubjectNative},
-    user_native::UserNative,
+    user_native::{User, UserNative},
 };
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
@@ -1386,9 +1386,243 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
-    let native: UserNative = quick_xml::de::from_str(xml_str)?;
+    let chunks = extract_user_chunks(xml_str);
+    let users = chunks
+        .into_par_iter()
+        .map(parse_user_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(UserNative { users })
+}
 
-    Ok(native)
+fn extract_user_chunks(xml: &str) -> Vec<&str> {
+    let mut chunks = Vec::new();
+    let mut pos = 0;
+    loop {
+        match xml[pos..].find("<user ") {
+            None => break,
+            Some(rel) => {
+                let start = pos + rel;
+                match xml[start..].find("</user>") {
+                    None => break,
+                    Some(rel_end) => {
+                        let end = start + rel_end + "</user>".len();
+                        chunks.push(&xml[start..end]);
+                        pos = end;
+                    }
+                }
+            }
+        }
+    }
+    chunks
+}
+
+fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
+    let wrapped = format!("<r>{}</r>", user_xml);
+    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    xml_reader.config_mut().trim_text(true);
+
+    let mut current_user: Option<User> = None;
+    let mut current_forms: Vec<Form> = Vec::new();
+    let mut current_form: Option<Form> = None;
+    let mut current_states: Vec<State> = Vec::new();
+    let mut current_categories: Vec<Category> = Vec::new();
+    let mut current_category: Option<Category> = None;
+    let mut current_fields: Vec<Field> = Vec::new();
+    let mut current_field: Option<Field> = None;
+    let mut current_entries: Vec<Entry> = Vec::new();
+    let mut current_entry: Option<Entry> = None;
+    let mut current_comments: Vec<Comment> = Vec::new();
+    let mut current_comment: Option<Comment> = None;
+    let mut current_value: Option<Value> = None;
+    let mut current_reason: Option<Reason> = None;
+    let mut text_content = String::new();
+    let mut in_form = false;
+    let mut in_category = false;
+    let mut in_field = false;
+    let mut in_entry = false;
+    let mut in_comment = false;
+    let mut in_value = false;
+    let mut in_reason = false;
+    let mut buf = Vec::new();
+
+    loop {
+        match xml_reader.read_event_into(&mut buf) {
+            Err(e) => {
+                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
+                    format!("XML reading error: {}", e),
+                )))
+            }
+            Ok(Event::Eof) => break,
+
+            Ok(Event::Start(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "user" => {
+                            let attrs = extract_attributes(e)?;
+                            current_user = Some(User::from_attributes(attrs)?);
+                        }
+                        "form" => {
+                            let attrs = extract_attributes(e)?;
+                            current_form = Some(Form::from_attributes(attrs)?);
+                            in_form = true;
+                        }
+                        "category" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            current_category = Some(Category::from_attributes(attrs)?);
+                            in_category = true;
+                        }
+                        "field" if in_category => {
+                            let attrs = extract_attributes(e)?;
+                            current_field = Some(Field::from_attributes(attrs)?);
+                            in_field = true;
+                        }
+                        "entry" if in_field => {
+                            let attrs = extract_attributes(e)?;
+                            current_entry = Some(Entry::from_attributes(attrs)?);
+                            in_entry = true;
+                        }
+                        "comment" if in_field => {
+                            let attrs = extract_attributes(e)?;
+                            let comment_id = attrs.get("id").cloned().unwrap_or_default();
+                            current_comment = Some(Comment {
+                                comment_id,
+                                value: None,
+                            });
+                            in_comment = true;
+                        }
+                        "value" if in_entry || in_comment => {
+                            let attrs = extract_attributes(e)?;
+                            current_value = Some(Value::from_attributes(attrs)?);
+                            in_value = true;
+                            text_content.clear();
+                        }
+                        "reason" if in_entry => {
+                            let attrs = extract_attributes(e)?;
+                            current_reason = Some(Reason::from_attributes(attrs)?);
+                            in_reason = true;
+                            text_content.clear();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            Ok(Event::Text(e)) if (in_value || in_reason) => {
+                text_content.push_str(&String::from_utf8_lossy(&e));
+            }
+
+            Ok(Event::End(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "user" => {
+                            if let Some(mut user) = current_user.take() {
+                                if !current_forms.is_empty() {
+                                    user.set_forms(std::mem::take(&mut current_forms));
+                                }
+                                current_user = Some(user);
+                            }
+                        }
+                        "form" if in_form => {
+                            if let Some(mut form) = current_form.take() {
+                                if !current_states.is_empty() {
+                                    form.states = Some(std::mem::take(&mut current_states));
+                                }
+                                if !current_categories.is_empty() {
+                                    form.categories = Some(std::mem::take(&mut current_categories));
+                                }
+                                current_forms.push(form);
+                            }
+                            in_form = false;
+                        }
+                        "category" if in_category => {
+                            if let Some(mut category) = current_category.take() {
+                                if !current_fields.is_empty() {
+                                    category.fields = Some(std::mem::take(&mut current_fields));
+                                }
+                                current_categories.push(category);
+                            }
+                            in_category = false;
+                        }
+                        "field" if in_field => {
+                            if let Some(mut field) = current_field.take() {
+                                if !current_entries.is_empty() {
+                                    field.entries = Some(std::mem::take(&mut current_entries));
+                                }
+                                if !current_comments.is_empty() {
+                                    field.comments = Some(std::mem::take(&mut current_comments));
+                                }
+                                current_fields.push(field);
+                            }
+                            in_field = false;
+                        }
+                        "entry" if in_entry => {
+                            if let Some(entry) = current_entry.take() {
+                                current_entries.push(entry);
+                            }
+                            in_entry = false;
+                        }
+                        "comment" if in_comment => {
+                            if let Some(comment) = current_comment.take() {
+                                current_comments.push(comment);
+                            }
+                            in_comment = false;
+                        }
+                        "value" if in_value => {
+                            if let Some(mut value) = current_value.take() {
+                                value.value = std::mem::take(&mut text_content);
+                                if let Some(ref mut entry) = current_entry {
+                                    entry.value = Some(value);
+                                } else if let Some(ref mut comment) = current_comment {
+                                    comment.value = Some(value);
+                                }
+                            }
+                            in_value = false;
+                        }
+                        "reason" if in_reason => {
+                            if let Some(mut reason) = current_reason.take() {
+                                reason.value = std::mem::take(&mut text_content);
+                                if let Some(ref mut entry) = current_entry {
+                                    entry.reason = Some(reason);
+                                }
+                            }
+                            in_reason = false;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            Ok(Event::Empty(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "state" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            let state = State::from_attributes(attrs)?;
+                            current_states.push(state);
+                        }
+                        "field" if in_category => {
+                            let attrs = extract_attributes(e)?;
+                            let field = Field::from_attributes(attrs)?;
+                            current_fields.push(field);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            _ => {}
+        }
+        buf.clear();
+    }
+
+    current_user.ok_or_else(|| {
+        Error::ParsingError(quick_xml::de::DeError::Custom(
+            "No user element found".to_string(),
+        ))
+    })
 }
 
 fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {

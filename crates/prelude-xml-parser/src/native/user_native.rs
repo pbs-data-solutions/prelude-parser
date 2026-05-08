@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
@@ -36,6 +38,42 @@ pub struct User {
     pub forms: Option<Vec<Form>>,
 }
 
+#[cfg(not(feature = "python"))]
+impl User {
+    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
+        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing uniqueId".to_string(),
+            ))
+        })?;
+
+        let last_language = attrs.get("lastLanguage").filter(|s| !s.is_empty()).cloned();
+
+        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing creator".to_string(),
+            ))
+        })?;
+
+        let number_of_forms = attrs
+            .get("numberOfForms")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        Ok(User {
+            unique_id,
+            last_language,
+            creator,
+            number_of_forms,
+            forms: None,
+        })
+    }
+
+    pub fn set_forms(&mut self, forms: Vec<Form>) {
+        self.forms = if forms.is_empty() { None } else { Some(forms) };
+    }
+}
+
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -65,6 +103,42 @@ pub struct User {
 
     #[serde(alias = "form")]
     pub forms: Option<Vec<Form>>,
+}
+
+#[cfg(feature = "python")]
+impl User {
+    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
+        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing uniqueId".to_string(),
+            ))
+        })?;
+
+        let last_language = attrs.get("lastLanguage").filter(|s| !s.is_empty()).cloned();
+
+        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Missing creator".to_string(),
+            ))
+        })?;
+
+        let number_of_forms = attrs
+            .get("numberOfForms")
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0);
+
+        Ok(User {
+            unique_id,
+            last_language,
+            creator,
+            number_of_forms,
+            forms: None,
+        })
+    }
+
+    pub fn set_forms(&mut self, forms: Vec<Form>) {
+        self.forms = if forms.is_empty() { None } else { Some(forms) };
+    }
 }
 
 #[cfg(feature = "python")]
