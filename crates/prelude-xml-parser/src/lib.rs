@@ -809,7 +809,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "patient" => {
                             if let Some(mut patient) = current_patient.take() {
                                 if !current_forms.is_empty() {
-                                    patient.set_forms(current_forms.clone());
+                                    patient.set_forms(std::mem::take(&mut current_forms));
                                 }
                                 current_patient = Some(patient);
                             }
@@ -817,40 +817,35 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(current_states.clone());
+                                    form.states = Some(std::mem::take(&mut current_states));
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(current_categories.clone());
+                                    form.categories = Some(std::mem::take(&mut current_categories));
                                 }
                                 current_forms.push(form);
                             }
                             in_form = false;
-                            current_states.clear();
-                            current_categories.clear();
                         }
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(current_fields.clone());
+                                    category.fields = Some(std::mem::take(&mut current_fields));
                                 }
                                 current_categories.push(category);
                             }
                             in_category = false;
-                            current_fields.clear();
                         }
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(current_entries.clone());
+                                    field.entries = Some(std::mem::take(&mut current_entries));
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(current_comments.clone());
+                                    field.comments = Some(std::mem::take(&mut current_comments));
                                 }
                                 current_fields.push(field);
                             }
                             in_field = false;
-                            current_entries.clear();
-                            current_comments.clear();
                         }
                         "entry" if in_entry => {
                             if let Some(entry) = current_entry.take() {
@@ -866,26 +861,23 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
-                                value.value = text_content.clone();
+                                value.value = std::mem::take(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
-                                    entry.value = Some(value.clone());
-                                }
-                                if let Some(ref mut comment) = current_comment {
+                                    entry.value = Some(value);
+                                } else if let Some(ref mut comment) = current_comment {
                                     comment.value = Some(value);
                                 }
                             }
                             in_value = false;
-                            text_content.clear();
                         }
                         "reason" if in_reason => {
                             if let Some(mut reason) = current_reason.take() {
-                                reason.value = text_content.clone();
+                                reason.value = std::mem::take(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.reason = Some(reason);
                                 }
                             }
                             in_reason = false;
-                            text_content.clear();
                         }
                         _ => {}
                     }
@@ -1071,7 +1063,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "site" => {
                             if let Some(mut site) = current_site.take() {
                                 if !current_forms.is_empty() {
-                                    site.set_forms(current_forms.clone());
+                                    site.set_forms(std::mem::take(&mut current_forms));
                                 }
                                 current_site = Some(site);
                             }
@@ -1079,40 +1071,35 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(current_states.clone());
+                                    form.states = Some(std::mem::take(&mut current_states));
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(current_categories.clone());
+                                    form.categories = Some(std::mem::take(&mut current_categories));
                                 }
                                 current_forms.push(form);
                             }
                             in_form = false;
-                            current_states.clear();
-                            current_categories.clear();
                         }
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(current_fields.clone());
+                                    category.fields = Some(std::mem::take(&mut current_fields));
                                 }
                                 current_categories.push(category);
                             }
                             in_category = false;
-                            current_fields.clear();
                         }
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(current_entries.clone());
+                                    field.entries = Some(std::mem::take(&mut current_entries));
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(current_comments.clone());
+                                    field.comments = Some(std::mem::take(&mut current_comments));
                                 }
                                 current_fields.push(field);
                             }
                             in_field = false;
-                            current_entries.clear();
-                            current_comments.clear();
                         }
                         "entry" if in_entry => {
                             if let Some(entry) = current_entry.take() {
@@ -1128,26 +1115,23 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
-                                value.value = text_content.clone();
+                                value.value = std::mem::take(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
-                                    entry.value = Some(value.clone());
-                                }
-                                if let Some(ref mut comment) = current_comment {
+                                    entry.value = Some(value);
+                                } else if let Some(ref mut comment) = current_comment {
                                     comment.value = Some(value);
                                 }
                             }
                             in_value = false;
-                            text_content.clear();
                         }
                         "reason" if in_reason => {
                             if let Some(mut reason) = current_reason.take() {
-                                reason.value = text_content.clone();
+                                reason.value = std::mem::take(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.reason = Some(reason);
                                 }
                             }
                             in_reason = false;
-                            text_content.clear();
                         }
                         _ => {}
                     }
