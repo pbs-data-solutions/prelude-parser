@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -13,7 +15,6 @@ use crate::native::deserializers::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, State, Value};
 

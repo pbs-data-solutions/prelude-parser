@@ -1,17 +1,14 @@
 pub mod errors;
 pub mod native;
 
-use std::{
-    collections::HashMap,
-    fs::{read_to_string, File},
-    io::{BufReader, Cursor},
-    path::Path,
-};
+use std::{collections::HashMap, fs::read_to_string, io::Cursor, path::Path};
+
+use rayon::prelude::*;
 
 use crate::errors::Error;
 use crate::native::{
     common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
-    site_native::SiteNative,
+    site_native::{Site, SiteNative},
     subject_native::{Form, Patient, SubjectNative},
     user_native::UserNative,
 };
@@ -430,9 +427,12 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 /// let result = parse_site_native_string(xml).unwrap();
 /// assert_eq!(result, expected);
 pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
-    let native: SiteNative = quick_xml::de::from_str(xml_str)?;
-
-    Ok(native)
+    let chunks = extract_site_chunks(xml_str);
+    let sites = chunks
+        .into_par_iter()
+        .map(parse_site_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SiteNative { sites })
 }
 
 /// Parses a Prelude native subject XML file into a `SubjectNative` struct.
@@ -452,9 +452,13 @@ pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
 pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error> {
     check_valid_xml_file(xml_path)?;
 
-    let file = File::open(xml_path)?;
-    let buf_reader = BufReader::new(file);
-    parse_subject_native_streaming(buf_reader)
+    let xml_str = read_to_string(xml_path)?;
+    let chunks = extract_patient_chunks(&xml_str);
+    let patients = chunks
+        .into_par_iter()
+        .map(parse_patient_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SubjectNative { patients })
 }
 
 /// Parse a string of Prelude native subject XML into a `SubjectNative` struct.
@@ -650,16 +654,56 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
-    parse_subject_native_streaming(Cursor::new(xml_str.as_bytes()))
+    let chunks = extract_patient_chunks(xml_str);
+    let patients = chunks
+        .into_par_iter()
+        .map(parse_patient_xml)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(SubjectNative { patients })
 }
 
-fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<SubjectNative, Error> {
-    let mut xml_reader = Reader::from_reader(reader);
-    xml_reader.config_mut().trim_text(true);
+fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> {
+    let mut attrs = HashMap::new();
+    for attr in e.attributes() {
+        let attr = attr.map_err(|e| {
+            Error::ParsingError(quick_xml::de::DeError::Custom(format!(
+                "Attribute error: {}",
+                e
+            )))
+        })?;
+        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
+        let value = String::from_utf8_lossy(&attr.value).to_string();
+        attrs.insert(key, value);
+    }
+    Ok(attrs)
+}
 
-    let mut patients = Vec::new();
-    let mut buf = Vec::new();
-    let mut text_content = String::new();
+fn extract_patient_chunks(xml: &str) -> Vec<&str> {
+    let mut chunks = Vec::new();
+    let mut pos = 0;
+    loop {
+        match xml[pos..].find("<patient ") {
+            None => break,
+            Some(rel) => {
+                let start = pos + rel;
+                match xml[start..].find("</patient>") {
+                    None => break,
+                    Some(rel_end) => {
+                        let end = start + rel_end + "</patient>".len();
+                        chunks.push(&xml[start..end]);
+                        pos = end;
+                    }
+                }
+            }
+        }
+    }
+    chunks
+}
+
+fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
+    let wrapped = format!("<r>{}</r>", patient_xml);
+    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    xml_reader.config_mut().trim_text(true);
 
     let mut current_patient: Option<Patient> = None;
     let mut current_forms: Vec<Form> = Vec::new();
@@ -675,8 +719,7 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
     let mut current_comment: Option<Comment> = None;
     let mut current_value: Option<Value> = None;
     let mut current_reason: Option<Reason> = None;
-
-    let mut in_patient = false;
+    let mut text_content = String::new();
     let mut in_form = false;
     let mut in_category = false;
     let mut in_field = false;
@@ -684,6 +727,7 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
     let mut in_comment = false;
     let mut in_value = false;
     let mut in_reason = false;
+    let mut buf = Vec::new();
 
     loop {
         match xml_reader.read_event_into(&mut buf) {
@@ -701,10 +745,9 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                         "patient" => {
                             let attrs = extract_attributes(e)?;
                             current_patient = Some(Patient::from_attributes(attrs)?);
-                            in_patient = true;
                             current_forms.clear();
                         }
-                        "form" if in_patient => {
+                        "form" if current_patient.is_some() => {
                             let attrs = extract_attributes(e)?;
                             current_form = Some(Form::from_attributes(attrs)?);
                             in_form = true;
@@ -768,10 +811,8 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
                                 if !current_forms.is_empty() {
                                     patient.set_forms(current_forms.clone());
                                 }
-                                patients.push(patient);
+                                current_patient = Some(patient);
                             }
-                            in_patient = false;
-                            current_forms.clear();
                         }
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
@@ -892,23 +933,278 @@ fn parse_subject_native_streaming<R: std::io::BufRead>(reader: R) -> Result<Subj
         buf.clear();
     }
 
-    Ok(SubjectNative { patients })
+    current_patient.ok_or_else(|| {
+        Error::ParsingError(quick_xml::de::DeError::Custom(
+            "No patient found in chunk".to_string(),
+        ))
+    })
 }
 
-fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> {
-    let mut attrs = HashMap::new();
-    for attr in e.attributes() {
-        let attr = attr.map_err(|e| {
-            Error::ParsingError(quick_xml::de::DeError::Custom(format!(
-                "Attribute error: {}",
-                e
-            )))
-        })?;
-        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-        let value = String::from_utf8_lossy(&attr.value).to_string();
-        attrs.insert(key, value);
+fn extract_site_chunks(xml: &str) -> Vec<&str> {
+    let mut chunks = Vec::new();
+    let mut pos = 0;
+    loop {
+        match xml[pos..].find("<site ") {
+            None => break,
+            Some(rel) => {
+                let start = pos + rel;
+                match xml[start..].find("</site>") {
+                    None => break,
+                    Some(rel_end) => {
+                        let end = start + rel_end + "</site>".len();
+                        chunks.push(&xml[start..end]);
+                        pos = end;
+                    }
+                }
+            }
+        }
     }
-    Ok(attrs)
+    chunks
+}
+
+fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
+    let wrapped = format!("<r>{}</r>", site_xml);
+    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    xml_reader.config_mut().trim_text(true);
+
+    let mut current_site: Option<Site> = None;
+    let mut current_forms: Vec<Form> = Vec::new();
+    let mut current_form: Option<Form> = None;
+    let mut current_states: Vec<State> = Vec::new();
+    let mut current_categories: Vec<Category> = Vec::new();
+    let mut current_category: Option<Category> = None;
+    let mut current_fields: Vec<Field> = Vec::new();
+    let mut current_field: Option<Field> = None;
+    let mut current_entries: Vec<Entry> = Vec::new();
+    let mut current_entry: Option<Entry> = None;
+    let mut current_comments: Vec<Comment> = Vec::new();
+    let mut current_comment: Option<Comment> = None;
+    let mut current_value: Option<Value> = None;
+    let mut current_reason: Option<Reason> = None;
+    let mut text_content = String::new();
+    let mut in_form = false;
+    let mut in_category = false;
+    let mut in_field = false;
+    let mut in_entry = false;
+    let mut in_comment = false;
+    let mut in_value = false;
+    let mut in_reason = false;
+    let mut buf = Vec::new();
+
+    loop {
+        match xml_reader.read_event_into(&mut buf) {
+            Err(e) => {
+                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
+                    format!("XML reading error: {}", e),
+                )))
+            }
+            Ok(Event::Eof) => break,
+
+            Ok(Event::Start(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "site" => {
+                            let attrs = extract_attributes(e)?;
+                            current_site = Some(Site::from_attributes(attrs)?);
+                            current_forms.clear();
+                        }
+                        "form" if current_site.is_some() => {
+                            let attrs = extract_attributes(e)?;
+                            current_form = Some(Form::from_attributes(attrs)?);
+                            in_form = true;
+                            current_states.clear();
+                            current_categories.clear();
+                        }
+                        "category" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            current_category = Some(Category::from_attributes(attrs)?);
+                            in_category = true;
+                            current_fields.clear();
+                        }
+                        "field" if in_category => {
+                            let attrs = extract_attributes(e)?;
+                            current_field = Some(Field::from_attributes(attrs)?);
+                            in_field = true;
+                            current_entries.clear();
+                            current_comments.clear();
+                        }
+                        "entry" if in_field => {
+                            let attrs = extract_attributes(e)?;
+                            current_entry = Some(Entry::from_attributes(attrs)?);
+                            in_entry = true;
+                        }
+                        "comment" if in_field => {
+                            let attrs = extract_attributes(e)?;
+                            let comment_id = attrs.get("id").cloned().unwrap_or_default();
+                            current_comment = Some(Comment {
+                                comment_id,
+                                value: None,
+                            });
+                            in_comment = true;
+                        }
+                        "value" if in_entry || in_comment => {
+                            let attrs = extract_attributes(e)?;
+                            current_value = Some(Value::from_attributes(attrs)?);
+                            in_value = true;
+                            text_content.clear();
+                        }
+                        "reason" if in_entry => {
+                            let attrs = extract_attributes(e)?;
+                            current_reason = Some(Reason::from_attributes(attrs)?);
+                            in_reason = true;
+                            text_content.clear();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            Ok(Event::Text(e)) if (in_value || in_reason) => {
+                text_content.push_str(&String::from_utf8_lossy(&e));
+            }
+
+            Ok(Event::End(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "site" => {
+                            if let Some(mut site) = current_site.take() {
+                                if !current_forms.is_empty() {
+                                    site.set_forms(current_forms.clone());
+                                }
+                                current_site = Some(site);
+                            }
+                        }
+                        "form" if in_form => {
+                            if let Some(mut form) = current_form.take() {
+                                if !current_states.is_empty() {
+                                    form.states = Some(current_states.clone());
+                                }
+                                if !current_categories.is_empty() {
+                                    form.categories = Some(current_categories.clone());
+                                }
+                                current_forms.push(form);
+                            }
+                            in_form = false;
+                            current_states.clear();
+                            current_categories.clear();
+                        }
+                        "category" if in_category => {
+                            if let Some(mut category) = current_category.take() {
+                                if !current_fields.is_empty() {
+                                    category.fields = Some(current_fields.clone());
+                                }
+                                current_categories.push(category);
+                            }
+                            in_category = false;
+                            current_fields.clear();
+                        }
+                        "field" if in_field => {
+                            if let Some(mut field) = current_field.take() {
+                                if !current_entries.is_empty() {
+                                    field.entries = Some(current_entries.clone());
+                                }
+                                if !current_comments.is_empty() {
+                                    field.comments = Some(current_comments.clone());
+                                }
+                                current_fields.push(field);
+                            }
+                            in_field = false;
+                            current_entries.clear();
+                            current_comments.clear();
+                        }
+                        "entry" if in_entry => {
+                            if let Some(entry) = current_entry.take() {
+                                current_entries.push(entry);
+                            }
+                            in_entry = false;
+                        }
+                        "comment" if in_comment => {
+                            if let Some(comment) = current_comment.take() {
+                                current_comments.push(comment);
+                            }
+                            in_comment = false;
+                        }
+                        "value" if in_value => {
+                            if let Some(mut value) = current_value.take() {
+                                value.value = text_content.clone();
+                                if let Some(ref mut entry) = current_entry {
+                                    entry.value = Some(value.clone());
+                                }
+                                if let Some(ref mut comment) = current_comment {
+                                    comment.value = Some(value);
+                                }
+                            }
+                            in_value = false;
+                            text_content.clear();
+                        }
+                        "reason" if in_reason => {
+                            if let Some(mut reason) = current_reason.take() {
+                                reason.value = text_content.clone();
+                                if let Some(ref mut entry) = current_entry {
+                                    entry.reason = Some(reason);
+                                }
+                            }
+                            in_reason = false;
+                            text_content.clear();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            Ok(Event::Empty(ref e)) => {
+                let name_bytes = e.local_name();
+                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
+                    match name {
+                        "state" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            let state = State::from_attributes(attrs)?;
+                            current_states.push(state);
+                        }
+                        "lockState" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            let lock_state = LockState::from_attributes(attrs)?;
+                            if let Some(ref mut form) = current_form {
+                                form.lock_state = Some(lock_state);
+                            }
+                        }
+                        "field" if in_category => {
+                            let attrs = extract_attributes(e)?;
+                            let field = Field::from_attributes(attrs)?;
+                            current_fields.push(field);
+                        }
+                        "value" if in_entry => {
+                            let attrs = extract_attributes(e)?;
+                            let value = Value::from_attributes(attrs)?;
+                            if let Some(ref mut entry) = current_entry {
+                                entry.value = Some(value);
+                            }
+                        }
+                        "reason" if in_entry => {
+                            let attrs = extract_attributes(e)?;
+                            let reason = Reason::from_attributes(attrs)?;
+                            if let Some(ref mut entry) = current_entry {
+                                entry.reason = Some(reason);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            _ => {}
+        }
+
+        buf.clear();
+    }
+
+    current_site.ok_or_else(|| {
+        Error::ParsingError(quick_xml::de::DeError::Custom(
+            "No site found in chunk".to_string(),
+        ))
+    })
 }
 
 /// Parses a Prelude native user XML file into a `UserNative` struct.
