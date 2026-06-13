@@ -5,11 +5,6 @@ on:
     types:
       - published
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to publish (e.g. v1.2.3)'
-        required: true
-        type: string
 
 env:
   PYTHON_VERSION: "3.13"
@@ -25,8 +20,6 @@ jobs:
         target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -50,8 +43,6 @@ jobs:
         target: [x64, x86]
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -75,8 +66,6 @@ jobs:
         target: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -96,8 +85,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
