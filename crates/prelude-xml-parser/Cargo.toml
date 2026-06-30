@@ -17,7 +17,7 @@ python = ["dep:pyo3"]
 [dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
 pyo3 = { version = "0.29.0", optional = true }
-quick-xml = { version = "0.40.1", features = ["serde", "serialize"] }
+quick-xml = { version = "0.41.0", features = ["serde", "serialize"] }
 rayon = "1.12.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
