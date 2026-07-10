@@ -21,8 +21,8 @@
   just --justfile {{justfile()}} ruff-check
   echo ruff-format
   just --justfile {{justfile()}} ruff-format
-  echo mypy
-  just --justfile {{justfile()}} mypy
+  echo pyrefly
+  just --justfile {{justfile()}} pyrefly
 
 @check:
   cargo check
@@ -33,8 +33,8 @@
 @fmt:
   cargo fmt
 
-@mypy:
-  uv run mypy prelude_parser tests
+@pyrefly:
+  uv run pyrefly check
 
 @ruff-check:
   uv run ruff check prelude_parser tests
