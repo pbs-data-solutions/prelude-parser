@@ -52,8 +52,8 @@ jobs:
         run: |
           uv sync --frozen --all-extras
           uv run maturin build
-      - name: mypy check
-        run: just mypy
+      - name: pyrefly check
+        run: just pyrefly
   test:
     strategy:
       fail-fast: false

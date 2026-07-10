@@ -1,3 +1,6 @@
+ci:
+  skip: [pyrefly-check]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -8,10 +11,14 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.1.0
+  - repo: https://github.com/facebook/pyrefly-pre-commit
+    rev: 1.1.1
     hooks:
-      - id: mypy
+      - id: pyrefly-check
+        name: pyrefly
+        pass_filenames: false # Pyrefly recommendeds doing full repo checks
+        language: system
+        entry: uv run pyrefly check
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.20
     hooks:
