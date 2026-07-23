@@ -54,6 +54,13 @@ jobs:
           uv run maturin build
       - name: pyrefly check
         run: just pyrefly
+  prek:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: j178/prek-action@v2
+        env:
+          PREK_SKIP: no-commit-to-branch,pyrefly-check
   test:
     strategy:
       fail-fast: false
