@@ -25,7 +25,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.PREK_UPDATE_TOKEN }}
+          token: ${{ secrets.PBS_DATA_SOLUTIONS_PREK_UPDATE_TOKEN }}
           commit-message: "Bump prek hooks"
           branch: prek-autoupdate
           delete-branch: true
