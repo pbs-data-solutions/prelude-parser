@@ -41,7 +41,7 @@ dev = [
   "pyrefly==1.1.1",
   "pytest==9.1.1",
   "pytest-cov==7.1.0",
-  "ruff==0.15.22",
+  "ruff==0.16.0",
   "tomli==2.0.2; python_version<'3.11'",
 ]
 
