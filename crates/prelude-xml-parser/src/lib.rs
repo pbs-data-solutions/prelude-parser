@@ -1,7 +1,7 @@
 pub mod errors;
 pub mod native;
 
-use std::{collections::HashMap, fs::read_to_string, io::Cursor, path::Path};
+use std::{collections::HashMap, fs::read_to_string, path::Path};
 
 use rayon::prelude::*;
 
@@ -701,8 +701,7 @@ fn extract_patient_chunks(xml: &str) -> Vec<&str> {
 }
 
 fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
-    let wrapped = format!("<r>{}</r>", patient_xml);
-    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    let mut xml_reader = Reader::from_str(patient_xml);
     xml_reader.config_mut().trim_text(true);
 
     let mut current_patient: Option<Patient> = None;
@@ -727,10 +726,9 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut in_comment = false;
     let mut in_value = false;
     let mut in_reason = false;
-    let mut buf = Vec::new();
 
     loop {
-        match xml_reader.read_event_into(&mut buf) {
+        match xml_reader.read_event() {
             Err(e) => {
                 return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
                     format!("XML reading error: {}", e),
@@ -921,8 +919,6 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
 
             _ => {}
         }
-
-        buf.clear();
     }
 
     current_patient.ok_or_else(|| {
@@ -955,8 +951,7 @@ fn extract_site_chunks(xml: &str) -> Vec<&str> {
 }
 
 fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
-    let wrapped = format!("<r>{}</r>", site_xml);
-    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    let mut xml_reader = Reader::from_str(site_xml);
     xml_reader.config_mut().trim_text(true);
 
     let mut current_site: Option<Site> = None;
@@ -981,10 +976,9 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut in_comment = false;
     let mut in_value = false;
     let mut in_reason = false;
-    let mut buf = Vec::new();
 
     loop {
-        match xml_reader.read_event_into(&mut buf) {
+        match xml_reader.read_event() {
             Err(e) => {
                 return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
                     format!("XML reading error: {}", e),
@@ -1180,8 +1174,6 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
 
             _ => {}
         }
-
-        buf.clear();
     }
 
     current_site.ok_or_else(|| {
@@ -1417,8 +1409,7 @@ fn extract_user_chunks(xml: &str) -> Vec<&str> {
 }
 
 fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
-    let wrapped = format!("<r>{}</r>", user_xml);
-    let mut xml_reader = Reader::from_reader(Cursor::new(wrapped.as_bytes()));
+    let mut xml_reader = Reader::from_str(user_xml);
     xml_reader.config_mut().trim_text(true);
 
     let mut current_user: Option<User> = None;
@@ -1443,10 +1434,9 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut in_comment = false;
     let mut in_value = false;
     let mut in_reason = false;
-    let mut buf = Vec::new();
 
     loop {
-        match xml_reader.read_event_into(&mut buf) {
+        match xml_reader.read_event() {
             Err(e) => {
                 return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
                     format!("XML reading error: {}", e),
@@ -1615,7 +1605,6 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
 
             _ => {}
         }
-        buf.clear();
     }
 
     current_user.ok_or_else(|| {
