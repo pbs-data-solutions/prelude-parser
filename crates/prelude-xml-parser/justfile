@@ -9,6 +9,15 @@ lint:
   just --justfile {{justfile()}} check
   just --justfile {{justfile()}} clippy
 
+bench:
+  cargo bench
+
+bench-quick:
+  cargo bench --bench parse_benchmark -- --quick
+
+bench-smoke:
+  cargo bench -- --test
+
 clippy:
   cargo clippy --all-targets --all-features
 
