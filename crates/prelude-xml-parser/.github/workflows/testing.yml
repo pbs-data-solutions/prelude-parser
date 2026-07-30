@@ -59,6 +59,18 @@ jobs:
         uses: Swatinem/rust-cache@v2.9.1
       - name: Run cargo fmt
         run: cargo check --all-targets -F python
+  bench:
+    name: Benchmark smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2.9.1
+      - name: Run benchmarks in test mode
+        run: cargo bench --locked -- --test
   test:
     name: Tests
     strategy:
