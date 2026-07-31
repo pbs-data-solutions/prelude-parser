@@ -1,0 +1,35 @@
+name: Crates.io Publish
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-publish:
+    name: Publish prelude-xml-parser
+    if: startsWith(github.event.release.tag_name, 'rust-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare tag against crates/prelude-xml-parser/Cargo.toml
+        run: |
+          manifest=$(grep -m1 '^version = ' crates/prelude-xml-parser/Cargo.toml | cut -d'"' -f2)
+          tag="${{ github.event.release.tag_name }}"
+          if [ "rust-v$manifest" != "$tag" ]; then
+            echo "::error::Release tag $tag does not match the manifest version $manifest (expected rust-v$manifest)"
+            exit 1
+          fi
+          echo "Tag $tag matches manifest version $manifest"
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2.9.1
+      - name: Verify the package is self-contained
+        run: cargo publish -p prelude-xml-parser --locked --dry-run
+      - name: Publish to crates.io
+        run: cargo publish -p prelude-xml-parser --locked --token ${{ secrets.CARGO_API_TOKEN }}

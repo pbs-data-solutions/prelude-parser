@@ -12,7 +12,24 @@ permissions:
   contents: read
 
 jobs:
+  check-version:
+    name: Check tag matches manifest version
+    if: startsWith(github.event.release.tag_name, 'py-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compare tag against crates/prelude-parser-py/Cargo.toml
+        run: |
+          manifest=$(grep -m1 '^version = ' crates/prelude-parser-py/Cargo.toml | cut -d'"' -f2)
+          tag="${{ github.event.release.tag_name }}"
+          if [ "py-v$manifest" != "$tag" ]; then
+            echo "::error::Release tag $tag does not match the manifest version $manifest (expected py-v$manifest)"
+            exit 1
+          fi
+          echo "Tag $tag matches manifest version $manifest"
+
   linux:
+    needs: [check-version]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -36,6 +53,7 @@ jobs:
           path: dist
 
   windows:
+    needs: [check-version]
     runs-on: windows-latest
     strategy:
       matrix:
@@ -59,6 +77,7 @@ jobs:
           path: dist
 
   macos:
+    needs: [check-version]
     runs-on: macos-latest
     strategy:
       matrix:
@@ -81,6 +100,7 @@ jobs:
           path: dist
 
   sdist:
+    needs: [check-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -103,8 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-    if: "startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'"
-    needs: [linux, windows, macos, sdist]
+    needs: [check-version, linux, windows, macos, sdist]
     steps:
       - uses: actions/download-artifact@v8
       - name: Install uv

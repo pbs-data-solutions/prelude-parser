@@ -7,10 +7,21 @@ on:
 
 jobs:
   update_release_draft:
+    name: Python release draft
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v7.6.0
         with:
           config-name: release-draft-template.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update_rust_release_draft:
+    name: Rust release draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v7.6.0
+        with:
+          config-name: rust-release-draft-template.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
