@@ -46,6 +46,7 @@ dev = [
 ]
 
 [tool.maturin]
+manifest-path = "crates/prelude-parser-py/Cargo.toml"
 module-name = "prelude_parser._prelude_parser"
 binding = "pyo3"
 features = ["pyo3/extension-module"]

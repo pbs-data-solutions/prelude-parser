@@ -1,24 +1,16 @@
-[package]
-name = "prelude-parser"
-version = "0.17.2"
-description = "Parses XML files exported from Prelude EDC into formats usable by Python."
+[workspace]
+members = ["crates/prelude-xml-parser", "crates/prelude-parser-py"]
+resolver = "2"
+
+[workspace.package]
 edition = "2021"
 license = "MIT"
+authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 repository = "https://github.com/pbs-data-solutions/prelude-parser"
-readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "_prelude_parser"
-crate-type = ["cdylib"]
-
-[dependencies]
-anyhow = "1.0.102"
-chrono = "0.4.45"
-prelude-xml-parser = { version = "0.11.0", features = ["python"] }
-pyo3 = { version = "0.29.0", features = ["extension-module"] }
-roxmltree = "0.21.1"
+[workspace.dependencies]
+chrono = { version = "0.4.45", features = ["serde"] }
+pyo3 = "0.29.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde-xml-rs = "0.8.2"
 thiserror = "2.0.18"

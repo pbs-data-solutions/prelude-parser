@@ -1,0 +1,22 @@
+[package]
+name = "prelude-parser-py"
+version = "0.17.2"
+description = "Parses XML files exported from Prelude EDC into formats usable by Python."
+publish = false
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme = "../../README.md"
+
+[lib]
+name = "_prelude_parser"
+crate-type = ["cdylib"]
+
+[dependencies]
+chrono.workspace = true
+prelude-xml-parser = { path = "../prelude-xml-parser", features = ["python"] }
+pyo3 = { workspace = true, features = ["extension-module"] }
+roxmltree = "0.21.1"
+thiserror.workspace = true
