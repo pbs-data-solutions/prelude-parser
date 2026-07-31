@@ -11,6 +11,9 @@ pub enum XmlFileValidationError {
 
     #[error("{0:?} is not an xml file")]
     InvalidFileType(PathBuf),
+
+    #[error("No file extension found in {0:?}")]
+    NoFileExtension(PathBuf),
 }
 
 create_exception!(_prelude_parser, FileNotFoundError, PyException);

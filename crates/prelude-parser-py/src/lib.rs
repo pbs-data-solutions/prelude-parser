@@ -40,6 +40,11 @@ fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
                     "{xml_file:?} is not an xml file"
                 )))
             }
+            XmlFileValidationError::NoFileExtension(_) => {
+                return Err(InvalidFileTypeError::new_err(
+                    "No file extension found in file: {xml_file:?}",
+                ))
+            }
         };
     };
 

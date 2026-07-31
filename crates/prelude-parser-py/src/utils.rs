@@ -23,8 +23,14 @@ pub fn to_snake(camel_string: &str) -> String {
 pub fn validate_file(xml_file: &PathBuf) -> Result<(), XmlFileValidationError> {
     if !xml_file.is_file() {
         return Err(XmlFileValidationError::FileNotFound(xml_file.to_owned()));
-    } else if xml_file.extension().unwrap() != "xml" {
-        return Err(XmlFileValidationError::InvalidFileType(xml_file.to_owned()));
+    }
+
+    if let Some(extension) = xml_file.extension() {
+        if extension != "xml" {
+            return Err(XmlFileValidationError::InvalidFileType(xml_file.to_owned()));
+        }
+    } else {
+        return Err(XmlFileValidationError::NoFileExtension(xml_file.to_owned()));
     }
 
     Ok(())
