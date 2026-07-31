@@ -676,9 +676,9 @@ impl Category {
 
 impl Form {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.remove("name").unwrap_or_default();
+        let name = attrs.get("name").copied().unwrap_or_default().to_string();
 
         let last_modified = if let Some(lm) = attrs.get("lastModified") {
             if lm.is_empty() {
@@ -691,27 +691,35 @@ impl Form {
         };
 
         let who_last_modified_name = attrs
-            .remove("whoLastModifiedName")
-            .filter(|s| !s.is_empty());
+            .get("whoLastModifiedName")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
         let who_last_modified_role = attrs
-            .remove("whoLastModifiedRole")
-            .filter(|s| !s.is_empty());
+            .get("whoLastModifiedRole")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
 
         let when_created = attrs
             .get("whenCreated")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
 
-        let has_errors = attrs.get("hasErrors").map(|s| s == "true").unwrap_or(false);
+        let has_errors = attrs
+            .get("hasErrors")
+            .map(|s| *s == "true")
+            .unwrap_or(false);
 
         let has_warnings = attrs
             .get("hasWarnings")
-            .map(|s| s == "true")
+            .map(|s| *s == "true")
             .unwrap_or(false);
 
-        let locked = attrs.get("locked").map(|s| s == "true").unwrap_or(false);
+        let locked = attrs.get("locked").map(|s| *s == "true").unwrap_or(false);
 
-        let user = attrs.remove("user").filter(|s| !s.is_empty());
+        let user = attrs
+            .get("user")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
 
         let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
             if dtc.is_empty() {
@@ -723,15 +731,26 @@ impl Form {
             None
         };
 
-        let form_title = attrs.remove("formTitle").unwrap_or_default();
+        let form_title = attrs
+            .get("formTitle")
+            .copied()
+            .unwrap_or_default()
+            .to_string();
 
         let form_index = attrs
             .get("formIndex")
             .and_then(|s| s.parse().ok())
             .unwrap_or(0);
 
-        let form_group = attrs.remove("formGroup").filter(|s| !s.is_empty());
-        let form_state = attrs.remove("formState").unwrap_or_default();
+        let form_group = attrs
+            .get("formGroup")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let form_state = attrs
+            .get("formState")
+            .copied()
+            .unwrap_or_default()
+            .to_string();
 
         Ok(Form {
             name,
@@ -1318,11 +1337,15 @@ impl Form {
 
 impl State {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let value = attrs.remove("value").unwrap_or_default();
-        let signer = attrs.remove("signer").unwrap_or_default();
-        let signer_unique_id = attrs.remove("signerUniqueId").unwrap_or_default();
+        let value = attrs.get("value").copied().unwrap_or_default().to_string();
+        let signer = attrs.get("signer").copied().unwrap_or_default().to_string();
+        let signer_unique_id = attrs
+            .get("signerUniqueId")
+            .copied()
+            .unwrap_or_default()
+            .to_string();
 
         let date_signed = if let Some(ds) = attrs.get("dateSigned") {
             if ds.is_empty() {
@@ -1345,11 +1368,17 @@ impl State {
 
 impl LockState {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let locked = attrs.get("locked").map(|s| s == "true").unwrap_or(false);
-        let user = attrs.remove("user").filter(|s| !s.is_empty());
-        let user_unique_id = attrs.remove("userUniqueId").filter(|s| !s.is_empty());
+        let locked = attrs.get("locked").map(|s| *s == "true").unwrap_or(false);
+        let user = attrs
+            .get("user")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let user_unique_id = attrs
+            .get("userUniqueId")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
 
         let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
             if dtc.is_empty() {
@@ -1372,10 +1401,10 @@ impl LockState {
 
 impl Category {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.remove("name").unwrap_or_default();
-        let category_type = attrs.remove("type").unwrap_or_default();
+        let name = attrs.get("name").copied().unwrap_or_default().to_string();
+        let category_type = attrs.get("type").copied().unwrap_or_default().to_string();
         let highest_index = attrs
             .get("highestIndex")
             .and_then(|s| s.parse().ok())
@@ -1392,12 +1421,19 @@ impl Category {
 
 impl Field {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.remove("name").unwrap_or_default();
-        let field_type = attrs.remove("type").unwrap_or_default();
-        let data_type = attrs.remove("dataType").filter(|s| !s.is_empty());
-        let error_code = attrs.remove("errorCode").unwrap_or_default();
+        let name = attrs.get("name").copied().unwrap_or_default().to_string();
+        let field_type = attrs.get("type").copied().unwrap_or_default().to_string();
+        let data_type = attrs
+            .get("dataType")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let error_code = attrs
+            .get("errorCode")
+            .copied()
+            .unwrap_or_default()
+            .to_string();
 
         let when_created = if let Some(wc) = attrs.get("whenCreated") {
             if wc.is_empty() {
@@ -1411,7 +1447,7 @@ impl Field {
 
         let keep_history = attrs
             .get("keepHistory")
-            .map(|s| s == "true")
+            .map(|s| *s == "true")
             .unwrap_or(false);
 
         Ok(Field {
@@ -1429,15 +1465,23 @@ impl Field {
 
 impl Entry {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let entry_id = attrs
-            .remove("id")
-            .or_else(|| attrs.remove("entryId"))
-            .unwrap_or_default();
+            .get("id")
+            .or_else(|| attrs.get("entryId"))
+            .copied()
+            .unwrap_or_default()
+            .to_string();
 
-        let reviewed_by = attrs.remove("reviewedBy").filter(|s| !s.is_empty());
-        let reviewed_by_unique_id = attrs.remove("reviewedByUniqueId").filter(|s| !s.is_empty());
+        let reviewed_by = attrs
+            .get("reviewedBy")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let reviewed_by_unique_id = attrs
+            .get("reviewedByUniqueId")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
 
         let reviewed_by_when = if let Some(rbw) = attrs.get("reviewedByWhen") {
             if rbw.is_empty() {
@@ -1462,11 +1506,14 @@ impl Entry {
 
 impl Value {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let by = attrs.remove("by").unwrap_or_default();
-        let by_unique_id = attrs.remove("byUniqueId").filter(|s| !s.is_empty());
-        let role = attrs.remove("role").unwrap_or_default();
+        let by = attrs.get("by").copied().unwrap_or_default().to_string();
+        let by_unique_id = attrs
+            .get("byUniqueId")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let role = attrs.get("role").copied().unwrap_or_default().to_string();
 
         let when = if let Some(w) = attrs.get("when") {
             if w.is_empty() {
@@ -1490,11 +1537,14 @@ impl Value {
 
 impl Reason {
     pub fn from_attributes(
-        mut attrs: std::collections::HashMap<String, String>,
+        attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
-        let by = attrs.remove("by").unwrap_or_default();
-        let by_unique_id = attrs.remove("byUniqueId").filter(|s| !s.is_empty());
-        let role = attrs.remove("role").unwrap_or_default();
+        let by = attrs.get("by").copied().unwrap_or_default().to_string();
+        let by_unique_id = attrs
+            .get("byUniqueId")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        let role = attrs.get("role").copied().unwrap_or_default().to_string();
 
         let when = if let Some(w) = attrs.get("when") {
             if w.is_empty() {

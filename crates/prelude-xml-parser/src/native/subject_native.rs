@@ -40,20 +40,26 @@ pub struct Patient {
 }
 
 impl Patient {
-    pub fn from_attributes(
-        mut attrs: HashMap<String, String>,
-    ) -> Result<Self, crate::errors::Error> {
-        let patient_id = attrs.remove("patientId").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing patientId".to_string(),
-            ))
-        })?;
+    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+        let patient_id = attrs
+            .get("patientId")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing patientId".to_string(),
+                ))
+            })?;
 
-        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing uniqueId".to_string(),
-            ))
-        })?;
+        let unique_id = attrs
+            .get("uniqueId")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing uniqueId".to_string(),
+                ))
+            })?;
 
         let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
             if wc_str.is_empty() {
@@ -65,25 +71,40 @@ impl Patient {
             None
         };
 
-        let creator = attrs.remove("creator").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing creator".to_string(),
-            ))
-        })?;
+        let creator = attrs
+            .get("creator")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing creator".to_string(),
+                ))
+            })?;
 
-        let site_name = attrs.remove("siteName").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing siteName".to_string(),
-            ))
-        })?;
+        let site_name = attrs
+            .get("siteName")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing siteName".to_string(),
+                ))
+            })?;
 
-        let site_unique_id = attrs.remove("siteUniqueId").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing siteUniqueId".to_string(),
-            ))
-        })?;
+        let site_unique_id = attrs
+            .get("siteUniqueId")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing siteUniqueId".to_string(),
+                ))
+            })?;
 
-        let last_language = attrs.remove("lastLanguage").filter(|s| !s.is_empty());
+        let last_language = attrs
+            .get("lastLanguage")
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
 
         let number_of_forms = attrs
             .get("numberOfForms")
