@@ -21,7 +21,9 @@ jobs:
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2.9.1
       - name: Run cargo clippy
-        run: cargo clippy --all-targets -- --deny warnings
+        run: cargo clippy --workspace --all-targets --all-features -- --deny warnings
+      - name: Run cargo clippy without the python feature
+        run: cargo clippy -p prelude-xml-parser --all-targets -- --deny warnings
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
@@ -34,6 +36,36 @@ jobs:
         uses: Swatinem/rust-cache@v2.9.1
       - name: Run cargo fmt
         run: cargo fmt --all -- --check
+  rust-test:
+    name: Rust tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2.9.1
+      - name: Run cargo test
+        run: cargo test -p prelude-xml-parser --locked
+  bench:
+    name: Benchmark smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2.9.1
+      - name: Run benchmarks in test mode
+        run: cargo bench -p prelude-xml-parser --locked -- --test
   python-linting:
     runs-on: ubuntu-latest
     steps:

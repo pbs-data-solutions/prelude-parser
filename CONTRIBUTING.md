@@ -163,6 +163,63 @@ just test
 In addition to mainting the coverage percentage please ensure that all tests are passing before
 submitting a pull request.
 
+`just test` runs both suites. To run only one of them:
+
+```sh
+just rust-test
+just python-test
+```
+
+### Repository layout
+
+This repository is a Cargo workspace containing two crates:
+
+- `crates/prelude-xml-parser` deserializes the Prelude EDC native XML files into Rust structs. It is
+  published to [crates.io](https://crates.io/crates/prelude-xml-parser) as a standalone library on
+  its own version series, so treat its public API as public. Its `python` feature adds the PyO3
+  `#[pyclass]` implementations.
+- `crates/prelude-parser-py` is the PyO3 extension module that becomes `prelude_parser._prelude_parser`
+  in the wheel. It is never published to crates.io.
+
+Shared dependencies, `pyo3` in particular, are pinned once in the root `Cargo.toml` under
+`[workspace.dependencies]` so the two crates cannot drift.
+
+The two artifacts are released independently. Python releases are tagged `py-v<version>` and Rust
+releases `rust-v<version>`, each with its own release draft. The version in the relevant
+`Cargo.toml` is the source of truth, and publishing fails if the release tag does not match it.
+
+### Benchmarks
+
+Benchmarks are run with [criterion](https://github.com/bheisler/criterion.rs) and cover all three
+parsers, in both their `_string` and `_file` forms, across a range of input sizes. Inputs are
+generated at run time by replicating the fixtures in `crates/prelude-xml-parser/tests/assets/`, so
+no extra setup is needed:
+
+```sh
+just bench
+```
+
+An HTML report is written to `target/criterion/report/index.html`.
+
+For a faster measurement that stops as soon as the significance level is reached (~20s instead of
+several minutes):
+
+```sh
+just bench-quick
+```
+
+To only check that the benchmarks still run, without measuring anything:
+
+```sh
+just bench-smoke
+```
+
+To additionally benchmark against a real subject native export, point `BENCH_XML_FILE` at it:
+
+```sh
+BENCH_XML_FILE=/path/to/subject_native.xml just bench
+```
+
 ## Committing your code
 
 Once you have made changes to the code on your branch you can see which files have changed by

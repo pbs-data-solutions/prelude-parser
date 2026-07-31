@@ -1,7 +1,11 @@
-name-template: "py-v$RESOLVED_VERSION"
-tag-template: "py-v$RESOLVED_VERSION"
-tag-prefix: "py-v"
+name-template: "rust-v$RESOLVED_VERSION"
+tag-template: "rust-v$RESOLVED_VERSION"
+tag-prefix: "rust-v"
 categories:
+  - type: "pre-include"
+    when:
+      paths:
+        - "crates/prelude-xml-parser/**"
   - type: "pre-exclude"
     when:
       labels:

@@ -68,6 +68,17 @@ from prelude_parser.polars import to_dataframe
 df = to_dataframe("physical_examination.xml")
 ```
 
+## Rust crate
+
+The XML deserialization is done by
+[`prelude-xml-parser`](https://crates.io/crates/prelude-xml-parser), which lives in this repository
+at [`crates/prelude-xml-parser`](crates/prelude-xml-parser) and is published to crates.io on its own
+version series. It can be used directly as a Rust dependency:
+
+```sh
+cargo add prelude-xml-parser
+```
+
 ## Contributing
 
 Contributions to this project are welcome. If you are interesting in contributing please see our [contributing guide](CONTRIBUTING.md)
