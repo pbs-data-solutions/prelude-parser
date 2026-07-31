@@ -1,7 +1,7 @@
 pub mod errors;
 pub mod native;
 
-use std::{collections::HashMap, fs::read_to_string, path::Path};
+use std::{borrow::Cow, collections::HashMap, fs::read_to_string, path::Path, str::from_utf8};
 
 use rayon::prelude::*;
 
@@ -662,7 +662,7 @@ pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error
     Ok(SubjectNative { patients })
 }
 
-fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> {
+fn extract_attributes<'a>(e: &'a BytesStart<'a>) -> Result<HashMap<&'a str, &'a str>, Error> {
     let mut attrs = HashMap::new();
     for attr in e.attributes() {
         let attr = attr.map_err(|e| {
@@ -671,8 +671,16 @@ fn extract_attributes(e: &BytesStart) -> Result<HashMap<String, String>, Error> 
                 e
             )))
         })?;
-        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-        let value = String::from_utf8_lossy(&attr.value).to_string();
+        let Cow::Borrowed(value) = attr.value else {
+            return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Attribute value was not borrowed from the source".to_string(),
+            )));
+        };
+        let (Ok(key), Ok(value)) = (from_utf8(attr.key.into_inner()), from_utf8(value)) else {
+            return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
+                "Attribute was not valid UTF-8".to_string(),
+            )));
+        };
         attrs.insert(key, value);
     }
     Ok(attrs)
@@ -774,7 +782,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             let attrs = extract_attributes(e)?;
                             let comment_id = attrs.get("id").cloned().unwrap_or_default();
                             current_comment = Some(Comment {
-                                comment_id,
+                                comment_id: comment_id.to_string(),
                                 value: None,
                             });
                             in_comment = true;
@@ -1024,7 +1032,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             let attrs = extract_attributes(e)?;
                             let comment_id = attrs.get("id").cloned().unwrap_or_default();
                             current_comment = Some(Comment {
-                                comment_id,
+                                comment_id: comment_id.to_string(),
                                 value: None,
                             });
                             in_comment = true;
@@ -1476,7 +1484,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             let attrs = extract_attributes(e)?;
                             let comment_id = attrs.get("id").cloned().unwrap_or_default();
                             current_comment = Some(Comment {
-                                comment_id,
+                                comment_id: comment_id.to_string(),
                                 value: None,
                             });
                             in_comment = true;

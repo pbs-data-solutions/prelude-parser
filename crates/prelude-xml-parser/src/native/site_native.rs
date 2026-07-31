@@ -54,20 +54,26 @@ pub struct Site {
 
 #[cfg(not(feature = "python"))]
 impl Site {
-    pub fn from_attributes(
-        mut attrs: HashMap<String, String>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.remove("name").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing name".to_string(),
-            ))
-        })?;
+    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+        let name = attrs
+            .get("name")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing name".to_string(),
+                ))
+            })?;
 
-        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing uniqueId".to_string(),
-            ))
-        })?;
+        let unique_id = attrs
+            .get("uniqueId")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing uniqueId".to_string(),
+                ))
+            })?;
 
         let number_of_patients = attrs
             .get("numberOfPatients")
@@ -89,11 +95,15 @@ impl Site {
             None
         };
 
-        let creator = attrs.remove("creator").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing creator".to_string(),
-            ))
-        })?;
+        let creator = attrs
+            .get("creator")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing creator".to_string(),
+                ))
+            })?;
 
         let number_of_forms = attrs
             .get("numberOfForms")
@@ -170,20 +180,26 @@ pub struct Site {
 
 #[cfg(feature = "python")]
 impl Site {
-    pub fn from_attributes(
-        mut attrs: HashMap<String, String>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.remove("name").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing name".to_string(),
-            ))
-        })?;
+    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+        let name = attrs
+            .get("name")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing name".to_string(),
+                ))
+            })?;
 
-        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing uniqueId".to_string(),
-            ))
-        })?;
+        let unique_id = attrs
+            .get("uniqueId")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing uniqueId".to_string(),
+                ))
+            })?;
 
         let number_of_patients = attrs
             .get("numberOfPatients")
@@ -205,11 +221,15 @@ impl Site {
             None
         };
 
-        let creator = attrs.remove("creator").ok_or_else(|| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Missing creator".to_string(),
-            ))
-        })?;
+        let creator = attrs
+            .get("creator")
+            .copied()
+            .map(str::to_string)
+            .ok_or_else(|| {
+                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
+                    "Missing creator".to_string(),
+                ))
+            })?;
 
         let number_of_forms = attrs
             .get("numberOfForms")
