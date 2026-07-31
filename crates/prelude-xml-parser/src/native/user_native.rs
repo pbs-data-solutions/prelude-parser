@@ -40,16 +40,18 @@ pub struct User {
 
 #[cfg(not(feature = "python"))]
 impl User {
-    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
-        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+    pub fn from_attributes(
+        mut attrs: HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing uniqueId".to_string(),
             ))
         })?;
 
-        let last_language = attrs.get("lastLanguage").filter(|s| !s.is_empty()).cloned();
+        let last_language = attrs.remove("lastLanguage").filter(|s| !s.is_empty());
 
-        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+        let creator = attrs.remove("creator").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing creator".to_string(),
             ))
@@ -107,16 +109,18 @@ pub struct User {
 
 #[cfg(feature = "python")]
 impl User {
-    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
-        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+    pub fn from_attributes(
+        mut attrs: HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing uniqueId".to_string(),
             ))
         })?;
 
-        let last_language = attrs.get("lastLanguage").filter(|s| !s.is_empty()).cloned();
+        let last_language = attrs.remove("lastLanguage").filter(|s| !s.is_empty());
 
-        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+        let creator = attrs.remove("creator").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing creator".to_string(),
             ))

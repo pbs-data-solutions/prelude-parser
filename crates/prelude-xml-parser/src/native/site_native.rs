@@ -54,14 +54,16 @@ pub struct Site {
 
 #[cfg(not(feature = "python"))]
 impl Site {
-    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
-        let name = attrs.get("name").cloned().ok_or_else(|| {
+    pub fn from_attributes(
+        mut attrs: HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let name = attrs.remove("name").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing name".to_string(),
             ))
         })?;
 
-        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing uniqueId".to_string(),
             ))
@@ -87,7 +89,7 @@ impl Site {
             None
         };
 
-        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+        let creator = attrs.remove("creator").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing creator".to_string(),
             ))
@@ -168,14 +170,16 @@ pub struct Site {
 
 #[cfg(feature = "python")]
 impl Site {
-    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
-        let name = attrs.get("name").cloned().ok_or_else(|| {
+    pub fn from_attributes(
+        mut attrs: HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let name = attrs.remove("name").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing name".to_string(),
             ))
         })?;
 
-        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing uniqueId".to_string(),
             ))
@@ -201,7 +205,7 @@ impl Site {
             None
         };
 
-        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+        let creator = attrs.remove("creator").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing creator".to_string(),
             ))

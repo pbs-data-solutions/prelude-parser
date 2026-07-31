@@ -40,14 +40,16 @@ pub struct Patient {
 }
 
 impl Patient {
-    pub fn from_attributes(attrs: HashMap<String, String>) -> Result<Self, crate::errors::Error> {
-        let patient_id = attrs.get("patientId").cloned().ok_or_else(|| {
+    pub fn from_attributes(
+        mut attrs: HashMap<String, String>,
+    ) -> Result<Self, crate::errors::Error> {
+        let patient_id = attrs.remove("patientId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing patientId".to_string(),
             ))
         })?;
 
-        let unique_id = attrs.get("uniqueId").cloned().ok_or_else(|| {
+        let unique_id = attrs.remove("uniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing uniqueId".to_string(),
             ))
@@ -63,25 +65,25 @@ impl Patient {
             None
         };
 
-        let creator = attrs.get("creator").cloned().ok_or_else(|| {
+        let creator = attrs.remove("creator").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing creator".to_string(),
             ))
         })?;
 
-        let site_name = attrs.get("siteName").cloned().ok_or_else(|| {
+        let site_name = attrs.remove("siteName").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing siteName".to_string(),
             ))
         })?;
 
-        let site_unique_id = attrs.get("siteUniqueId").cloned().ok_or_else(|| {
+        let site_unique_id = attrs.remove("siteUniqueId").ok_or_else(|| {
             crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
                 "Missing siteUniqueId".to_string(),
             ))
         })?;
 
-        let last_language = attrs.get("lastLanguage").filter(|s| !s.is_empty()).cloned();
+        let last_language = attrs.remove("lastLanguage").filter(|s| !s.is_empty());
 
         let number_of_forms = attrs
             .get("numberOfForms")
