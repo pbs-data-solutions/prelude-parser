@@ -40,7 +40,9 @@ pub struct Patient {
 }
 
 impl Patient {
-    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        attrs: HashMap<&str, &str>,
+    ) -> Result<Self, crate::errors::Error> {
         let patient_id = attrs
             .get("patientId")
             .copied()
@@ -124,7 +126,7 @@ impl Patient {
         })
     }
 
-    pub fn set_forms(&mut self, forms: Vec<Form>) {
+    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
     }
 }

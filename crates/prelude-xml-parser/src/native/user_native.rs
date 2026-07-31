@@ -40,7 +40,9 @@ pub struct User {
 
 #[cfg(not(feature = "python"))]
 impl User {
-    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        attrs: HashMap<&str, &str>,
+    ) -> Result<Self, crate::errors::Error> {
         let unique_id = attrs
             .get("uniqueId")
             .copied()
@@ -80,7 +82,7 @@ impl User {
         })
     }
 
-    pub fn set_forms(&mut self, forms: Vec<Form>) {
+    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
     }
 }
@@ -118,7 +120,9 @@ pub struct User {
 
 #[cfg(feature = "python")]
 impl User {
-    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        attrs: HashMap<&str, &str>,
+    ) -> Result<Self, crate::errors::Error> {
         let unique_id = attrs
             .get("uniqueId")
             .copied()
@@ -158,7 +162,7 @@ impl User {
         })
     }
 
-    pub fn set_forms(&mut self, forms: Vec<Form>) {
+    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
     }
 }
