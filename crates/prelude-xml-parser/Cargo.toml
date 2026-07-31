@@ -1,0 +1,33 @@
+[package]
+name = "prelude-xml-parser"
+version = "0.11.0"
+edition = "2021"
+authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
+description = "Deserialize Prelude EDC native XML files into Rust stucts."
+documentation = "https://docs.rs/prelude-xml-parser"
+homepage = "https://github.com/pbs-data-solutions/prelude-xml-parser"
+repository = "https://github.com/pbs-data-solutions/prelude-xml-parser"
+readme = "README.md"
+keywords = ["prelude-edc", "xml", "deserialization", "pyo3"]
+license = "MIT"
+
+[features]
+python = ["dep:pyo3"]
+
+[dependencies]
+chrono = { version = "0.4.45", features = ["serde"] }
+pyo3 = { version = "0.29.0", optional = true }
+quick-xml = { version = "0.41.0", features = ["serde", "serialize"] }
+rayon = "1.12.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+thiserror = "2.0.18"
+
+[dev-dependencies]
+criterion = { version = "0.8.2", features = ["html_reports"] }
+insta = { version = "1.47.2", features = ["yaml"] }
+tempfile = "3.27.0"
+
+[[bench]]
+name = "parse_benchmark"
+harness = false
