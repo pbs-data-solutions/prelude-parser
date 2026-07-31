@@ -675,7 +675,7 @@ impl Category {
 }
 
 impl Form {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let name = attrs.get("name").copied().unwrap_or_default().to_string();
@@ -1336,7 +1336,7 @@ impl Form {
 }
 
 impl State {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let value = attrs.get("value").copied().unwrap_or_default().to_string();
@@ -1367,7 +1367,7 @@ impl State {
 }
 
 impl LockState {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let locked = attrs.get("locked").map(|s| *s == "true").unwrap_or(false);
@@ -1400,7 +1400,7 @@ impl LockState {
 }
 
 impl Category {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let name = attrs.get("name").copied().unwrap_or_default().to_string();
@@ -1420,7 +1420,7 @@ impl Category {
 }
 
 impl Field {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let name = attrs.get("name").copied().unwrap_or_default().to_string();
@@ -1464,7 +1464,7 @@ impl Field {
 }
 
 impl Entry {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let entry_id = attrs
@@ -1505,7 +1505,7 @@ impl Entry {
 }
 
 impl Value {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let by = attrs.get("by").copied().unwrap_or_default().to_string();
@@ -1536,7 +1536,7 @@ impl Value {
 }
 
 impl Reason {
-    pub fn from_attributes(
+    pub(crate) fn from_attributes(
         attrs: std::collections::HashMap<&str, &str>,
     ) -> Result<Self, crate::errors::Error> {
         let by = attrs.get("by").copied().unwrap_or_default().to_string();

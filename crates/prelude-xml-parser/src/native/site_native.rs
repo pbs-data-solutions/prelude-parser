@@ -54,7 +54,9 @@ pub struct Site {
 
 #[cfg(not(feature = "python"))]
 impl Site {
-    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        attrs: HashMap<&str, &str>,
+    ) -> Result<Self, crate::errors::Error> {
         let name = attrs
             .get("name")
             .copied()
@@ -122,7 +124,7 @@ impl Site {
         })
     }
 
-    pub fn set_forms(&mut self, forms: Vec<Form>) {
+    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
     }
 }
@@ -180,7 +182,9 @@ pub struct Site {
 
 #[cfg(feature = "python")]
 impl Site {
-    pub fn from_attributes(attrs: HashMap<&str, &str>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        attrs: HashMap<&str, &str>,
+    ) -> Result<Self, crate::errors::Error> {
         let name = attrs
             .get("name")
             .copied()
@@ -248,7 +252,7 @@ impl Site {
         })
     }
 
-    pub fn set_forms(&mut self, forms: Vec<Form>) {
+    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
     }
 }
