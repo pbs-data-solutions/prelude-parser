@@ -1,10 +1,16 @@
 # Prelude XML Parser
 
-[![Tests Status](https://github.com/pbs-data-solutions/prelude-xml-parser/actions/workflows/testing.yml/badge.svg?branch=main&event=push)](https://github.com/pbs-data-solutions/prelude-xml-parser/actions?query=workflow%3ATesting+branch%3Amain+event%3Apush)
+[![Tests Status](https://github.com/pbs-data-solutions/prelude-parser/actions/workflows/testing.yml/badge.svg?branch=main&event=push)](https://github.com/pbs-data-solutions/prelude-parser/actions?query=workflow%3ATesting+branch%3Amain+event%3Apush)
 ![crates.io](https://img.shields.io/crates/v/prelude-xml-parser.svg?color=brightgreen)
 
 Deserialize Prelude EDC native XML files into Rust structs. Enabling the `python` feature allows
 deserializing to Python classes with PyO3.
+
+## Installation
+
+```sh
+cargo add prelude-xml-parser
+```
 
 ## Supported native files
 
@@ -12,33 +18,10 @@ deserializing to Python classes with PyO3.
 - [x] Site Native XML
 - [x] User Native XML
 
-## Benchmarks
+## Development
 
-Benchmarks are run with [criterion](https://github.com/bheisler/criterion.rs) and cover all three
-parsers, in both their `_string` and `_file` forms, across a range of input sizes. Inputs are
-generated at run time by replicating the fixtures in `tests/assets/`, so no extra setup is needed:
-
-```sh
-just bench
-```
-
-An HTML report is written to `target/criterion/report/index.html`.
-
-For a faster measurement that stops as soon as the significance level is reached (~20s instead of
-several minutes):
-
-```sh
-just bench-quick
-```
-
-To only check that the benchmarks still run, without measuring anything:
-
-```sh
-just bench-smoke
-```
-
-To additionally benchmark against a real subject native export, point `BENCH_XML_FILE` at it:
-
-```sh
-BENCH_XML_FILE=/path/to/subject_native.xml cargo bench
-```
+This crate lives in the [prelude-parser](https://github.com/pbs-data-solutions/prelude-parser)
+repository, alongside the Python bindings that build on it. It is published to crates.io on its own
+version series and can be used as a standalone Rust dependency. See the repository's
+[contributing guide](https://github.com/pbs-data-solutions/prelude-parser/blob/main/CONTRIBUTING.md)
+for how to build, test, and benchmark it.

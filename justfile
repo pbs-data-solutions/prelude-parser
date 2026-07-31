@@ -25,13 +25,28 @@
   just --justfile {{justfile()}} pyrefly
 
 @check:
-  cargo check
+  cargo check --workspace --all-targets --all-features
 
 @clippy:
-  cargo clippy
+  cargo clippy --workspace --all-targets --all-features
 
 @fmt:
-  cargo fmt
+  cargo fmt --all
+
+@bench:
+  cargo bench -p prelude-xml-parser
+
+@bench-quick:
+  cargo bench -p prelude-xml-parser --bench parse_benchmark -- --quick
+
+@bench-smoke:
+  cargo bench -p prelude-xml-parser -- --test
+
+@rust-test *args="":
+  cargo test -p prelude-xml-parser {{args}}
+
+@rust-test-review:
+  cargo insta test -p prelude-xml-parser --review
 
 @pyrefly:
   uv run pyrefly check
@@ -42,5 +57,11 @@
 @ruff-format:
   uv run ruff format prelude_parser tests
 
-@test *args="":
+@python-test *args="":
   uv run pytest {{args}}
+
+@test:
+  echo testing rust
+  just --justfile {{justfile()}} rust-test
+  echo testing python
+  just --justfile {{justfile()}} python-test
