@@ -1,9 +1,91 @@
 #[cfg(feature = "python")]
 use chrono::{Datelike, Timelike};
 
+use std::borrow::Cow;
+use std::str::from_utf8;
+
 use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
+use quick_xml::events::BytesStart;
 use serde::{Deserialize, Deserializer};
+
+/// Walk an element's attributes once, handing each raw key and its borrowed value to `visit`.
+///
+/// Matching on the raw key bytes lets callers pull out the attributes they care about without
+/// building an intermediate map, which matters because this runs for every element in the file.
+pub(crate) fn visit_attributes<'a>(
+    e: &'a BytesStart<'a>,
+    mut visit: impl FnMut(&'a [u8], &'a str),
+) -> Result<(), crate::errors::Error> {
+    for attr in e.attributes() {
+        let attr = attr.map_err(|e| {
+            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(format!(
+                "Attribute error: {}",
+                e
+            )))
+        })?;
+
+        let Cow::Borrowed(value) = attr.value else {
+            return Err(crate::errors::Error::ParsingError(
+                quick_xml::de::DeError::Custom(
+                    "Attribute value was not borrowed from the source".to_string(),
+                ),
+            ));
+        };
+
+        let Ok(value) = from_utf8(value) else {
+            return Err(crate::errors::Error::ParsingError(
+                quick_xml::de::DeError::Custom("Attribute was not valid UTF-8".to_string()),
+            ));
+        };
+
+        visit(attr.key.into_inner(), value);
+    }
+
+    Ok(())
+}
+
+/// Parse an attribute that carries a datetime, treating an empty string as absent and an
+/// unparsable value as absent.
+pub(crate) fn optional_datetime(s: &str) -> Option<DateTime<Utc>> {
+    if s.is_empty() {
+        None
+    } else {
+        parse_datetime(s).ok()
+    }
+}
+
+/// Parse an attribute that carries a datetime, treating an empty string as absent but reporting an
+/// unparsable value as an error.
+pub(crate) fn checked_datetime(s: &str) -> Result<Option<DateTime<Utc>>, crate::errors::Error> {
+    if s.is_empty() {
+        Ok(None)
+    } else {
+        parse_datetime(s).map(Some)
+    }
+}
+
+/// Take an attribute that must be present, reporting its absence as an error.
+pub(crate) fn required_attribute(
+    value: Option<&str>,
+    name: &str,
+) -> Result<String, crate::errors::Error> {
+    match value {
+        Some(value) => Ok(value.to_string()),
+        None => Err(crate::errors::Error::ParsingError(
+            quick_xml::de::DeError::Custom(format!("Missing {}", name)),
+        )),
+    }
+}
+
+/// Convert an attribute into an owned `String`, treating an empty string as absent.
+pub(crate) fn optional_string(s: &str) -> Option<String> {
+    if s.is_empty() {
+        None
+    } else {
+        Some(s.to_string())
+    }
+}
 
 fn two_digits(tens: u8, ones: u8) -> Option<u32> {
     if !tens.is_ascii_digit() || !ones.is_ascii_digit() {

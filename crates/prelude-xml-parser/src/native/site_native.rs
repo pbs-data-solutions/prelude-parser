@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -13,7 +11,9 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, State, Value};
 
-use crate::native::deserializers::parse_datetime;
+use quick_xml::events::BytesStart;
+
+use crate::native::deserializers::{checked_datetime, required_attribute, visit_attributes};
 
 #[cfg(feature = "python")]
 use crate::native::deserializers::to_py_datetime;
@@ -56,72 +56,34 @@ pub struct Site {
 
 #[cfg(not(feature = "python"))]
 impl Site {
-    pub(crate) fn from_attributes(
-        attrs: HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs
-            .get("name")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing name".to_string(),
-                ))
-            })?;
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut name: Option<&str> = None;
+        let mut unique_id: Option<&str> = None;
+        let mut number_of_patients = "";
+        let mut count_of_randomized_patients = "";
+        let mut when_created = "";
+        let mut creator: Option<&str> = None;
+        let mut number_of_forms = "";
 
-        let unique_id = attrs
-            .get("uniqueId")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing uniqueId".to_string(),
-                ))
-            })?;
-
-        let number_of_patients = attrs
-            .get("numberOfPatients")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let count_of_randomized_patients = attrs
-            .get("countOfRandomizedPatients")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
-            if wc_str.is_empty() {
-                None
-            } else {
-                Some(parse_datetime(wc_str)?)
-            }
-        } else {
-            None
-        };
-
-        let creator = attrs
-            .get("creator")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing creator".to_string(),
-                ))
-            })?;
-
-        let number_of_forms = attrs
-            .get("numberOfForms")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = Some(attr),
+            b"uniqueId" => unique_id = Some(attr),
+            b"numberOfPatients" => number_of_patients = attr,
+            b"countOfRandomizedPatients" => count_of_randomized_patients = attr,
+            b"whenCreated" => when_created = attr,
+            b"creator" => creator = Some(attr),
+            b"numberOfForms" => number_of_forms = attr,
+            _ => {}
+        })?;
 
         Ok(Site {
-            name,
-            unique_id,
-            number_of_patients,
-            count_of_randomized_patients,
-            when_created,
-            creator,
-            number_of_forms,
+            name: required_attribute(name, "name")?,
+            unique_id: required_attribute(unique_id, "uniqueId")?,
+            number_of_patients: number_of_patients.parse().unwrap_or(0),
+            count_of_randomized_patients: count_of_randomized_patients.parse().unwrap_or(0),
+            when_created: checked_datetime(when_created)?,
+            creator: required_attribute(creator, "creator")?,
+            number_of_forms: number_of_forms.parse().unwrap_or(0),
             forms: None,
         })
     }
@@ -170,72 +132,34 @@ pub struct Site {
 
 #[cfg(feature = "python")]
 impl Site {
-    pub(crate) fn from_attributes(
-        attrs: HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs
-            .get("name")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing name".to_string(),
-                ))
-            })?;
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut name: Option<&str> = None;
+        let mut unique_id: Option<&str> = None;
+        let mut number_of_patients = "";
+        let mut count_of_randomized_patients = "";
+        let mut when_created = "";
+        let mut creator: Option<&str> = None;
+        let mut number_of_forms = "";
 
-        let unique_id = attrs
-            .get("uniqueId")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing uniqueId".to_string(),
-                ))
-            })?;
-
-        let number_of_patients = attrs
-            .get("numberOfPatients")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let count_of_randomized_patients = attrs
-            .get("countOfRandomizedPatients")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
-            if wc_str.is_empty() {
-                None
-            } else {
-                Some(parse_datetime(wc_str)?)
-            }
-        } else {
-            None
-        };
-
-        let creator = attrs
-            .get("creator")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing creator".to_string(),
-                ))
-            })?;
-
-        let number_of_forms = attrs
-            .get("numberOfForms")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = Some(attr),
+            b"uniqueId" => unique_id = Some(attr),
+            b"numberOfPatients" => number_of_patients = attr,
+            b"countOfRandomizedPatients" => count_of_randomized_patients = attr,
+            b"whenCreated" => when_created = attr,
+            b"creator" => creator = Some(attr),
+            b"numberOfForms" => number_of_forms = attr,
+            _ => {}
+        })?;
 
         Ok(Site {
-            name,
-            unique_id,
-            number_of_patients,
-            count_of_randomized_patients,
-            when_created,
-            creator,
-            number_of_forms,
+            name: required_attribute(name, "name")?,
+            unique_id: required_attribute(unique_id, "uniqueId")?,
+            number_of_patients: number_of_patients.parse().unwrap_or(0),
+            count_of_randomized_patients: count_of_randomized_patients.parse().unwrap_or(0),
+            when_created: checked_datetime(when_created)?,
+            creator: required_attribute(creator, "creator")?,
+            number_of_forms: number_of_forms.parse().unwrap_or(0),
             forms: None,
         })
     }
