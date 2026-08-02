@@ -6,8 +6,61 @@ use std::str::from_utf8;
 
 use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
-use quick_xml::events::BytesStart;
+use quick_xml::{
+    escape::resolve_predefined_entity,
+    events::{BytesRef, BytesStart},
+};
 use serde::{Deserialize, Deserializer};
+
+pub(crate) fn decode_error(e: impl std::fmt::Display) -> crate::errors::Error {
+    crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(format!(
+        "Text decoding error: {}",
+        e
+    )))
+}
+
+/// Append the resolved form of a `&...;` reference to the text being accumulated.
+///
+/// quick-xml reports references as their own events, so text content has to be reassembled from
+/// the surrounding [`Event::Text`](quick_xml::events::Event::Text) events and these. A reference
+/// that cannot be resolved is kept verbatim rather than dropped, so no input is silently lost.
+pub(crate) fn push_general_ref(
+    text: &mut String,
+    reference: &BytesRef<'_>,
+) -> Result<(), crate::errors::Error> {
+    if let Some(character) = reference.resolve_char_ref().map_err(decode_error)? {
+        text.push(character);
+        return Ok(());
+    }
+
+    let name = reference.decode().map_err(decode_error)?;
+
+    match resolve_predefined_entity(&name) {
+        Some(resolved) => text.push_str(resolved),
+        None => {
+            text.push('&');
+            text.push_str(&name);
+            text.push(';');
+        }
+    }
+
+    Ok(())
+}
+
+/// Take the accumulated text, trimmed, leaving the buffer empty for the next element.
+///
+/// Trimming happens once over the fully reassembled text rather than per fragment, so whitespace
+/// that sits next to a reference survives.
+pub(crate) fn take_trimmed(text: &mut String) -> String {
+    if text.trim().len() == text.len() {
+        return std::mem::take(text);
+    }
+
+    let trimmed = text.trim().to_string();
+    text.clear();
+
+    trimmed
+}
 
 /// Walk an element's attributes once, handing each raw key and its borrowed value to `visit`.
 ///
@@ -239,5 +292,82 @@ pub fn to_py_datetime_option<'py>(
         Ok(py_datetime)
     } else {
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolves_amp() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("amp")).expect("reference should resolve");
+
+        assert_eq!(text, "&");
+    }
+
+    #[test]
+    fn resolves_lt() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("lt")).expect("reference should resolve");
+
+        assert_eq!(text, "<");
+    }
+
+    #[test]
+    fn resolves_gt() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("gt")).expect("reference should resolve");
+
+        assert_eq!(text, ">");
+    }
+
+    #[test]
+    fn resolves_quot() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("quot")).expect("reference should resolve");
+
+        assert_eq!(text, "\"");
+    }
+
+    #[test]
+    fn resolves_apos() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("apos")).expect("reference should resolve");
+
+        assert_eq!(text, "'");
+    }
+
+    #[test]
+    fn resolves_decimal_character_reference() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("#65")).expect("reference should resolve");
+
+        assert_eq!(text, "A");
+    }
+
+    #[test]
+    fn resolves_hex_character_reference() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("#x42")).expect("reference should resolve");
+
+        assert_eq!(text, "B");
+    }
+
+    #[test]
+    fn keeps_unresolvable_reference_verbatim() {
+        let mut text = String::new();
+        push_general_ref(&mut text, &BytesRef::new("unknown")).expect("reference should resolve");
+
+        assert_eq!(text, "&unknown;");
+    }
+
+    #[test]
+    fn appends_to_existing_text() {
+        let mut text = String::from("Tom ");
+        push_general_ref(&mut text, &BytesRef::new("amp")).expect("reference should resolve");
+
+        assert_eq!(text, "Tom &");
     }
 }
