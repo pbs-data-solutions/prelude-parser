@@ -6,6 +6,7 @@ use std::{fs::read_to_string, path::Path};
 use rayon::prelude::*;
 
 use crate::errors::Error;
+use crate::native::deserializers::{decode_error, push_general_ref, take_trimmed};
 use crate::native::{
     common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
     site_native::{Site, SiteNative},
@@ -686,7 +687,7 @@ fn extract_patient_chunks(xml: &str) -> Vec<&str> {
 
 fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut xml_reader = Reader::from_str(patient_xml);
-    xml_reader.config_mut().trim_text(true);
+    xml_reader.config_mut().trim_text(false);
 
     let mut current_patient: Option<Patient> = None;
     let mut current_forms: Vec<Form> = Vec::new();
@@ -769,7 +770,11 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&String::from_utf8_lossy(&e));
+                text_content.push_str(&e.decode().map_err(decode_error)?);
+            }
+
+            Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
+                push_general_ref(&mut text_content, e)?;
             }
 
             Ok(Event::End(ref e)) => {
@@ -831,7 +836,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
-                                value.value = std::mem::take(&mut text_content);
+                                value.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
@@ -842,7 +847,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         }
                         "reason" if in_reason => {
                             if let Some(mut reason) = current_reason.take() {
-                                reason.value = std::mem::take(&mut text_content);
+                                reason.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.reason = Some(reason);
                                 }
@@ -926,7 +931,7 @@ fn extract_site_chunks(xml: &str) -> Vec<&str> {
 
 fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut xml_reader = Reader::from_str(site_xml);
-    xml_reader.config_mut().trim_text(true);
+    xml_reader.config_mut().trim_text(false);
 
     let mut current_site: Option<Site> = None;
     let mut current_forms: Vec<Form> = Vec::new();
@@ -1009,7 +1014,11 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&String::from_utf8_lossy(&e));
+                text_content.push_str(&e.decode().map_err(decode_error)?);
+            }
+
+            Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
+                push_general_ref(&mut text_content, e)?;
             }
 
             Ok(Event::End(ref e)) => {
@@ -1071,7 +1080,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
-                                value.value = std::mem::take(&mut text_content);
+                                value.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
@@ -1082,7 +1091,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         }
                         "reason" if in_reason => {
                             if let Some(mut reason) = current_reason.take() {
-                                reason.value = std::mem::take(&mut text_content);
+                                reason.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.reason = Some(reason);
                                 }
@@ -1370,7 +1379,7 @@ fn extract_user_chunks(xml: &str) -> Vec<&str> {
 
 fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut xml_reader = Reader::from_str(user_xml);
-    xml_reader.config_mut().trim_text(true);
+    xml_reader.config_mut().trim_text(false);
 
     let mut current_user: Option<User> = None;
     let mut current_forms: Vec<Form> = Vec::new();
@@ -1447,7 +1456,11 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&String::from_utf8_lossy(&e));
+                text_content.push_str(&e.decode().map_err(decode_error)?);
+            }
+
+            Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
+                push_general_ref(&mut text_content, e)?;
             }
 
             Ok(Event::End(ref e)) => {
@@ -1509,7 +1522,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
-                                value.value = std::mem::take(&mut text_content);
+                                value.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
@@ -1520,7 +1533,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         }
                         "reason" if in_reason => {
                             if let Some(mut reason) = current_reason.take() {
-                                reason.value = std::mem::take(&mut text_content);
+                                reason.value = take_trimmed(&mut text_content);
                                 if let Some(ref mut entry) = current_entry {
                                     entry.reason = Some(reason);
                                 }
