@@ -906,6 +906,14 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                                 form.lock_state = Some(lock_state);
                             }
                         }
+                        "category" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            current_categories.push(Category::from_attributes(attrs)?);
+                        }
+                        "field" if in_category => {
+                            let attrs = extract_attributes(e)?;
+                            current_fields.push(Field::from_attributes(attrs)?);
+                        }
                         "value" if in_entry => {
                             let attrs = extract_attributes(e)?;
                             let value = Value::from_attributes(attrs)?;
@@ -1155,6 +1163,10 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             if let Some(ref mut form) = current_form {
                                 form.lock_state = Some(lock_state);
                             }
+                        }
+                        "category" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            current_categories.push(Category::from_attributes(attrs)?);
                         }
                         "field" if in_category => {
                             let attrs = extract_attributes(e)?;
@@ -1600,6 +1612,10 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             let attrs = extract_attributes(e)?;
                             let state = State::from_attributes(attrs)?;
                             current_states.push(state);
+                        }
+                        "category" if in_form => {
+                            let attrs = extract_attributes(e)?;
+                            current_categories.push(Category::from_attributes(attrs)?);
                         }
                         "field" if in_category => {
                             let attrs = extract_attributes(e)?;
