@@ -9,6 +9,10 @@ authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
 homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 repository = "https://github.com/pbs-data-solutions/prelude-parser"
 
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
 [workspace.dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
 pyo3 = "0.29.0"

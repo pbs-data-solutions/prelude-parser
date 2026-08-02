@@ -1,9 +1,72 @@
 #[cfg(feature = "python")]
 use chrono::{Datelike, Timelike};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
 use serde::{Deserialize, Deserializer};
+
+fn two_digits(tens: u8, ones: u8) -> Option<u32> {
+    if !tens.is_ascii_digit() || !ones.is_ascii_digit() {
+        return None;
+    }
+
+    Some(u32::from(tens - b'0') * 10 + u32::from(ones - b'0'))
+}
+
+/// Fast path for the only datetime shape Prelude emits: `YYYY-MM-DD HH:MM:SS ±HHMM`.
+///
+/// Returns `None` when the input does not match that exact shape so the caller can fall back to
+/// the general chrono parsers.
+fn parse_prelude_datetime(s: &str) -> Option<DateTime<Utc>> {
+    let Ok(b) = <&[u8; 25]>::try_from(s.as_bytes()) else {
+        return None;
+    };
+
+    if b[4] != b'-' || b[7] != b'-' || b[10] != b' ' || b[13] != b':' || b[16] != b':' {
+        return None;
+    }
+
+    let offset_sign = match (b[19], b[20]) {
+        (b' ', b'+') => 1i32,
+        (b' ', b'-') => -1i32,
+        _ => return None,
+    };
+
+    let year = two_digits(b[0], b[1])? * 100 + two_digits(b[2], b[3])?;
+    let month = two_digits(b[5], b[6])?;
+    let day = two_digits(b[8], b[9])?;
+    let hour = two_digits(b[11], b[12])?;
+    let minute = two_digits(b[14], b[15])?;
+    let second = two_digits(b[17], b[18])?;
+    let offset_hours = two_digits(b[21], b[22])?;
+    let offset_minutes = two_digits(b[23], b[24])?;
+
+    let offset_seconds = offset_sign * (offset_hours * 3600 + offset_minutes * 60) as i32;
+    let offset = FixedOffset::east_opt(offset_seconds)?;
+
+    let naive =
+        NaiveDate::from_ymd_opt(year as i32, month, day)?.and_hms_opt(hour, minute, second)?;
+
+    Some(offset.from_local_datetime(&naive).single()?.to_utc())
+}
+
+/// Parse a Prelude datetime attribute, trying the common fixed-shape fast path before falling back
+/// to the general chrono format parsers.
+pub(crate) fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
+    if let Some(dt) = parse_prelude_datetime(s) {
+        Ok(dt)
+    } else if let Ok(dt) = DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
+        Ok(dt.with_timezone(&Utc))
+    } else {
+        Err(crate::errors::Error::ParsingError(
+            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
+        ))
+    }
+}
 
 #[cfg(feature = "python")]
 use pyo3::{prelude::*, types::PyDateTime};
