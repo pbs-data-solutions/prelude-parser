@@ -9,7 +9,7 @@ use pyo3::{
 
 use crate::native::deserializers::{
     default_datetime_none, default_string_none, deserialize_empty_string_as_none,
-    deserialize_empty_string_as_none_datetime,
+    deserialize_empty_string_as_none_datetime, parse_datetime,
 };
 
 #[cfg(feature = "python")]
@@ -775,17 +775,7 @@ impl Form {
 }
 
 fn parse_datetime_internal(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
-    if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z") {
-        Ok(dt.with_timezone(&Utc))
-    } else if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z") {
-        Ok(dt.with_timezone(&Utc))
-    } else if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(s) {
-        Ok(dt.with_timezone(&Utc))
-    } else {
-        Err(crate::errors::Error::ParsingError(
-            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
-        ))
-    }
+    parse_datetime(s)
 }
 
 #[cfg(not(feature = "python"))]

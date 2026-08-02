@@ -9,6 +9,8 @@ use pyo3::{
     types::{PyDateTime, PyDict},
 };
 
+use crate::native::deserializers::parse_datetime;
+
 #[cfg(feature = "python")]
 use crate::native::deserializers::{
     default_string_none, deserialize_empty_string_as_none, to_py_datetime,
@@ -128,20 +130,6 @@ impl Patient {
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
         self.forms = if forms.is_empty() { None } else { Some(forms) };
-    }
-}
-
-fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
-    if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S %z") {
-        Ok(dt.with_timezone(&Utc))
-    } else if let Ok(dt) = chrono::DateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%z") {
-        Ok(dt.with_timezone(&Utc))
-    } else if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(s) {
-        Ok(dt.with_timezone(&Utc))
-    } else {
-        Err(crate::errors::Error::ParsingError(
-            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
-        ))
     }
 }
 
