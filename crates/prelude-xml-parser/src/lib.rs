@@ -1,7 +1,7 @@
 pub mod errors;
 pub mod native;
 
-use std::{borrow::Cow, collections::HashMap, fs::read_to_string, path::Path, str::from_utf8};
+use std::{fs::read_to_string, path::Path};
 
 use rayon::prelude::*;
 
@@ -12,7 +12,7 @@ use crate::native::{
     subject_native::{Form, Patient, SubjectNative},
     user_native::{User, UserNative},
 };
-use quick_xml::events::{BytesStart, Event};
+use quick_xml::events::Event;
 use quick_xml::Reader;
 
 /// Parses a Prelude native XML file into a `Native` struct.
@@ -662,30 +662,6 @@ pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error
     Ok(SubjectNative { patients })
 }
 
-fn extract_attributes<'a>(e: &'a BytesStart<'a>) -> Result<HashMap<&'a str, &'a str>, Error> {
-    let mut attrs = HashMap::new();
-    for attr in e.attributes() {
-        let attr = attr.map_err(|e| {
-            Error::ParsingError(quick_xml::de::DeError::Custom(format!(
-                "Attribute error: {}",
-                e
-            )))
-        })?;
-        let Cow::Borrowed(value) = attr.value else {
-            return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Attribute value was not borrowed from the source".to_string(),
-            )));
-        };
-        let (Ok(key), Ok(value)) = (from_utf8(attr.key.into_inner()), from_utf8(value)) else {
-            return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                "Attribute was not valid UTF-8".to_string(),
-            )));
-        };
-        attrs.insert(key, value);
-    }
-    Ok(attrs)
-}
-
 fn extract_patient_chunks(xml: &str) -> Vec<&str> {
     let mut chunks = Vec::new();
     let mut pos = 0;
@@ -749,53 +725,41 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "patient" => {
-                            let attrs = extract_attributes(e)?;
-                            current_patient = Some(Patient::from_attributes(attrs)?);
+                            current_patient = Some(Patient::from_attributes(e)?);
                             current_forms.clear();
                         }
                         "form" if current_patient.is_some() => {
-                            let attrs = extract_attributes(e)?;
-                            current_form = Some(Form::from_attributes(attrs)?);
+                            current_form = Some(Form::from_attributes(e)?);
                             in_form = true;
                             current_states.clear();
                             current_categories.clear();
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_category = Some(Category::from_attributes(attrs)?);
+                            current_category = Some(Category::from_attributes(e)?);
                             in_category = true;
                             current_fields.clear();
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            current_field = Some(Field::from_attributes(attrs)?);
+                            current_field = Some(Field::from_attributes(e)?);
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
                         }
                         "entry" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            current_entry = Some(Entry::from_attributes(attrs)?);
+                            current_entry = Some(Entry::from_attributes(e)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            let comment_id = attrs.get("id").cloned().unwrap_or_default();
-                            current_comment = Some(Comment {
-                                comment_id: comment_id.to_string(),
-                                value: None,
-                            });
+                            current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            let attrs = extract_attributes(e)?;
-                            current_value = Some(Value::from_attributes(attrs)?);
+                            current_value = Some(Value::from_attributes(e)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            current_reason = Some(Reason::from_attributes(attrs)?);
+                            current_reason = Some(Reason::from_attributes(e)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -895,35 +859,29 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            let state = State::from_attributes(attrs)?;
+                            let state = State::from_attributes(e)?;
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            let lock_state = LockState::from_attributes(attrs)?;
+                            let lock_state = LockState::from_attributes(e)?;
                             if let Some(ref mut form) = current_form {
                                 form.lock_state = Some(lock_state);
                             }
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_categories.push(Category::from_attributes(attrs)?);
+                            current_categories.push(Category::from_attributes(e)?);
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            current_fields.push(Field::from_attributes(attrs)?);
+                            current_fields.push(Field::from_attributes(e)?);
                         }
                         "value" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            let value = Value::from_attributes(attrs)?;
+                            let value = Value::from_attributes(e)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.value = Some(value);
                             }
                         }
                         "reason" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            let reason = Reason::from_attributes(attrs)?;
+                            let reason = Reason::from_attributes(e)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
@@ -1007,53 +965,41 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "site" => {
-                            let attrs = extract_attributes(e)?;
-                            current_site = Some(Site::from_attributes(attrs)?);
+                            current_site = Some(Site::from_attributes(e)?);
                             current_forms.clear();
                         }
                         "form" if current_site.is_some() => {
-                            let attrs = extract_attributes(e)?;
-                            current_form = Some(Form::from_attributes(attrs)?);
+                            current_form = Some(Form::from_attributes(e)?);
                             in_form = true;
                             current_states.clear();
                             current_categories.clear();
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_category = Some(Category::from_attributes(attrs)?);
+                            current_category = Some(Category::from_attributes(e)?);
                             in_category = true;
                             current_fields.clear();
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            current_field = Some(Field::from_attributes(attrs)?);
+                            current_field = Some(Field::from_attributes(e)?);
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
                         }
                         "entry" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            current_entry = Some(Entry::from_attributes(attrs)?);
+                            current_entry = Some(Entry::from_attributes(e)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            let comment_id = attrs.get("id").cloned().unwrap_or_default();
-                            current_comment = Some(Comment {
-                                comment_id: comment_id.to_string(),
-                                value: None,
-                            });
+                            current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            let attrs = extract_attributes(e)?;
-                            current_value = Some(Value::from_attributes(attrs)?);
+                            current_value = Some(Value::from_attributes(e)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            current_reason = Some(Reason::from_attributes(attrs)?);
+                            current_reason = Some(Reason::from_attributes(e)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -1153,36 +1099,30 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            let state = State::from_attributes(attrs)?;
+                            let state = State::from_attributes(e)?;
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            let lock_state = LockState::from_attributes(attrs)?;
+                            let lock_state = LockState::from_attributes(e)?;
                             if let Some(ref mut form) = current_form {
                                 form.lock_state = Some(lock_state);
                             }
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_categories.push(Category::from_attributes(attrs)?);
+                            current_categories.push(Category::from_attributes(e)?);
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            let field = Field::from_attributes(attrs)?;
+                            let field = Field::from_attributes(e)?;
                             current_fields.push(field);
                         }
                         "value" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            let value = Value::from_attributes(attrs)?;
+                            let value = Value::from_attributes(e)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.value = Some(value);
                             }
                         }
                         "reason" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            let reason = Reason::from_attributes(attrs)?;
+                            let reason = Reason::from_attributes(e)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
@@ -1469,47 +1409,35 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "user" => {
-                            let attrs = extract_attributes(e)?;
-                            current_user = Some(User::from_attributes(attrs)?);
+                            current_user = Some(User::from_attributes(e)?);
                         }
                         "form" => {
-                            let attrs = extract_attributes(e)?;
-                            current_form = Some(Form::from_attributes(attrs)?);
+                            current_form = Some(Form::from_attributes(e)?);
                             in_form = true;
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_category = Some(Category::from_attributes(attrs)?);
+                            current_category = Some(Category::from_attributes(e)?);
                             in_category = true;
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            current_field = Some(Field::from_attributes(attrs)?);
+                            current_field = Some(Field::from_attributes(e)?);
                             in_field = true;
                         }
                         "entry" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            current_entry = Some(Entry::from_attributes(attrs)?);
+                            current_entry = Some(Entry::from_attributes(e)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
-                            let attrs = extract_attributes(e)?;
-                            let comment_id = attrs.get("id").cloned().unwrap_or_default();
-                            current_comment = Some(Comment {
-                                comment_id: comment_id.to_string(),
-                                value: None,
-                            });
+                            current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            let attrs = extract_attributes(e)?;
-                            current_value = Some(Value::from_attributes(attrs)?);
+                            current_value = Some(Value::from_attributes(e)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            let attrs = extract_attributes(e)?;
-                            current_reason = Some(Reason::from_attributes(attrs)?);
+                            current_reason = Some(Reason::from_attributes(e)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -1609,17 +1537,14 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            let state = State::from_attributes(attrs)?;
+                            let state = State::from_attributes(e)?;
                             current_states.push(state);
                         }
                         "category" if in_form => {
-                            let attrs = extract_attributes(e)?;
-                            current_categories.push(Category::from_attributes(attrs)?);
+                            current_categories.push(Category::from_attributes(e)?);
                         }
                         "field" if in_category => {
-                            let attrs = extract_attributes(e)?;
-                            let field = Field::from_attributes(attrs)?;
+                            let field = Field::from_attributes(e)?;
                             current_fields.push(field);
                         }
                         _ => {}

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -9,7 +7,11 @@ use pyo3::{
     types::{PyDateTime, PyDict},
 };
 
-use crate::native::deserializers::parse_datetime;
+use quick_xml::events::BytesStart;
+
+use crate::native::deserializers::{
+    checked_datetime, optional_string, required_attribute, visit_attributes,
+};
 
 #[cfg(feature = "python")]
 use crate::native::deserializers::{
@@ -42,88 +44,37 @@ pub struct Patient {
 }
 
 impl Patient {
-    pub(crate) fn from_attributes(
-        attrs: HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let patient_id = attrs
-            .get("patientId")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing patientId".to_string(),
-                ))
-            })?;
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut patient_id: Option<&str> = None;
+        let mut unique_id: Option<&str> = None;
+        let mut when_created = "";
+        let mut creator: Option<&str> = None;
+        let mut site_name: Option<&str> = None;
+        let mut site_unique_id: Option<&str> = None;
+        let mut last_language = "";
+        let mut number_of_forms = "";
 
-        let unique_id = attrs
-            .get("uniqueId")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing uniqueId".to_string(),
-                ))
-            })?;
-
-        let when_created = if let Some(wc_str) = attrs.get("whenCreated") {
-            if wc_str.is_empty() {
-                None
-            } else {
-                Some(parse_datetime(wc_str)?)
-            }
-        } else {
-            None
-        };
-
-        let creator = attrs
-            .get("creator")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing creator".to_string(),
-                ))
-            })?;
-
-        let site_name = attrs
-            .get("siteName")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing siteName".to_string(),
-                ))
-            })?;
-
-        let site_unique_id = attrs
-            .get("siteUniqueId")
-            .copied()
-            .map(str::to_string)
-            .ok_or_else(|| {
-                crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(
-                    "Missing siteUniqueId".to_string(),
-                ))
-            })?;
-
-        let last_language = attrs
-            .get("lastLanguage")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-
-        let number_of_forms = attrs
-            .get("numberOfForms")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
+        visit_attributes(e, |key, attr| match key {
+            b"patientId" => patient_id = Some(attr),
+            b"uniqueId" => unique_id = Some(attr),
+            b"whenCreated" => when_created = attr,
+            b"creator" => creator = Some(attr),
+            b"siteName" => site_name = Some(attr),
+            b"siteUniqueId" => site_unique_id = Some(attr),
+            b"lastLanguage" => last_language = attr,
+            b"numberOfForms" => number_of_forms = attr,
+            _ => {}
+        })?;
 
         Ok(Patient {
-            patient_id,
-            unique_id,
-            when_created,
-            creator,
-            site_name,
-            site_unique_id,
-            last_language,
-            number_of_forms,
+            patient_id: required_attribute(patient_id, "patientId")?,
+            unique_id: required_attribute(unique_id, "uniqueId")?,
+            when_created: checked_datetime(when_created)?,
+            creator: required_attribute(creator, "creator")?,
+            site_name: required_attribute(site_name, "siteName")?,
+            site_unique_id: required_attribute(site_unique_id, "siteUniqueId")?,
+            last_language: optional_string(last_language),
+            number_of_forms: number_of_forms.parse().unwrap_or(0),
             forms: None,
         })
     }

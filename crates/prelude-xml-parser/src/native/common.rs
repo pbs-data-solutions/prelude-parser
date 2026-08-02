@@ -7,9 +7,12 @@ use pyo3::{
     types::{PyDateTime, PyDict},
 };
 
+use quick_xml::events::BytesStart;
+
 use crate::native::deserializers::{
-    default_datetime_none, default_string_none, deserialize_empty_string_as_none,
-    deserialize_empty_string_as_none_datetime, parse_datetime,
+    checked_datetime, default_datetime_none, default_string_none, deserialize_empty_string_as_none,
+    deserialize_empty_string_as_none_datetime, optional_datetime, optional_string,
+    visit_attributes,
 };
 
 #[cfg(feature = "python")]
@@ -675,107 +678,60 @@ impl Category {
 }
 
 impl Form {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.get("name").copied().unwrap_or_default().to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut name = "";
+        let mut last_modified = "";
+        let mut who_last_modified_name = "";
+        let mut who_last_modified_role = "";
+        let mut when_created = "";
+        let mut has_errors = "";
+        let mut has_warnings = "";
+        let mut locked = "";
+        let mut user = "";
+        let mut date_time_changed = "";
+        let mut form_title = "";
+        let mut form_index = "";
+        let mut form_group = "";
+        let mut form_state = "";
 
-        let last_modified = if let Some(lm) = attrs.get("lastModified") {
-            if lm.is_empty() {
-                None
-            } else {
-                parse_datetime_internal(lm).ok()
-            }
-        } else {
-            None
-        };
-
-        let who_last_modified_name = attrs
-            .get("whoLastModifiedName")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let who_last_modified_role = attrs
-            .get("whoLastModifiedRole")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-
-        let when_created = attrs
-            .get("whenCreated")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let has_errors = attrs
-            .get("hasErrors")
-            .map(|s| *s == "true")
-            .unwrap_or(false);
-
-        let has_warnings = attrs
-            .get("hasWarnings")
-            .map(|s| *s == "true")
-            .unwrap_or(false);
-
-        let locked = attrs.get("locked").map(|s| *s == "true").unwrap_or(false);
-
-        let user = attrs
-            .get("user")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-
-        let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
-            if dtc.is_empty() {
-                None
-            } else {
-                parse_datetime_internal(dtc).ok()
-            }
-        } else {
-            None
-        };
-
-        let form_title = attrs
-            .get("formTitle")
-            .copied()
-            .unwrap_or_default()
-            .to_string();
-
-        let form_index = attrs
-            .get("formIndex")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
-
-        let form_group = attrs
-            .get("formGroup")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let form_state = attrs
-            .get("formState")
-            .copied()
-            .unwrap_or_default()
-            .to_string();
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = attr,
+            b"lastModified" => last_modified = attr,
+            b"whoLastModifiedName" => who_last_modified_name = attr,
+            b"whoLastModifiedRole" => who_last_modified_role = attr,
+            b"whenCreated" => when_created = attr,
+            b"hasErrors" => has_errors = attr,
+            b"hasWarnings" => has_warnings = attr,
+            b"locked" => locked = attr,
+            b"user" => user = attr,
+            b"dateTimeChanged" => date_time_changed = attr,
+            b"formTitle" => form_title = attr,
+            b"formIndex" => form_index = attr,
+            b"formGroup" => form_group = attr,
+            b"formState" => form_state = attr,
+            _ => {}
+        })?;
 
         Ok(Form {
-            name,
-            last_modified,
-            who_last_modified_name,
-            who_last_modified_role,
-            when_created,
-            has_errors,
-            has_warnings,
-            locked,
-            user,
-            date_time_changed,
-            form_title,
-            form_index,
-            form_group,
-            form_state,
+            name: name.to_string(),
+            last_modified: optional_datetime(last_modified),
+            who_last_modified_name: optional_string(who_last_modified_name),
+            who_last_modified_role: optional_string(who_last_modified_role),
+            when_created: when_created.parse().unwrap_or(0),
+            has_errors: has_errors == "true",
+            has_warnings: has_warnings == "true",
+            locked: locked == "true",
+            user: optional_string(user),
+            date_time_changed: optional_datetime(date_time_changed),
+            form_title: form_title.to_string(),
+            form_index: form_index.parse().unwrap_or(0),
+            form_group: optional_string(form_group),
+            form_state: form_state.to_string(),
             states: None,
             lock_state: None,
             categories: None,
         })
     }
-}
-
-fn parse_datetime_internal(s: &str) -> Result<DateTime<Utc>, crate::errors::Error> {
-    parse_datetime(s)
 }
 
 #[cfg(not(feature = "python"))]
@@ -1326,127 +1282,101 @@ impl Form {
 }
 
 impl State {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let value = attrs.get("value").copied().unwrap_or_default().to_string();
-        let signer = attrs.get("signer").copied().unwrap_or_default().to_string();
-        let signer_unique_id = attrs
-            .get("signerUniqueId")
-            .copied()
-            .unwrap_or_default()
-            .to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut value = "";
+        let mut signer = "";
+        let mut signer_unique_id = "";
+        let mut date_signed = "";
 
-        let date_signed = if let Some(ds) = attrs.get("dateSigned") {
-            if ds.is_empty() {
-                None
-            } else {
-                parse_datetime_internal(ds).ok()
-            }
-        } else {
-            None
-        };
+        visit_attributes(e, |key, attr| match key {
+            b"value" => value = attr,
+            b"signer" => signer = attr,
+            b"signerUniqueId" => signer_unique_id = attr,
+            b"dateSigned" => date_signed = attr,
+            _ => {}
+        })?;
 
         Ok(State {
-            value,
-            signer,
-            signer_unique_id,
-            date_signed,
+            value: value.to_string(),
+            signer: signer.to_string(),
+            signer_unique_id: signer_unique_id.to_string(),
+            date_signed: optional_datetime(date_signed),
         })
     }
 }
 
 impl LockState {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let locked = attrs.get("locked").map(|s| *s == "true").unwrap_or(false);
-        let user = attrs
-            .get("user")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let user_unique_id = attrs
-            .get("userUniqueId")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut locked = "";
+        let mut user = "";
+        let mut user_unique_id = "";
+        let mut date_time_changed = "";
 
-        let date_time_changed = if let Some(dtc) = attrs.get("dateTimeChanged") {
-            if dtc.is_empty() {
-                None
-            } else {
-                parse_datetime_internal(dtc).ok()
-            }
-        } else {
-            None
-        };
+        visit_attributes(e, |key, attr| match key {
+            b"locked" => locked = attr,
+            b"user" => user = attr,
+            b"userUniqueId" => user_unique_id = attr,
+            b"dateTimeChanged" => date_time_changed = attr,
+            _ => {}
+        })?;
 
         Ok(LockState {
-            locked,
-            user,
-            user_unique_id,
-            date_time_changed,
+            locked: locked == "true",
+            user: optional_string(user),
+            user_unique_id: optional_string(user_unique_id),
+            date_time_changed: optional_datetime(date_time_changed),
         })
     }
 }
 
 impl Category {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.get("name").copied().unwrap_or_default().to_string();
-        let category_type = attrs.get("type").copied().unwrap_or_default().to_string();
-        let highest_index = attrs
-            .get("highestIndex")
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(0);
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut name = "";
+        let mut category_type = "";
+        let mut highest_index = "";
+
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = attr,
+            b"type" => category_type = attr,
+            b"highestIndex" => highest_index = attr,
+            _ => {}
+        })?;
 
         Ok(Category {
-            name,
-            category_type,
-            highest_index,
+            name: name.to_string(),
+            category_type: category_type.to_string(),
+            highest_index: highest_index.parse().unwrap_or(0),
             fields: None,
         })
     }
 }
 
 impl Field {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let name = attrs.get("name").copied().unwrap_or_default().to_string();
-        let field_type = attrs.get("type").copied().unwrap_or_default().to_string();
-        let data_type = attrs
-            .get("dataType")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let error_code = attrs
-            .get("errorCode")
-            .copied()
-            .unwrap_or_default()
-            .to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut name = "";
+        let mut field_type = "";
+        let mut data_type = "";
+        let mut error_code = "";
+        let mut when_created = "";
+        let mut keep_history = "";
 
-        let when_created = if let Some(wc) = attrs.get("whenCreated") {
-            if wc.is_empty() {
-                None
-            } else {
-                Some(parse_datetime_internal(wc)?)
-            }
-        } else {
-            None
-        };
-
-        let keep_history = attrs
-            .get("keepHistory")
-            .map(|s| *s == "true")
-            .unwrap_or(false);
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = attr,
+            b"type" => field_type = attr,
+            b"dataType" => data_type = attr,
+            b"errorCode" => error_code = attr,
+            b"whenCreated" => when_created = attr,
+            b"keepHistory" => keep_history = attr,
+            _ => {}
+        })?;
 
         Ok(Field {
-            name,
-            field_type,
-            data_type,
-            error_code,
-            when_created,
-            keep_history,
+            name: name.to_string(),
+            field_type: field_type.to_string(),
+            data_type: optional_string(data_type),
+            error_code: error_code.to_string(),
+            when_created: checked_datetime(when_created)?,
+            keep_history: keep_history == "true",
             entries: None,
             comments: None,
         })
@@ -1454,40 +1384,27 @@ impl Field {
 }
 
 impl Entry {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let entry_id = attrs
-            .get("id")
-            .or_else(|| attrs.get("entryId"))
-            .copied()
-            .unwrap_or_default()
-            .to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut id: Option<&str> = None;
+        let mut entry_id: Option<&str> = None;
+        let mut reviewed_by = "";
+        let mut reviewed_by_unique_id = "";
+        let mut reviewed_by_when = "";
 
-        let reviewed_by = attrs
-            .get("reviewedBy")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let reviewed_by_unique_id = attrs
-            .get("reviewedByUniqueId")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-
-        let reviewed_by_when = if let Some(rbw) = attrs.get("reviewedByWhen") {
-            if rbw.is_empty() {
-                None
-            } else {
-                parse_datetime_internal(rbw).ok()
-            }
-        } else {
-            None
-        };
+        visit_attributes(e, |key, attr| match key {
+            b"id" => id = Some(attr),
+            b"entryId" => entry_id = Some(attr),
+            b"reviewedBy" => reviewed_by = attr,
+            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            b"reviewedByWhen" => reviewed_by_when = attr,
+            _ => {}
+        })?;
 
         Ok(Entry {
-            entry_id,
-            reviewed_by,
-            reviewed_by_unique_id,
-            reviewed_by_when,
+            entry_id: id.or(entry_id).unwrap_or_default().to_string(),
+            reviewed_by: optional_string(reviewed_by),
+            reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
+            reviewed_by_when: optional_datetime(reviewed_by_when),
             value: None,
             reason: None,
         })
@@ -1495,63 +1412,68 @@ impl Entry {
 }
 
 impl Value {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let by = attrs.get("by").copied().unwrap_or_default().to_string();
-        let by_unique_id = attrs
-            .get("byUniqueId")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let role = attrs.get("role").copied().unwrap_or_default().to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut by = "";
+        let mut by_unique_id = "";
+        let mut role = "";
+        let mut when = "";
 
-        let when = if let Some(w) = attrs.get("when") {
-            if w.is_empty() {
-                None
-            } else {
-                Some(parse_datetime_internal(w)?)
-            }
-        } else {
-            None
-        };
+        visit_attributes(e, |key, attr| match key {
+            b"by" => by = attr,
+            b"byUniqueId" => by_unique_id = attr,
+            b"role" => role = attr,
+            b"when" => when = attr,
+            _ => {}
+        })?;
 
         Ok(Value {
-            by,
-            by_unique_id,
-            role,
-            when,
+            by: by.to_string(),
+            by_unique_id: optional_string(by_unique_id),
+            role: role.to_string(),
+            when: checked_datetime(when)?,
             value: String::new(),
         })
     }
 }
 
 impl Reason {
-    pub(crate) fn from_attributes(
-        attrs: std::collections::HashMap<&str, &str>,
-    ) -> Result<Self, crate::errors::Error> {
-        let by = attrs.get("by").copied().unwrap_or_default().to_string();
-        let by_unique_id = attrs
-            .get("byUniqueId")
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
-        let role = attrs.get("role").copied().unwrap_or_default().to_string();
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut by = "";
+        let mut by_unique_id = "";
+        let mut role = "";
+        let mut when = "";
 
-        let when = if let Some(w) = attrs.get("when") {
-            if w.is_empty() {
-                None
-            } else {
-                Some(parse_datetime_internal(w)?)
-            }
-        } else {
-            None
-        };
+        visit_attributes(e, |key, attr| match key {
+            b"by" => by = attr,
+            b"byUniqueId" => by_unique_id = attr,
+            b"role" => role = attr,
+            b"when" => when = attr,
+            _ => {}
+        })?;
 
         Ok(Reason {
-            by,
-            by_unique_id,
-            role,
-            when,
+            by: by.to_string(),
+            by_unique_id: optional_string(by_unique_id),
+            role: role.to_string(),
+            when: checked_datetime(when)?,
             value: String::new(),
+        })
+    }
+}
+
+impl Comment {
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut comment_id = "";
+
+        visit_attributes(e, |key, attr| {
+            if key == b"id" {
+                comment_id = attr;
+            }
+        })?;
+
+        Ok(Comment {
+            comment_id: comment_id.to_string(),
+            value: None,
         })
     }
 }
