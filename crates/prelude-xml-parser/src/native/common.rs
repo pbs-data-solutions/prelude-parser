@@ -700,7 +700,7 @@ impl Form {
             form_group: optional_string(form_group),
             form_state: form_state.to_string(),
             states: None,
-            lock_state: None,
+            lock_states: None,
             categories: None,
         })
     }
@@ -976,7 +976,7 @@ pub struct Form {
     pub states: Option<Arc<Vec<State>>>,
 
     #[serde(alias = "lockState")]
-    pub lock_state: Option<LockState>,
+    pub lock_states: Option<Arc<Vec<LockState>>>,
 
     #[serde(alias = "category")]
     pub categories: Option<Arc<Vec<Category>>>,
@@ -1068,7 +1068,7 @@ pub struct Form {
     pub states: Option<Arc<Vec<State>>>,
 
     #[serde(alias = "lockState")]
-    pub lock_state: Option<LockState>,
+    pub lock_states: Option<Arc<Vec<LockState>>>,
 
     #[serde(alias = "category")]
     pub categories: Option<Arc<Vec<Category>>>,
@@ -1153,8 +1153,8 @@ impl Form {
     }
 
     #[getter]
-    fn lock_state(&self) -> PyResult<Option<LockState>> {
-        Ok(self.lock_state.clone())
+    fn lock_states(&self) -> PyResult<Option<Vec<LockState>>> {
+        Ok(self.lock_states.as_deref().cloned())
     }
 
     #[getter]
@@ -1196,10 +1196,15 @@ impl Form {
             dict.set_item("states", py.None())?;
         }
 
-        if let Some(lock_state) = &self.lock_state {
-            dict.set_item("lock_state", lock_state.to_dict(py)?)?;
+        let mut lock_state_dicts = Vec::new();
+        if let Some(lock_states) = &self.lock_states {
+            for lock_state in lock_states.iter() {
+                let lock_state_dict = lock_state.to_dict(py)?;
+                lock_state_dicts.push(lock_state_dict);
+            }
+            dict.set_item("lock_states", lock_state_dicts)?;
         } else {
-            dict.set_item("lock_state", py.None())?;
+            dict.set_item("lock_states", py.None())?;
         }
 
         if let Some(categories) = &self.categories {
