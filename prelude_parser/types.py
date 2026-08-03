@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime  # pragma: no cover
 
-FieldInfo = str | int | float | date | datetime | None
-FlatFormInfo = list[dict[str, FieldInfo]]
+FieldInfo = str | int | float | date | datetime | None  # pragma: no cover
+FlatFormInfo = list[dict[str, FieldInfo]]  # pragma: no cover

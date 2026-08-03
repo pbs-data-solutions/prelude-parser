@@ -112,7 +112,7 @@ def test_user_native_to_json(user_native_small_xml):
 def test_parse_to_classes(test_file_1):
     result = parse_to_classes(test_file_1)
     assert len(result) == 2
-    assert result[0].__name__ == "Communications"
+    assert type(result[0]).__name__ == "Communications"
     assert result[0].study_name == "PBS"
     assert result[0].site_name == "Some Site"
     assert result[0].site_id == 1681574834910
@@ -129,7 +129,7 @@ def test_parse_to_classes(test_file_1):
 def test_parse_to_classes_with_float(test_file_2):
     result = parse_to_classes(test_file_2)
     assert len(result) == 2
-    assert result[0].__name__ == "Demographics"
+    assert type(result[0]).__name__ == "Demographics"
     assert result[0].weight == 80.2
     assert result[0].dob == date(2020, 4, 15)
 
@@ -137,7 +137,7 @@ def test_parse_to_classes_with_float(test_file_2):
 def test_parse_to_classes_i_form(test_file_3):
     result = parse_to_classes(test_file_3)
     assert len(result) == 3
-    assert result[0].__name__ == "ICommunicationsDetails"
+    assert type(result[0]).__name__ == "ICommunicationsDetails"
     assert result[0].study_name == "PBS"
     assert result[0].site_name == "Some Site"
     assert result[0].site_id == 1681574834910
@@ -176,7 +176,7 @@ def test_parse_to_classes_parsing_error(tmp_path):
 def test_parse_to_classes_short_names(test_file_4):
     result = parse_to_classes(test_file_4, short_names=True)
     assert len(result) == 2
-    assert result[0].__name__ == "Communications"
+    assert type(result[0]).__name__ == "Communications"
     assert result[0].studyname == "PBS"
     assert result[0].sitename == "Some Site"
 
