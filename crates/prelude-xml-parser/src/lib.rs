@@ -774,7 +774,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.decode().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
@@ -1028,7 +1028,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.decode().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
@@ -1479,7 +1479,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
             }
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.decode().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
