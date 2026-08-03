@@ -55,6 +55,9 @@ features = ["pyo3/extension-module"]
 minversion = "6.0"
 addopts = "--cov=prelude_parser --cov-report term-missing --no-cov-on-fail"
 
+[tool.coverage.report]
+exclude_lines = ["if __name__ == .__main__.:", "if TYPE_CHECKING:", "pragma: no cover"]
+
 [[tool.pyrefly.sub-config]]
 matches = "tests/**"
 check-unannotated-defs = false
