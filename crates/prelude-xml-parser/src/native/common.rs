@@ -427,10 +427,10 @@ pub struct Field {
     pub keep_history: bool,
 
     #[serde(alias = "entry")]
-    pub entries: Option<Vec<Entry>>,
+    pub entries: Option<Arc<Vec<Entry>>>,
 
     #[serde(alias = "comment")]
-    pub comments: Option<Vec<Comment>>,
+    pub comments: Option<Arc<Vec<Comment>>>,
 }
 
 #[cfg(feature = "python")]
@@ -467,10 +467,10 @@ pub struct Field {
     pub keep_history: bool,
 
     #[serde(alias = "entry")]
-    pub entries: Option<Vec<Entry>>,
+    pub entries: Option<Arc<Vec<Entry>>>,
 
     #[serde(alias = "comment")]
-    pub comments: Option<Vec<Comment>>,
+    pub comments: Option<Arc<Vec<Comment>>>,
 }
 
 #[cfg(feature = "python")]
@@ -511,12 +511,12 @@ impl Field {
 
     #[getter]
     fn entries(&self) -> PyResult<Option<Vec<Entry>>> {
-        Ok(self.entries.clone())
+        Ok(self.entries.as_deref().cloned())
     }
 
     #[getter]
     fn comments(&self) -> PyResult<Option<Vec<Comment>>> {
-        Ok(self.comments.clone())
+        Ok(self.comments.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -536,7 +536,7 @@ impl Field {
 
         let mut entry_dicts = Vec::new();
         if let Some(entries) = &self.entries {
-            for entry in entries {
+            for entry in entries.iter() {
                 let entry_dict = entry.to_dict(py)?;
                 entry_dicts.push(entry_dict);
             }
@@ -547,7 +547,7 @@ impl Field {
 
         let mut comment_dicts = Vec::new();
         if let Some(comments) = &self.comments {
-            for comment in comments {
+            for comment in comments.iter() {
                 let comment_dict = comment.to_dict(py)?;
                 comment_dicts.push(comment_dict);
             }
@@ -579,7 +579,7 @@ pub struct Category {
     pub highest_index: usize,
 
     #[serde(alias = "field")]
-    pub fields: Option<Vec<Field>>,
+    pub fields: Option<Arc<Vec<Field>>>,
 }
 
 #[cfg(feature = "python")]
@@ -602,7 +602,7 @@ pub struct Category {
     pub highest_index: usize,
 
     #[serde(alias = "field")]
-    pub fields: Option<Vec<Field>>,
+    pub fields: Option<Arc<Vec<Field>>>,
 }
 
 #[cfg(feature = "python")]
@@ -625,7 +625,7 @@ impl Category {
 
     #[getter]
     fn fields(&self) -> PyResult<Option<Vec<Field>>> {
-        Ok(self.fields.clone())
+        Ok(self.fields.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -636,7 +636,7 @@ impl Category {
 
         let mut field_dicts = Vec::new();
         if let Some(fields) = &self.fields {
-            for field in fields {
+            for field in fields.iter() {
                 let field_dict = field.to_dict(py)?;
                 field_dicts.push(field_dict);
             }
@@ -973,13 +973,13 @@ pub struct Form {
     pub form_state: String,
 
     #[serde(alias = "state")]
-    pub states: Option<Vec<State>>,
+    pub states: Option<Arc<Vec<State>>>,
 
     #[serde(alias = "lockState")]
     pub lock_state: Option<LockState>,
 
     #[serde(alias = "category")]
-    pub categories: Option<Vec<Category>>,
+    pub categories: Option<Arc<Vec<Category>>>,
 }
 
 #[cfg(feature = "python")]
@@ -1065,13 +1065,13 @@ pub struct Form {
     pub form_state: String,
 
     #[serde(alias = "state")]
-    pub states: Option<Vec<State>>,
+    pub states: Option<Arc<Vec<State>>>,
 
     #[serde(alias = "lockState")]
     pub lock_state: Option<LockState>,
 
     #[serde(alias = "category")]
-    pub categories: Option<Vec<Category>>,
+    pub categories: Option<Arc<Vec<Category>>>,
 }
 
 #[cfg(feature = "python")]
@@ -1149,7 +1149,7 @@ impl Form {
 
     #[getter]
     fn states(&self) -> PyResult<Option<Vec<State>>> {
-        Ok(self.states.clone())
+        Ok(self.states.as_deref().cloned())
     }
 
     #[getter]
@@ -1159,7 +1159,7 @@ impl Form {
 
     #[getter]
     fn categories(&self) -> PyResult<Option<Vec<Category>>> {
-        Ok(self.categories.clone())
+        Ok(self.categories.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -1187,7 +1187,7 @@ impl Form {
 
         let mut state_dicts = Vec::new();
         if let Some(states) = &self.states {
-            for state in states {
+            for state in states.iter() {
                 let state_dict = state.to_dict(py)?;
                 state_dicts.push(state_dict);
             }
@@ -1204,7 +1204,7 @@ impl Form {
 
         if let Some(categories) = &self.categories {
             let mut category_dicts = Vec::new();
-            for category in categories {
+            for category in categories.iter() {
                 let category_dict = category.to_dict(py)?;
                 category_dicts.push(category_dict);
             }

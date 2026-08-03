@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -51,7 +53,7 @@ pub struct Site {
 
     #[serde(rename = "form")]
     #[serde(alias = "form")]
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 #[cfg(not(feature = "python"))]
@@ -89,7 +91,11 @@ impl Site {
     }
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() { None } else { Some(forms) };
+        self.forms = if forms.is_empty() {
+            None
+        } else {
+            Some(Arc::new(forms))
+        };
     }
 }
 
@@ -127,7 +133,7 @@ pub struct Site {
 
     #[serde(rename = "form")]
     #[serde(alias = "form")]
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 #[cfg(feature = "python")]
@@ -165,7 +171,11 @@ impl Site {
     }
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() { None } else { Some(forms) };
+        self.forms = if forms.is_empty() {
+            None
+        } else {
+            Some(Arc::new(forms))
+        };
     }
 }
 
@@ -212,7 +222,7 @@ impl Site {
 
     #[getter]
     fn forms(&self) -> PyResult<Option<Vec<Form>>> {
-        Ok(self.forms.clone())
+        Ok(self.forms.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -236,7 +246,7 @@ impl Site {
 
         let mut form_dicts = Vec::new();
         if let Some(forms) = &self.forms {
-            for form in forms {
+            for form in forms.iter() {
                 let form_dict = form.to_dict(py)?;
                 form_dicts.push(form_dict);
             }
