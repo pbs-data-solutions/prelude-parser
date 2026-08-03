@@ -1,34 +1,37 @@
 mod errors;
 mod utils;
 
-use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::path::PathBuf;
-use std::str::from_utf8;
+use std::{collections::HashMap, fs::read_to_string, path::PathBuf, str::from_utf8};
 
 use chrono::{Datelike, NaiveDate};
-pub use prelude_xml_parser::native::{
-    common::{Category, Comment, Entry, Field, Form, LockState, Reason, State, Value},
-    site_native::{Site, SiteNative},
-    subject_native::{Patient, SubjectNative},
-    user_native::{User, UserNative},
+use prelude_xml_parser::{
+    native::{
+        common::{Category, Comment, Entry, Field, Form, LockState, Reason, State, Value},
+        site_native::{Site, SiteNative},
+        subject_native::{Patient, SubjectNative},
+        user_native::{User, UserNative},
+    },
+    parse_site_native_file as parse_site_native_file_rs,
+    parse_site_native_string as parse_site_native_string_rs,
+    parse_subject_native_file as parse_subject_native_file_rs,
+    parse_subject_native_string as parse_subject_native_string_rs,
+    parse_user_native_file as parse_user_native_file_rs,
+    parse_user_native_string as parse_user_native_string_rs,
 };
-use prelude_xml_parser::parse_site_native_file as parse_site_native_file_rs;
-use prelude_xml_parser::parse_site_native_string as parse_site_native_string_rs;
-use prelude_xml_parser::parse_subject_native_file as parse_subject_native_file_rs;
-use prelude_xml_parser::parse_subject_native_string as parse_subject_native_string_rs;
-use prelude_xml_parser::parse_user_native_file as parse_user_native_file_rs;
-use prelude_xml_parser::parse_user_native_string as parse_user_native_string_rs;
-use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict, PyList, PyString};
-use quick_xml::escape::resolve_predefined_entity;
-use quick_xml::events::{BytesRef, Event};
-use quick_xml::Reader;
+use pyo3::{
+    prelude::*,
+    types::{IntoPyDict, PyDict, PyList, PyString},
+};
+use quick_xml::{
+    escape::resolve_predefined_entity,
+    events::{BytesRef, Event},
+    Reader,
+};
 
-use crate::errors::{
-    FileNotFoundError, InvalidFileTypeError, ParsingError, XmlFileValidationError,
+use crate::{
+    errors::{FileNotFoundError, InvalidFileTypeError, ParsingError, XmlFileValidationError},
+    utils::{to_snake, validate_file},
 };
-use crate::utils::{to_snake, validate_file};
 
 fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
     if let Err(e) = validate_file(xml_file) {

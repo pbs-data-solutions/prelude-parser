@@ -5,16 +5,17 @@ use std::{fs::read_to_string, path::Path, sync::Arc};
 
 use rayon::prelude::*;
 
-use crate::errors::Error;
-use crate::native::deserializers::{decode_error, push_general_ref, take_trimmed, Interner};
-use crate::native::{
-    common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
-    site_native::{Site, SiteNative},
-    subject_native::{Form, Patient, SubjectNative},
-    user_native::{User, UserNative},
+use crate::{
+    errors::Error,
+    native::{
+        common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
+        deserializers::{decode_error, push_general_ref, take_trimmed, Interner},
+        site_native::{Site, SiteNative},
+        subject_native::{Form, Patient, SubjectNative},
+        user_native::{User, UserNative},
+    },
 };
-use quick_xml::events::Event;
-use quick_xml::Reader;
+use quick_xml::{events::Event, Reader};
 
 /// Parses a Prelude native XML file into a `Native` struct.
 ///

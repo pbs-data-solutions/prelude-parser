@@ -12,9 +12,9 @@ use pyo3::{
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
-    checked_datetime, deserialize_empty_string_as_none, deserialize_empty_string_as_none_arc,
-    deserialize_empty_string_as_none_datetime, optional_datetime, optional_string,
-    visit_attributes, Interner,
+    attribute_string, checked_datetime, deserialize_empty_string_as_none,
+    deserialize_empty_string_as_none_arc, deserialize_empty_string_as_none_datetime,
+    optional_datetime, optional_string, visit_attributes, Interner,
 };
 
 #[cfg(feature = "python")]
@@ -685,7 +685,7 @@ impl Form {
         })?;
 
         Ok(Form {
-            name: name.to_string(),
+            name: attribute_string(name),
             last_modified: optional_datetime(last_modified),
             who_last_modified_name: optional_string(who_last_modified_name),
             who_last_modified_role: optional_string(who_last_modified_role),
@@ -695,10 +695,10 @@ impl Form {
             locked: locked == "true",
             user: optional_string(user),
             date_time_changed: optional_datetime(date_time_changed),
-            form_title: form_title.to_string(),
+            form_title: attribute_string(form_title),
             form_index: form_index.parse().unwrap_or(0),
             form_group: optional_string(form_group),
-            form_state: form_state.to_string(),
+            form_state: attribute_string(form_state),
             states: None,
             lock_states: None,
             categories: None,
@@ -1431,7 +1431,7 @@ impl Comment {
         })?;
 
         Ok(Comment {
-            comment_id: comment_id.to_string(),
+            comment_id: attribute_string(comment_id),
             value: None,
         })
     }
