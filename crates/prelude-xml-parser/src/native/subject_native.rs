@@ -14,9 +14,7 @@ use crate::native::deserializers::{
 };
 
 #[cfg(feature = "python")]
-use crate::native::deserializers::{
-    default_string_none, deserialize_empty_string_as_none, to_py_datetime,
-};
+use crate::native::deserializers::{deserialize_empty_string_as_none, to_py_datetime};
 
 use serde::{Deserialize, Serialize};
 
@@ -117,10 +115,7 @@ pub struct Patient {
     #[serde(rename = "lastLanguage")]
     #[serde(alias = "@lastLanguage")]
     #[serde(alias = "lastLanguage")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub last_language: Option<String>,
 
     #[serde(rename = "numberOfForms")]

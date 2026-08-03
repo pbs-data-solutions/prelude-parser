@@ -1,8 +1,7 @@
+use std::{borrow::Cow, collections::HashSet, str::from_utf8, sync::Arc};
+
 #[cfg(feature = "python")]
 use chrono::{Datelike, Timelike};
-
-use std::borrow::Cow;
-use std::str::from_utf8;
 
 use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
@@ -11,6 +10,38 @@ use quick_xml::{
     events::{BytesRef, BytesStart},
 };
 use serde::{Deserialize, Deserializer};
+
+/// Deduplicates the heavily repeated attribute values within a single record.
+///
+/// Values such as a field's `type`, `dataType` and `errorCode` take only a handful of distinct
+/// values across hundreds of thousands of elements, so handing out a shared `Arc<str>` replaces
+/// one allocation per occurrence with one per distinct value. One interner is used per parsed
+/// record so that no synchronisation is needed between threads.
+#[derive(Default)]
+pub(crate) struct Interner {
+    seen: HashSet<Arc<str>>,
+}
+
+impl Interner {
+    pub(crate) fn intern(&mut self, value: &str) -> Arc<str> {
+        if let Some(existing) = self.seen.get(value) {
+            return existing.clone();
+        }
+
+        let shared: Arc<str> = Arc::from(value);
+        self.seen.insert(shared.clone());
+
+        shared
+    }
+
+    pub(crate) fn intern_optional(&mut self, value: &str) -> Option<Arc<str>> {
+        if value.is_empty() {
+            None
+        } else {
+            Some(self.intern(value))
+        }
+    }
+}
 
 pub(crate) fn decode_error(e: impl std::fmt::Display) -> crate::errors::Error {
     crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(format!(
@@ -245,12 +276,18 @@ where
     }
 }
 
-pub fn default_datetime_none() -> Option<DateTime<Utc>> {
-    None
-}
-
-pub fn default_string_none() -> Option<String> {
-    None
+pub fn deserialize_empty_string_as_none_arc<'de, D>(
+    deserializer: D,
+) -> Result<Option<Arc<str>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = Option::<String>::deserialize(deserializer)?;
+    match s {
+        Some(v) if v.is_empty() => Ok(None),
+        Some(v) => Ok(Some(Arc::from(v.as_str()))),
+        None => Ok(None),
+    }
 }
 
 #[cfg(feature = "python")]
