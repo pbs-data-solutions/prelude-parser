@@ -1581,6 +1581,24 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             let field = Field::from_attributes(e, &mut interner)?;
                             current_fields.push(field);
                         }
+                        "lockState" if in_form => {
+                            let lock_state = LockState::from_attributes(e)?;
+                            if let Some(ref mut form) = current_form {
+                                form.lock_state = Some(lock_state);
+                            }
+                        }
+                        "value" if in_entry => {
+                            let value = Value::from_attributes(e, &mut interner)?;
+                            if let Some(ref mut entry) = current_entry {
+                                entry.value = Some(value);
+                            }
+                        }
+                        "reason" if in_entry => {
+                            let reason = Reason::from_attributes(e, &mut interner)?;
+                            if let Some(ref mut entry) = current_entry {
+                                entry.reason = Some(reason);
+                            }
+                        }
                         _ => {}
                     }
                 }
