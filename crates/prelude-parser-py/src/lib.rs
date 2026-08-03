@@ -19,7 +19,7 @@ use prelude_xml_parser::parse_subject_native_string as parse_subject_native_stri
 use prelude_xml_parser::parse_user_native_file as parse_user_native_file_rs;
 use prelude_xml_parser::parse_user_native_string as parse_user_native_string_rs;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyDict, PyList};
+use pyo3::types::{IntoPyDict, PyDict, PyList, PyString};
 use roxmltree::Document;
 
 use crate::errors::{
@@ -55,10 +55,8 @@ fn py_list_append<'py>(
     py: Python<'py>,
     value: Option<&str>,
     list: &'py Bound<'py, PyList>,
+    date: &Bound<'py, PyAny>,
 ) -> PyResult<&'py Bound<'py, PyList>> {
-    let datetime = py.import("datetime")?;
-    let date = datetime.getattr("date")?;
-
     match value {
         Some(t) => match t.parse::<usize>() {
             Ok(int_val) => list.append(int_val)?,
@@ -81,13 +79,11 @@ fn py_list_append<'py>(
 
 fn add_item<'py>(
     py: Python<'py>,
-    key: &str,
+    key: &Bound<'py, PyString>,
     value: Option<&str>,
     form_data: &'py Bound<'py, PyDict>,
+    date: &Bound<'py, PyAny>,
 ) -> PyResult<&'py Bound<'py, PyDict>> {
-    let datetime = py.import("datetime")?;
-    let date = datetime.getattr("date")?;
-
     match value {
         Some(t) => match t.parse::<usize>() {
             Ok(int_val) => form_data.set_item(key, int_val)?,
@@ -108,56 +104,70 @@ fn add_item<'py>(
     Ok(form_data)
 }
 
+fn convert_name(raw: &str, short_names: bool) -> String {
+    if short_names {
+        raw.to_lowercase()
+    } else {
+        to_snake(raw)
+    }
+}
+
 fn parse_xml<'py>(
     py: Python<'py>,
     xml_file: &PathBuf,
     short_names: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
+    let date = py.import("datetime")?.getattr("date")?;
     let reader = read_to_string(xml_file);
 
     match reader {
         Ok(r) => match Document::parse(&r) {
             Ok(doc) => {
                 let mut data: HashMap<String, Vec<Bound<'_, PyDict>>> = HashMap::new();
+                let mut form_names: HashMap<&str, String> = HashMap::new();
+                let mut field_names: HashMap<&str, Py<PyString>> = HashMap::new();
                 let tree = doc.root_element();
+
                 for form in tree.children() {
-                    let form_name = if short_names {
-                        form.tag_name().name().to_owned().to_lowercase()
-                    } else {
-                        to_snake(form.tag_name().name())
+                    let raw_form = form.tag_name().name();
+                    let form_name = match form_names.get(raw_form) {
+                        Some(name) => name,
+                        None => form_names
+                            .entry(raw_form)
+                            .or_insert_with(|| convert_name(raw_form, short_names)),
                     };
-                    if !form_name.is_empty() {
-                        if let Some(d) = data.get_mut(&form_name) {
-                            let form_data = PyDict::new(py);
-                            for child in form.children() {
-                                if child.is_element() && child.tag_name().name() != "" {
-                                    let key = if short_names {
-                                        child.tag_name().name().to_owned().to_lowercase()
-                                    } else {
-                                        to_snake(child.tag_name().name())
-                                    };
-                                    add_item(py, &key, child.text(), &form_data)?;
-                                };
-                            }
-                            d.push(form_data);
-                        } else {
-                            let mut items: Vec<Bound<'_, PyDict>> = Vec::new();
-                            let form_data = PyDict::new(py);
-                            for child in form.children() {
-                                if child.is_element() && child.tag_name().name() != "" {
-                                    let key = if short_names {
-                                        child.tag_name().name().to_owned().to_lowercase()
-                                    } else {
-                                        to_snake(child.tag_name().name())
-                                    };
-                                    add_item(py, &key, child.text(), &form_data)?;
-                                }
-                            }
-                            items.push(form_data.into_py_dict(py)?);
-                            data.insert(form_name, items);
-                        }
+
+                    if form_name.is_empty() {
+                        continue;
                     }
+
+                    let form_data = PyDict::new(py);
+                    for child in form.children() {
+                        if !child.is_element() {
+                            continue;
+                        }
+
+                        let raw_field = child.tag_name().name();
+                        if raw_field.is_empty() {
+                            continue;
+                        }
+
+                        let key = match field_names.get(raw_field) {
+                            Some(key) => key.clone_ref(py),
+                            None => {
+                                let key = PyString::new(py, &convert_name(raw_field, short_names))
+                                    .unbind();
+                                field_names.insert(raw_field, key.clone_ref(py));
+                                key
+                            }
+                        };
+
+                        add_item(py, key.bind(py), child.text(), &form_data, &date)?;
+                    }
+
+                    data.entry(form_name.clone()).or_default().push(form_data);
                 }
+
                 let data_dict = data.into_py_dict(py)?;
                 Ok(data_dict)
             }
@@ -176,6 +186,7 @@ fn parse_xml_pandas<'py>(
     xml_file: &PathBuf,
     short_names: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
+    let date = py.import("datetime")?.getattr("date")?;
     let reader = read_to_string(xml_file);
 
     match reader {
@@ -193,11 +204,11 @@ fn parse_xml_pandas<'py>(
                                 to_snake(child.tag_name().name())
                             };
                             if let Ok(Some(c)) = data.get_item(&column) {
-                                py_list_append(py, child.text(), &c.extract()?)?;
+                                py_list_append(py, child.text(), &c.extract()?, &date)?;
                                 data.set_item(column, c)?;
                             } else {
                                 let list = PyList::empty(py);
-                                py_list_append(py, child.text(), &list)?;
+                                py_list_append(py, child.text(), &list, &date)?;
                                 data.set_item(column, list)?;
                             }
                         }
