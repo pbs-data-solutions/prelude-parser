@@ -4,6 +4,7 @@ mod utils;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::PathBuf;
+use std::str::from_utf8;
 
 use chrono::{Datelike, NaiveDate};
 pub use prelude_xml_parser::native::{
@@ -20,7 +21,9 @@ use prelude_xml_parser::parse_user_native_file as parse_user_native_file_rs;
 use prelude_xml_parser::parse_user_native_string as parse_user_native_string_rs;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyDict, PyList, PyString};
-use roxmltree::Document;
+use quick_xml::escape::resolve_predefined_entity;
+use quick_xml::events::{BytesRef, Event};
+use quick_xml::Reader;
 
 use crate::errors::{
     FileNotFoundError, InvalidFileTypeError, ParsingError, XmlFileValidationError,
@@ -104,6 +107,35 @@ fn add_item<'py>(
     Ok(form_data)
 }
 
+fn xml_error(e: impl std::fmt::Display) -> PyErr {
+    ParsingError::new_err(format!("Error parsing xml file: {e}"))
+}
+
+/// Append a `&...;` reference to the text being accumulated.
+///
+/// quick-xml reports references as their own events, so a value's text has to be reassembled from
+/// the surrounding text events and these. This matches what a DOM parser hands back as the node's
+/// text. An unresolvable reference is kept verbatim rather than dropped.
+fn push_general_ref(text: &mut String, reference: &BytesRef<'_>) -> PyResult<()> {
+    if let Some(character) = reference.resolve_char_ref().map_err(xml_error)? {
+        text.push(character);
+        return Ok(());
+    }
+
+    let name = reference.decode().map_err(xml_error)?;
+
+    match resolve_predefined_entity(&name) {
+        Some(resolved) => text.push_str(resolved),
+        None => {
+            text.push('&');
+            text.push_str(&name);
+            text.push(';');
+        }
+    }
+
+    Ok(())
+}
+
 fn convert_name(raw: &str, short_names: bool) -> String {
     if short_names {
         raw.to_lowercase()
@@ -118,67 +150,141 @@ fn parse_xml<'py>(
     short_names: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
     let date = py.import("datetime")?.getattr("date")?;
-    let reader = read_to_string(xml_file);
+    let contents = read_to_string(xml_file).map_err(xml_error)?;
 
-    match reader {
-        Ok(r) => match Document::parse(&r) {
-            Ok(doc) => {
-                let mut data: HashMap<String, Vec<Bound<'_, PyDict>>> = HashMap::new();
-                let mut form_names: HashMap<&str, String> = HashMap::new();
-                let mut field_names: HashMap<&str, Py<PyString>> = HashMap::new();
-                let tree = doc.root_element();
+    let mut reader = Reader::from_str(&contents);
+    reader.config_mut().trim_text(false);
 
-                for form in tree.children() {
-                    let raw_form = form.tag_name().name();
-                    let form_name = match form_names.get(raw_form) {
-                        Some(name) => name,
-                        None => form_names
-                            .entry(raw_form)
-                            .or_insert_with(|| convert_name(raw_form, short_names)),
-                    };
+    let mut data: HashMap<String, Vec<Bound<'_, PyDict>>> = HashMap::new();
+    let mut form_names: HashMap<Vec<u8>, String> = HashMap::new();
+    let mut field_names: HashMap<Vec<u8>, Py<PyString>> = HashMap::new();
 
-                    if form_name.is_empty() {
-                        continue;
-                    }
+    let mut depth = 0usize;
+    let mut saw_root = false;
+    let mut form_name: Option<String> = None;
+    let mut form_data: Option<Bound<'_, PyDict>> = None;
+    let mut field_key: Option<Py<PyString>> = None;
+    let mut text: Option<String> = None;
 
-                    let form_data = PyDict::new(py);
-                    for child in form.children() {
-                        if !child.is_element() {
-                            continue;
-                        }
+    loop {
+        match reader.read_event().map_err(xml_error)? {
+            Event::Eof => break,
 
-                        let raw_field = child.tag_name().name();
-                        if raw_field.is_empty() {
-                            continue;
-                        }
-
-                        let key = match field_names.get(raw_field) {
-                            Some(key) => key.clone_ref(py),
+            Event::Start(e) => {
+                depth += 1;
+                saw_root = true;
+                match depth {
+                    2 => {
+                        let raw = e.name().into_inner();
+                        let name = match form_names.get(raw) {
+                            Some(name) => name.clone(),
                             None => {
-                                let key = PyString::new(py, &convert_name(raw_field, short_names))
-                                    .unbind();
-                                field_names.insert(raw_field, key.clone_ref(py));
-                                key
+                                let name =
+                                    convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+                                form_names.insert(raw.to_vec(), name.clone());
+                                name
                             }
                         };
-
-                        add_item(py, key.bind(py), child.text(), &form_data, &date)?;
+                        form_name = Some(name);
+                        form_data = Some(PyDict::new(py));
                     }
-
-                    data.entry(form_name.clone()).or_default().push(form_data);
+                    3 => {
+                        field_key = Some(field_key_for(py, &e, short_names, &mut field_names)?);
+                        text = None;
+                    }
+                    _ => {}
                 }
-
-                let data_dict = data.into_py_dict(py)?;
-                Ok(data_dict)
             }
-            Err(e) => Err(ParsingError::new_err(format!(
-                "Error parsing xml file: {e:?}"
-            ))),
-        },
-        Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {e:?}"
-        ))),
+
+            Event::Empty(e) => match depth + 1 {
+                2 => {
+                    let raw = e.name().into_inner();
+                    let name = match form_names.get(raw) {
+                        Some(name) => name.clone(),
+                        None => {
+                            let name =
+                                convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+                            form_names.insert(raw.to_vec(), name.clone());
+                            name
+                        }
+                    };
+                    if !name.is_empty() {
+                        data.entry(name).or_default().push(PyDict::new(py));
+                    }
+                }
+                3 => {
+                    if let Some(ref dict) = form_data {
+                        let key = field_key_for(py, &e, short_names, &mut field_names)?;
+                        add_item(py, key.bind(py), None, dict, &date)?;
+                    }
+                }
+                _ => {}
+            },
+
+            Event::Text(e) if depth == 3 => {
+                // xml10_content normalizes \r\n and \r to \n as the XML spec requires; decode does
+                // not
+                let decoded = e.xml10_content().map_err(xml_error)?;
+                text.get_or_insert_with(String::new).push_str(&decoded);
+            }
+
+            Event::GeneralRef(ref e) if depth == 3 => {
+                push_general_ref(text.get_or_insert_with(String::new), e)?;
+            }
+
+            Event::End(_) => {
+                match depth {
+                    3 => {
+                        if let (Some(ref dict), Some(key)) = (&form_data, field_key.take()) {
+                            add_item(py, key.bind(py), text.as_deref(), dict, &date)?;
+                        }
+                        text = None;
+                    }
+                    2 => {
+                        if let (Some(name), Some(dict)) = (form_name.take(), form_data.take()) {
+                            if !name.is_empty() {
+                                data.entry(name).or_default().push(dict);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                depth -= 1;
+            }
+
+            _ => {}
+        }
     }
+
+    if !saw_root {
+        return Err(ParsingError::new_err(
+            "Error parsing xml file: no root element found",
+        ));
+    }
+
+    let data_dict = data.into_py_dict(py)?;
+    Ok(data_dict)
+}
+
+fn field_key_for<'py>(
+    py: Python<'py>,
+    e: &quick_xml::events::BytesStart<'_>,
+    short_names: bool,
+    cache: &mut HashMap<Vec<u8>, Py<PyString>>,
+) -> PyResult<Py<PyString>> {
+    let raw = e.name().into_inner();
+    if let Some(key) = cache.get(raw) {
+        return Ok(key.clone_ref(py));
+    }
+
+    let key = PyString::new(
+        py,
+        &convert_name(from_utf8(raw).map_err(xml_error)?, short_names),
+    )
+    .unbind();
+    cache.insert(raw.to_vec(), key.clone_ref(py));
+
+    Ok(key)
 }
 
 fn parse_xml_pandas<'py>(
@@ -187,44 +293,94 @@ fn parse_xml_pandas<'py>(
     short_names: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
     let date = py.import("datetime")?.getattr("date")?;
-    let reader = read_to_string(xml_file);
+    let contents = read_to_string(xml_file).map_err(xml_error)?;
 
-    match reader {
-        Ok(r) => match Document::parse(&r) {
-            Ok(doc) => {
-                let data = PyDict::new(py);
-                let tree = doc.root_element();
+    let mut reader = Reader::from_str(&contents);
+    reader.config_mut().trim_text(false);
 
-                for form in tree.children() {
-                    for child in form.children() {
-                        if child.is_element() && child.tag_name().name() != "" {
-                            let column = if short_names {
-                                child.tag_name().name().to_owned().to_lowercase()
-                            } else {
-                                to_snake(child.tag_name().name())
-                            };
-                            if let Ok(Some(c)) = data.get_item(&column) {
-                                py_list_append(py, child.text(), &c.extract()?, &date)?;
-                                data.set_item(column, c)?;
-                            } else {
-                                let list = PyList::empty(py);
-                                py_list_append(py, child.text(), &list, &date)?;
-                                data.set_item(column, list)?;
-                            }
-                        }
-                    }
+    let data = PyDict::new(py);
+    let mut columns: HashMap<Vec<u8>, Py<PyList>> = HashMap::new();
+
+    let mut depth = 0usize;
+    let mut saw_root = false;
+    let mut column: Option<Py<PyList>> = None;
+    let mut text: Option<String> = None;
+
+    loop {
+        match reader.read_event().map_err(xml_error)? {
+            Event::Eof => break,
+
+            Event::Start(e) => {
+                depth += 1;
+                saw_root = true;
+                if depth == 3 {
+                    column = Some(column_for(py, &e, short_names, &mut columns, &data)?);
+                    text = None;
                 }
-                let data_dict = data.into_py_dict(py)?;
-                Ok(data_dict)
             }
-            Err(e) => Err(ParsingError::new_err(format!(
-                "Error parsing xml file: {e:?}"
-            ))),
-        },
-        Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {e:?}"
-        ))),
+
+            Event::Empty(e) => {
+                if depth + 1 == 3 {
+                    let list = column_for(py, &e, short_names, &mut columns, &data)?;
+                    py_list_append(py, None, list.bind(py), &date)?;
+                }
+            }
+
+            Event::Text(e) if depth == 3 => {
+                let decoded = e.xml10_content().map_err(xml_error)?;
+                text.get_or_insert_with(String::new).push_str(&decoded);
+            }
+
+            Event::GeneralRef(ref e) if depth == 3 => {
+                push_general_ref(text.get_or_insert_with(String::new), e)?;
+            }
+
+            Event::End(_) => {
+                if depth == 3 {
+                    if let Some(list) = column.take() {
+                        py_list_append(py, text.as_deref(), list.bind(py), &date)?;
+                    }
+                    text = None;
+                }
+                depth -= 1;
+            }
+
+            _ => {}
+        }
     }
+
+    if !saw_root {
+        return Err(ParsingError::new_err(
+            "Error parsing xml file: no root element found",
+        ));
+    }
+
+    let data_dict = data.into_py_dict(py)?;
+    Ok(data_dict)
+}
+
+/// Look up (or create) the list backing a column, keyed by the raw tag so the name is converted
+/// once per distinct field rather than once per occurrence.
+fn column_for<'py>(
+    py: Python<'py>,
+    e: &quick_xml::events::BytesStart<'_>,
+    short_names: bool,
+    cache: &mut HashMap<Vec<u8>, Py<PyList>>,
+    data: &Bound<'py, PyDict>,
+) -> PyResult<Py<PyList>> {
+    let raw = e.name().into_inner();
+    if let Some(list) = cache.get(raw) {
+        return Ok(list.clone_ref(py));
+    }
+
+    let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+    let list = PyList::empty(py);
+    data.set_item(name, &list)?;
+
+    let list = list.unbind();
+    cache.insert(raw.to_vec(), list.clone_ref(py));
+
+    Ok(list)
 }
 
 #[pyfunction]

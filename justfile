@@ -4,7 +4,13 @@
 @develop:
   uv run maturin develop --uv -E all
 
+@develop-release:
+  uv run maturin develop --uv -E all -r
+
 @install: && develop
+  uv sync --frozen --all-extras
+
+@install-release: && develop-release
   uv sync --frozen --all-extras
 
 @lock:

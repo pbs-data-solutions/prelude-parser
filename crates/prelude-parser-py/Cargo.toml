@@ -18,5 +18,5 @@ crate-type = ["cdylib"]
 chrono.workspace = true
 prelude-xml-parser = { path = "../prelude-xml-parser", features = ["python"] }
 pyo3 = { workspace = true, features = ["extension-module"] }
-roxmltree = "0.21.1"
+quick-xml.workspace = true
 thiserror.workspace = true
