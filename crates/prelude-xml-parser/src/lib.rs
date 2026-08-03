@@ -685,6 +685,7 @@ fn extract_patient_chunks(xml: &str) -> Vec<&str> {
     chunks
 }
 
+#[allow(clippy::drain_collect)]
 fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut xml_reader = Reader::from_str(patient_xml);
     xml_reader.config_mut().trim_text(false);
@@ -784,7 +785,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "patient" => {
                             if let Some(mut patient) = current_patient.take() {
                                 if !current_forms.is_empty() {
-                                    patient.set_forms(std::mem::take(&mut current_forms));
+                                    patient.set_forms(current_forms.drain(..).collect());
                                 }
                                 current_patient = Some(patient);
                             }
@@ -792,10 +793,10 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(std::mem::take(&mut current_states));
+                                    form.states = Some(current_states.drain(..).collect());
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(std::mem::take(&mut current_categories));
+                                    form.categories = Some(current_categories.drain(..).collect());
                                 }
                                 current_forms.push(form);
                             }
@@ -804,7 +805,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(std::mem::take(&mut current_fields));
+                                    category.fields = Some(current_fields.drain(..).collect());
                                 }
                                 current_categories.push(category);
                             }
@@ -813,10 +814,10 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(std::mem::take(&mut current_entries));
+                                    field.entries = Some(current_entries.drain(..).collect());
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(std::mem::take(&mut current_comments));
+                                    field.comments = Some(current_comments.drain(..).collect());
                                 }
                                 current_fields.push(field);
                             }
@@ -929,6 +930,7 @@ fn extract_site_chunks(xml: &str) -> Vec<&str> {
     chunks
 }
 
+#[allow(clippy::drain_collect)]
 fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut xml_reader = Reader::from_str(site_xml);
     xml_reader.config_mut().trim_text(false);
@@ -1028,7 +1030,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "site" => {
                             if let Some(mut site) = current_site.take() {
                                 if !current_forms.is_empty() {
-                                    site.set_forms(std::mem::take(&mut current_forms));
+                                    site.set_forms(current_forms.drain(..).collect());
                                 }
                                 current_site = Some(site);
                             }
@@ -1036,10 +1038,10 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(std::mem::take(&mut current_states));
+                                    form.states = Some(current_states.drain(..).collect());
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(std::mem::take(&mut current_categories));
+                                    form.categories = Some(current_categories.drain(..).collect());
                                 }
                                 current_forms.push(form);
                             }
@@ -1048,7 +1050,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(std::mem::take(&mut current_fields));
+                                    category.fields = Some(current_fields.drain(..).collect());
                                 }
                                 current_categories.push(category);
                             }
@@ -1057,10 +1059,10 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(std::mem::take(&mut current_entries));
+                                    field.entries = Some(current_entries.drain(..).collect());
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(std::mem::take(&mut current_comments));
+                                    field.comments = Some(current_comments.drain(..).collect());
                                 }
                                 current_fields.push(field);
                             }
@@ -1377,6 +1379,7 @@ fn extract_user_chunks(xml: &str) -> Vec<&str> {
     chunks
 }
 
+#[allow(clippy::drain_collect)]
 fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut xml_reader = Reader::from_str(user_xml);
     xml_reader.config_mut().trim_text(false);
@@ -1470,7 +1473,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "user" => {
                             if let Some(mut user) = current_user.take() {
                                 if !current_forms.is_empty() {
-                                    user.set_forms(std::mem::take(&mut current_forms));
+                                    user.set_forms(current_forms.drain(..).collect());
                                 }
                                 current_user = Some(user);
                             }
@@ -1478,10 +1481,10 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(std::mem::take(&mut current_states));
+                                    form.states = Some(current_states.drain(..).collect());
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(std::mem::take(&mut current_categories));
+                                    form.categories = Some(current_categories.drain(..).collect());
                                 }
                                 current_forms.push(form);
                             }
@@ -1490,7 +1493,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(std::mem::take(&mut current_fields));
+                                    category.fields = Some(current_fields.drain(..).collect());
                                 }
                                 current_categories.push(category);
                             }
@@ -1499,10 +1502,10 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(std::mem::take(&mut current_entries));
+                                    field.entries = Some(current_entries.drain(..).collect());
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(std::mem::take(&mut current_comments));
+                                    field.comments = Some(current_comments.drain(..).collect());
                                 }
                                 current_fields.push(field);
                             }
