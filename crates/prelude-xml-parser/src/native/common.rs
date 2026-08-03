@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -10,9 +12,9 @@ use pyo3::{
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
-    checked_datetime, default_datetime_none, default_string_none, deserialize_empty_string_as_none,
+    checked_datetime, deserialize_empty_string_as_none, deserialize_empty_string_as_none_arc,
     deserialize_empty_string_as_none_datetime, optional_datetime, optional_string,
-    visit_attributes,
+    visit_attributes, Interner,
 };
 
 #[cfg(feature = "python")]
@@ -24,20 +26,17 @@ pub struct Value {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
     #[serde(alias = "by")]
-    pub by: String,
+    pub by: Arc<str>,
 
     #[serde(rename = "byUniqueId")]
     #[serde(alias = "@byUniqueId")]
     #[serde(alias = "byUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub by_unique_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub by_unique_id: Option<Arc<str>>,
     #[serde(rename = "role")]
     #[serde(alias = "@role")]
     #[serde(alias = "role")]
-    pub role: String,
+    pub role: Arc<str>,
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
@@ -58,20 +57,17 @@ pub struct Value {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
     #[serde(alias = "by")]
-    pub by: String,
+    pub by: Arc<str>,
 
     #[serde(rename = "byUniqueId")]
     #[serde(alias = "@byUniqueId")]
     #[serde(alias = "byUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub by_unique_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub by_unique_id: Option<Arc<str>>,
     #[serde(rename = "role")]
     #[serde(alias = "@role")]
     #[serde(alias = "role")]
-    pub role: String,
+    pub role: Arc<str>,
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
@@ -90,17 +86,17 @@ pub struct Value {
 impl Value {
     #[getter]
     fn by(&self) -> PyResult<String> {
-        Ok(self.by.clone())
+        Ok(self.by.to_string())
     }
 
     #[getter]
     fn by_unique_id(&self) -> PyResult<Option<String>> {
-        Ok(self.by_unique_id.clone())
+        Ok(self.by_unique_id.as_deref().map(str::to_string))
     }
 
     #[getter]
     fn role(&self) -> PyResult<String> {
-        Ok(self.role.clone())
+        Ok(self.role.to_string())
     }
 
     #[getter]
@@ -115,9 +111,9 @@ impl Value {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("by", &self.by)?;
-        dict.set_item("by_unique_id", &self.by_unique_id)?;
-        dict.set_item("role", &self.role)?;
+        dict.set_item("by", &*self.by)?;
+        dict.set_item("by_unique_id", self.by_unique_id.as_deref())?;
+        dict.set_item("role", &*self.role)?;
         dict.set_item("when", to_py_datetime_option(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
@@ -131,21 +127,18 @@ pub struct Reason {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
     #[serde(alias = "by")]
-    pub by: String,
+    pub by: Arc<str>,
 
     #[serde(rename = "byUniqueId")]
     #[serde(alias = "@byUniqueId")]
     #[serde(alias = "byUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub by_unique_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub by_unique_id: Option<Arc<str>>,
 
     #[serde(rename = "role")]
     #[serde(alias = "@role")]
     #[serde(alias = "role")]
-    pub role: String,
+    pub role: Arc<str>,
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
@@ -166,21 +159,18 @@ pub struct Reason {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
     #[serde(alias = "by")]
-    pub by: String,
+    pub by: Arc<str>,
 
     #[serde(rename = "byUniqueId")]
     #[serde(alias = "@byUniqueId")]
     #[serde(alias = "byUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub by_unique_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub by_unique_id: Option<Arc<str>>,
 
     #[serde(rename = "role")]
     #[serde(alias = "@role")]
     #[serde(alias = "role")]
-    pub role: String,
+    pub role: Arc<str>,
     #[serde(rename = "when")]
     #[serde(alias = "@when")]
     #[serde(alias = "when")]
@@ -199,17 +189,17 @@ pub struct Reason {
 impl Reason {
     #[getter]
     fn by(&self) -> PyResult<String> {
-        Ok(self.by.clone())
+        Ok(self.by.to_string())
     }
 
     #[getter]
     fn by_unique_id(&self) -> PyResult<Option<String>> {
-        Ok(self.by_unique_id.clone())
+        Ok(self.by_unique_id.as_deref().map(str::to_string))
     }
 
     #[getter]
     fn role(&self) -> PyResult<String> {
-        Ok(self.role.clone())
+        Ok(self.role.to_string())
     }
 
     #[getter]
@@ -224,9 +214,9 @@ impl Reason {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("by", &self.by)?;
-        dict.set_item("by_unique_id", &self.by_unique_id)?;
-        dict.set_item("role", &self.role)?;
+        dict.set_item("by", &*self.by)?;
+        dict.set_item("by_unique_id", self.by_unique_id.as_deref())?;
+        dict.set_item("role", &*self.role)?;
         dict.set_item("when", to_py_datetime_option(py, &self.when)?)?;
         dict.set_item("value", &self.value)?;
 
@@ -240,31 +230,25 @@ pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
     #[serde(alias = "entryId")]
-    pub entry_id: String,
+    pub entry_id: Arc<str>,
 
     #[serde(rename = "reviewedBy")]
     #[serde(alias = "@reviewedBy")]
     #[serde(alias = "reviewedBy")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub reviewed_by: Option<String>,
 
     #[serde(rename = "reviewedByUniqueId")]
     #[serde(alias = "@reviewedByUniqueId")]
     #[serde(alias = "reviewedByUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub reviewed_by_unique_id: Option<String>,
 
     #[serde(rename = "reviewedByWhen")]
     #[serde(alias = "@reviewedByWhen")]
     #[serde(alias = "reviewedByWhen")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub reviewed_by_when: Option<DateTime<Utc>>,
@@ -280,31 +264,25 @@ pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
     #[serde(alias = "entryId")]
-    pub entry_id: String,
+    pub entry_id: Arc<str>,
 
     #[serde(rename = "reviewedBy")]
     #[serde(alias = "@reviewedBy")]
     #[serde(alias = "reviewedBy")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub reviewed_by: Option<String>,
 
     #[serde(rename = "reviewedByUniqueId")]
     #[serde(alias = "@reviewedByUniqueId")]
     #[serde(alias = "reviewedByUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub reviewed_by_unique_id: Option<String>,
 
     #[serde(rename = "reviewedByWhen")]
     #[serde(alias = "@reviewedByWhen")]
     #[serde(alias = "reviewedByWhen")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub reviewed_by_when: Option<DateTime<Utc>>,
@@ -318,7 +296,7 @@ pub struct Entry {
 impl Entry {
     #[getter]
     fn entry_id(&self) -> PyResult<String> {
-        Ok(self.entry_id.clone())
+        Ok(self.entry_id.to_string())
     }
 
     #[getter]
@@ -348,7 +326,7 @@ impl Entry {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("entry_id", &self.entry_id)?;
+        dict.set_item("entry_id", &*self.entry_id)?;
         dict.set_item("reviewed_by", &self.reviewed_by)?;
         dict.set_item("reviewed_by_unique_id", &self.reviewed_by_unique_id)?;
         dict.set_item(
@@ -423,25 +401,22 @@ pub struct Field {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
-    pub name: String,
+    pub name: Arc<str>,
 
     #[serde(rename = "fieldType")]
     #[serde(alias = "@type")]
     #[serde(alias = "fieldType")]
-    pub field_type: String,
+    pub field_type: Arc<str>,
 
     #[serde(rename = "dataType")]
     #[serde(alias = "@dataType")]
     #[serde(alias = "dataType")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub data_type: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub data_type: Option<Arc<str>>,
     #[serde(rename = "errorCode")]
     #[serde(alias = "@errorCode")]
     #[serde(alias = "errorCode")]
-    pub error_code: String,
+    pub error_code: Arc<str>,
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
@@ -465,26 +440,23 @@ pub struct Field {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
-    pub name: String,
+    pub name: Arc<str>,
 
     #[serde(rename = "fieldType")]
     #[serde(alias = "@type")]
     #[serde(alias = "fieldType")]
-    pub field_type: String,
+    pub field_type: Arc<str>,
 
     #[serde(rename = "dataType")]
     #[serde(alias = "@dataType")]
     #[serde(alias = "dataType")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
-    pub data_type: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub data_type: Option<Arc<str>>,
 
     #[serde(rename = "errorCode")]
     #[serde(alias = "@errorCode")]
     #[serde(alias = "errorCode")]
-    pub error_code: String,
+    pub error_code: Arc<str>,
     #[serde(rename = "whenCreated")]
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
@@ -506,22 +478,22 @@ pub struct Field {
 impl Field {
     #[getter]
     fn name(&self) -> PyResult<String> {
-        Ok(self.name.clone())
+        Ok(self.name.to_string())
     }
 
     #[getter]
     fn field_type(&self) -> PyResult<String> {
-        Ok(self.field_type.clone())
+        Ok(self.field_type.to_string())
     }
 
     #[getter]
     fn data_type(&self) -> PyResult<Option<String>> {
-        Ok(self.data_type.clone())
+        Ok(self.data_type.as_deref().map(str::to_string))
     }
 
     #[getter]
     fn error_code(&self) -> PyResult<String> {
-        Ok(self.error_code.clone())
+        Ok(self.error_code.to_string())
     }
 
     #[getter]
@@ -549,10 +521,10 @@ impl Field {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("name", &self.name)?;
-        dict.set_item("field_type", &self.field_type)?;
-        dict.set_item("data_type", &self.data_type)?;
-        dict.set_item("error_code", &self.error_code)?;
+        dict.set_item("name", &*self.name)?;
+        dict.set_item("field_type", &*self.field_type)?;
+        dict.set_item("data_type", self.data_type.as_deref())?;
+        dict.set_item("error_code", &*self.error_code)?;
         dict.set_item(
             "when_created",
             self.when_created
@@ -594,12 +566,12 @@ pub struct Category {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
-    pub name: String,
+    pub name: Arc<str>,
 
     #[serde(rename = "categoryType")]
     #[serde(alias = "@type")]
     #[serde(alias = "categoryType")]
-    pub category_type: String,
+    pub category_type: Arc<str>,
 
     #[serde(rename = "highestIndex")]
     #[serde(alias = "@highestIndex")]
@@ -612,17 +584,17 @@ pub struct Category {
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all, skip_from_py_object)]
+#[pyclass(skip_from_py_object)]
 pub struct Category {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
-    pub name: String,
+    pub name: Arc<str>,
 
     #[serde(rename = "categoryType")]
     #[serde(alias = "@type")]
     #[serde(alias = "categoryType")]
-    pub category_type: String,
+    pub category_type: Arc<str>,
 
     #[serde(rename = "highestIndex")]
     #[serde(alias = "@highestIndex")]
@@ -638,12 +610,12 @@ pub struct Category {
 impl Category {
     #[getter]
     fn name(&self) -> PyResult<String> {
-        Ok(self.name.clone())
+        Ok(self.name.to_string())
     }
 
     #[getter]
     fn category_type(&self) -> PyResult<String> {
-        Ok(self.category_type.clone())
+        Ok(self.category_type.to_string())
     }
 
     #[getter]
@@ -658,8 +630,8 @@ impl Category {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("name", &self.name)?;
-        dict.set_item("category_type", &self.category_type)?;
+        dict.set_item("name", &*self.name)?;
+        dict.set_item("category_type", &*self.category_type)?;
         dict.set_item("highest_index", self.highest_index)?;
 
         let mut field_dicts = Vec::new();
@@ -740,21 +712,21 @@ pub struct State {
     #[serde(rename = "value")]
     #[serde(alias = "@value")]
     #[serde(alias = "value")]
-    pub value: String,
+    pub value: Arc<str>,
     #[serde(rename = "signer")]
     #[serde(alias = "@signer")]
     #[serde(alias = "signer")]
-    pub signer: String,
+    pub signer: Arc<str>,
     #[serde(rename = "signerUniqueId")]
     #[serde(alias = "@signerUniqueId")]
     #[serde(alias = "signerUniqueId")]
-    pub signer_unique_id: String,
+    pub signer_unique_id: Arc<str>,
 
     #[serde(rename = "dateSigned")]
     #[serde(alias = "@dateSigned")]
     #[serde(alias = "dateSigned")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_signed: Option<DateTime<Utc>>,
@@ -767,21 +739,21 @@ pub struct State {
     #[serde(rename = "value")]
     #[serde(alias = "@value")]
     #[serde(alias = "value")]
-    pub value: String,
+    pub value: Arc<str>,
     #[serde(rename = "signer")]
     #[serde(alias = "@signer")]
     #[serde(alias = "signer")]
-    pub signer: String,
+    pub signer: Arc<str>,
     #[serde(rename = "signerUniqueId")]
     #[serde(alias = "@signerUniqueId")]
     #[serde(alias = "signerUniqueId")]
-    pub signer_unique_id: String,
+    pub signer_unique_id: Arc<str>,
 
     #[serde(rename = "dateSigned")]
     #[serde(alias = "@dateSigned")]
     #[serde(alias = "dateSigned")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_signed: Option<DateTime<Utc>>,
@@ -792,17 +764,17 @@ pub struct State {
 impl State {
     #[getter]
     fn value(&self) -> PyResult<String> {
-        Ok(self.value.clone())
+        Ok(self.value.to_string())
     }
 
     #[getter]
     fn signer(&self) -> PyResult<String> {
-        Ok(self.signer.clone())
+        Ok(self.signer.to_string())
     }
 
     #[getter]
     fn signer_unique_id(&self) -> PyResult<String> {
-        Ok(self.signer_unique_id.clone())
+        Ok(self.signer_unique_id.to_string())
     }
 
     #[getter]
@@ -812,9 +784,9 @@ impl State {
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
-        dict.set_item("value", &self.value)?;
-        dict.set_item("signer", &self.signer)?;
-        dict.set_item("signer_unique_id", &self.signer_unique_id)?;
+        dict.set_item("value", &*self.value)?;
+        dict.set_item("signer", &*self.signer)?;
+        dict.set_item("signer_unique_id", &*self.signer_unique_id)?;
         dict.set_item("date_signed", to_py_datetime_option(py, &self.date_signed)?)?;
 
         Ok(dict)
@@ -832,26 +804,20 @@ pub struct LockState {
     #[serde(rename = "user")]
     #[serde(alias = "@user")]
     #[serde(alias = "user")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user: Option<String>,
 
     #[serde(rename = "userUniqueId")]
     #[serde(alias = "@userUniqueId")]
     #[serde(alias = "userUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user_unique_id: Option<String>,
 
     #[serde(rename = "dateTimeChanged")]
     #[serde(alias = "@dateTimeChanged")]
     #[serde(alias = "dateTimeChanged")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
@@ -869,26 +835,20 @@ pub struct LockState {
     #[serde(rename = "user")]
     #[serde(alias = "@user")]
     #[serde(alias = "user")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user: Option<String>,
 
     #[serde(rename = "userUniqueId")]
     #[serde(alias = "@userUniqueId")]
     #[serde(alias = "userUniqueId")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user_unique_id: Option<String>,
 
     #[serde(rename = "dateTimeChanged")]
     #[serde(alias = "@dateTimeChanged")]
     #[serde(alias = "dateTimeChanged")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
@@ -943,7 +903,7 @@ pub struct Form {
     #[serde(alias = "@lastModified")]
     #[serde(alias = "lastModified")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub last_modified: Option<DateTime<Utc>>,
@@ -951,19 +911,13 @@ pub struct Form {
     #[serde(rename = "whoLastModifiedName")]
     #[serde(alias = "@whoLastModifiedName")]
     #[serde(alias = "whoLastModifiedName")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub who_last_modified_name: Option<String>,
 
     #[serde(rename = "whoLastModifiedRole")]
     #[serde(alias = "@whoLastModifiedRole")]
     #[serde(alias = "whoLastModifiedRole")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub who_last_modified_role: Option<String>,
 
     #[serde(rename = "whenCreated")]
@@ -986,17 +940,14 @@ pub struct Form {
     #[serde(rename = "user")]
     #[serde(alias = "@user")]
     #[serde(alias = "user")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user: Option<String>,
 
     #[serde(rename = "dateTimeChanged")]
     #[serde(alias = "@dateTimeChanged")]
     #[serde(alias = "dateTimeChanged")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
@@ -1013,10 +964,7 @@ pub struct Form {
     #[serde(rename = "formGroup")]
     #[serde(alias = "@formGroup")]
     #[serde(alias = "formGroup")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub form_group: Option<String>,
 
     #[serde(rename = "formState")]
@@ -1047,7 +995,7 @@ pub struct Form {
     #[serde(alias = "@lastModified")]
     #[serde(alias = "lastModified")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub last_modified: Option<DateTime<Utc>>,
@@ -1055,19 +1003,13 @@ pub struct Form {
     #[serde(rename = "whoLastModifiedName")]
     #[serde(alias = "@whoLastModifiedName")]
     #[serde(alias = "whoLastModifiedName")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub who_last_modified_name: Option<String>,
 
     #[serde(rename = "whoLastModifiedRole")]
     #[serde(alias = "@whoLastModifiedRole")]
     #[serde(alias = "whoLastModifiedRole")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub who_last_modified_role: Option<String>,
 
     #[serde(rename = "whenCreated")]
@@ -1090,17 +1032,14 @@ pub struct Form {
     #[serde(rename = "user")]
     #[serde(alias = "@user")]
     #[serde(alias = "user")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub user: Option<String>,
 
     #[serde(rename = "dateTimeChanged")]
     #[serde(alias = "@dateTimeChanged")]
     #[serde(alias = "dateTimeChanged")]
     #[serde(
-        default = "default_datetime_none",
+        default,
         deserialize_with = "deserialize_empty_string_as_none_datetime"
     )]
     pub date_time_changed: Option<DateTime<Utc>>,
@@ -1117,10 +1056,7 @@ pub struct Form {
     #[serde(rename = "formGroup")]
     #[serde(alias = "@formGroup")]
     #[serde(alias = "formGroup")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub form_group: Option<String>,
 
     #[serde(rename = "formState")]
@@ -1282,7 +1218,10 @@ impl Form {
 }
 
 impl State {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut value = "";
         let mut signer = "";
         let mut signer_unique_id = "";
@@ -1297,9 +1236,9 @@ impl State {
         })?;
 
         Ok(State {
-            value: value.to_string(),
-            signer: signer.to_string(),
-            signer_unique_id: signer_unique_id.to_string(),
+            value: interner.intern(value),
+            signer: interner.intern(signer),
+            signer_unique_id: interner.intern(signer_unique_id),
             date_signed: optional_datetime(date_signed),
         })
     }
@@ -1330,7 +1269,10 @@ impl LockState {
 }
 
 impl Category {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut name = "";
         let mut category_type = "";
         let mut highest_index = "";
@@ -1343,8 +1285,8 @@ impl Category {
         })?;
 
         Ok(Category {
-            name: name.to_string(),
-            category_type: category_type.to_string(),
+            name: interner.intern(name),
+            category_type: interner.intern(category_type),
             highest_index: highest_index.parse().unwrap_or(0),
             fields: None,
         })
@@ -1352,7 +1294,10 @@ impl Category {
 }
 
 impl Field {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut name = "";
         let mut field_type = "";
         let mut data_type = "";
@@ -1371,10 +1316,10 @@ impl Field {
         })?;
 
         Ok(Field {
-            name: name.to_string(),
-            field_type: field_type.to_string(),
-            data_type: optional_string(data_type),
-            error_code: error_code.to_string(),
+            name: interner.intern(name),
+            field_type: interner.intern(field_type),
+            data_type: interner.intern_optional(data_type),
+            error_code: interner.intern(error_code),
             when_created: checked_datetime(when_created)?,
             keep_history: keep_history == "true",
             entries: None,
@@ -1384,7 +1329,10 @@ impl Field {
 }
 
 impl Entry {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut id: Option<&str> = None;
         let mut entry_id: Option<&str> = None;
         let mut reviewed_by = "";
@@ -1401,7 +1349,7 @@ impl Entry {
         })?;
 
         Ok(Entry {
-            entry_id: id.or(entry_id).unwrap_or_default().to_string(),
+            entry_id: interner.intern(id.or(entry_id).unwrap_or_default()),
             reviewed_by: optional_string(reviewed_by),
             reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
             reviewed_by_when: optional_datetime(reviewed_by_when),
@@ -1412,7 +1360,10 @@ impl Entry {
 }
 
 impl Value {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut by = "";
         let mut by_unique_id = "";
         let mut role = "";
@@ -1427,9 +1378,9 @@ impl Value {
         })?;
 
         Ok(Value {
-            by: by.to_string(),
-            by_unique_id: optional_string(by_unique_id),
-            role: role.to_string(),
+            by: interner.intern(by),
+            by_unique_id: interner.intern_optional(by_unique_id),
+            role: interner.intern(role),
             when: checked_datetime(when)?,
             value: String::new(),
         })
@@ -1437,7 +1388,10 @@ impl Value {
 }
 
 impl Reason {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
         let mut by = "";
         let mut by_unique_id = "";
         let mut role = "";
@@ -1452,9 +1406,9 @@ impl Reason {
         })?;
 
         Ok(Reason {
-            by: by.to_string(),
-            by_unique_id: optional_string(by_unique_id),
-            role: role.to_string(),
+            by: interner.intern(by),
+            by_unique_id: interner.intern_optional(by_unique_id),
+            role: interner.intern(role),
             when: checked_datetime(when)?,
             value: String::new(),
         })

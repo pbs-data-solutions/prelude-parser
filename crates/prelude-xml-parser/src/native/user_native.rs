@@ -7,8 +7,7 @@ pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, S
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
-    default_string_none, deserialize_empty_string_as_none, optional_string, required_attribute,
-    visit_attributes,
+    deserialize_empty_string_as_none, optional_string, required_attribute, visit_attributes,
 };
 
 #[cfg(not(feature = "python"))]
@@ -23,10 +22,7 @@ pub struct User {
     #[serde(rename = "lastLanguage")]
     #[serde(alias = "@lastLanguage")]
     #[serde(alias = "lastLanguage")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub last_language: Option<String>,
     #[serde(rename = "creator")]
     #[serde(alias = "@creator")]
@@ -84,10 +80,7 @@ pub struct User {
     #[serde(rename = "lastLanguage")]
     #[serde(alias = "@lastLanguage")]
     #[serde(alias = "lastLanguage")]
-    #[serde(
-        default = "default_string_none",
-        deserialize_with = "deserialize_empty_string_as_none"
-    )]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
     pub last_language: Option<String>,
     #[serde(rename = "creator")]
     #[serde(alias = "@creator")]

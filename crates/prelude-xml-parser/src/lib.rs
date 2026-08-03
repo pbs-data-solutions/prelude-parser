@@ -6,7 +6,7 @@ use std::{fs::read_to_string, path::Path};
 use rayon::prelude::*;
 
 use crate::errors::Error;
-use crate::native::deserializers::{decode_error, push_general_ref, take_trimmed};
+use crate::native::deserializers::{decode_error, push_general_ref, take_trimmed, Interner};
 use crate::native::{
     common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
     site_native::{Site, SiteNative},
@@ -106,39 +106,39 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 /// let expected = SiteNative {
 ///     sites: vec![
 ///         Site {
-///             name: "Some Site".to_string(),
-///             unique_id: "1681574834910".to_string(),
+///             name: "Some Site".into(),
+///             unique_id: "1681574834910".into(),
 ///             number_of_patients: 4,
 ///             count_of_randomized_patients: 0,
 ///             when_created: Some(DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc)),
-///             creator: "Paul Sanders".to_string(),
+///             creator: "Paul Sanders".into(),
 ///             number_of_forms: 1,
 ///             forms: Some(vec![Form {
-///                 name: "demographic.form.name.site.demographics".to_string(),
+///                 name: "demographic.form.name.site.demographics".into(),
 ///                 last_modified: Some(
 ///                     DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
 ///                         .unwrap()
 ///                         .with_timezone(&Utc),
 ///                 ),
-///                 who_last_modified_name: Some("Paul Sanders".to_string()),
-///                 who_last_modified_role: Some("Project Manager".to_string()),
+///                 who_last_modified_name: Some("Paul Sanders".into()),
+///                 who_last_modified_role: Some("Project Manager".into()),
 ///                 when_created: 1681574834930,
 ///                 has_errors: false,
 ///                 has_warnings: false,
 ///                 locked: false,
 ///                 user: None,
 ///                 date_time_changed: None,
-///                 form_title: "Site Demographics".to_string(),
+///                 form_title: "Site Demographics".into(),
 ///                 form_index: 1,
-///                 form_group: Some("Demographic".to_string()),
-///                 form_state: "In-Work".to_string(),
+///                 form_group: Some("Demographic".into()),
+///                 form_state: "In-Work".into(),
 ///                 lock_state: None,
 ///                 states: Some(vec![State {
-///                     value: "form.state.in.work".to_string(),
-///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: "1681162687395".to_string(),
+///                     value: "form.state.in.work".into(),
+///                     signer: "Paul Sanders - Project Manager".into(),
+///                     signer_unique_id: "1681162687395".into(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-04-15T16:08:19Z")
 ///                             .unwrap()
@@ -147,15 +147,15 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 }]),
 ///                 categories: Some(vec![
 ///                     Category {
-///                         name: "Demographics".to_string(),
-///                         category_type: "normal".to_string(),
+///                         name: "Demographics".into(),
+///                         category_type: "normal".into(),
 ///                         highest_index: 0,
 ///                         fields: Some(vec![
 ///                             Field {
-///                                 name: "address".to_string(),
-///                                 field_type: "text".to_string(),
-///                                 data_type: Some("string".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "address".into(),
+///                                 field_type: "text".into(),
+///                                 data_type: Some("string".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -166,10 +166,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 comments: None,
 ///                             },
 ///                             Field {
-///                                 name: "company".to_string(),
-///                                 field_type: "text".to_string(),
-///                                 data_type: Some("string".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "company".into(),
+///                                 field_type: "text".into(),
+///                                 data_type: Some("string".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -177,30 +177,30 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 .with_timezone(&Utc)),
 ///                                 keep_history: true,
 ///                                 entries: Some(vec![Entry {
-///                                     entry_id: "1".to_string(),
+///                                     entry_id: "1".into(),
 ///                                     reviewed_by: None,
 ///                                     reviewed_by_unique_id: None,
 ///                                     reviewed_by_when: None,
 ///                                     value: Some(Value {
-///                                         by: "Paul Sanders".to_string(),
-///                                         by_unique_id: Some("1681162687395".to_string()),
-///                                         role: "Project Manager".to_string(),
+///                                         by: "Paul Sanders".into(),
+///                                         by_unique_id: Some("1681162687395".into()),
+///                                         role: "Project Manager".into(),
 ///                                         when: Some(DateTime::parse_from_rfc3339(
 ///                                             "2023-04-15T16:08:19Z",
 ///                                         )
 ///                                         .unwrap()
 ///                                         .with_timezone(&Utc)),
-///                                         value: "Some Company".to_string(),
+///                                         value: "Some Company".into(),
 ///                                     }),
 ///                                     reason: None,
 ///                                 }]),
 ///                                 comments: None,
 ///                             },
 ///                             Field {
-///                                 name: "site_code_name".to_string(),
-///                                 field_type: "hidden".to_string(),
-///                                 data_type: Some("string".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "site_code_name".into(),
+///                                 field_type: "hidden".into(),
+///                                 data_type: Some("string".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -209,59 +209,59 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: Some(vec![
 ///                                     Entry {
-///                                         entry_id: "1".to_string(),
+///                                         entry_id: "1".into(),
 ///                                         reviewed_by: None,
 ///                                         reviewed_by_unique_id: None,
 ///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
-///                                             by: "set from calculation".to_string(),
+///                                             by: "set from calculation".into(),
 ///                                             by_unique_id: None,
-///                                             role: "System".to_string(),
+///                                             role: "System".into(),
 ///                                             when: Some(DateTime::parse_from_rfc3339(
 ///                                                 "2023-04-15T16:08:19Z",
 ///                                             )
 ///                                             .unwrap()
 ///                                             .with_timezone(&Utc)),
-///                                             value: "ABC-Some Site".to_string(),
+///                                             value: "ABC-Some Site".into(),
 ///                                         }),
 ///                                         reason: Some(Reason {
-///                                             by: "set from calculation".to_string(),
+///                                             by: "set from calculation".into(),
 ///                                             by_unique_id: None,
-///                                             role: "System".to_string(),
+///                                             role: "System".into(),
 ///                                             when: Some(DateTime::parse_from_rfc3339(
 ///                                                 "2023-04-15T16:08:19Z",
 ///                                             )
 ///                                             .unwrap()
 ///                                             .with_timezone(&Utc)),
-///                                             value: "calculated value".to_string(),
+///                                             value: "calculated value".into(),
 ///                                         }),
 ///                                     },
 ///                                     Entry {
-///                                         entry_id: "2".to_string(),
+///                                         entry_id: "2".into(),
 ///                                         reviewed_by: None,
 ///                                         reviewed_by_unique_id: None,
 ///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
-///                                             by: "set from calculation".to_string(),
+///                                             by: "set from calculation".into(),
 ///                                             by_unique_id: None,
-///                                             role: "System".to_string(),
+///                                             role: "System".into(),
 ///                                             when: Some(DateTime::parse_from_rfc3339(
 ///                                                 "2023-04-15T16:07:24Z",
 ///                                             )
 ///                                             .unwrap()
 ///                                             .with_timezone(&Utc)),
-///                                             value: "Some Site".to_string(),
+///                                             value: "Some Site".into(),
 ///                                         }),
 ///                                         reason: Some(Reason {
-///                                             by: "set from calculation".to_string(),
+///                                             by: "set from calculation".into(),
 ///                                             by_unique_id: None,
-///                                             role: "System".to_string(),
+///                                             role: "System".into(),
 ///                                             when: Some(DateTime::parse_from_rfc3339(
 ///                                                 "2023-04-15T16:07:24Z",
 ///                                             )
 ///                                             .unwrap()
 ///                                             .with_timezone(&Utc)),
-///                                             value: "calculated value".to_string(),
+///                                             value: "calculated value".into(),
 ///                                         }),
 ///                                     },
 ///                                 ]),
@@ -270,15 +270,15 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                         ]),
 ///                     },
 ///                     Category {
-///                         name: "Enrollment".to_string(),
-///                         category_type: "normal".to_string(),
+///                         name: "Enrollment".into(),
+///                         category_type: "normal".into(),
 ///                         highest_index: 0,
 ///                         fields: Some(vec![
 ///                             Field {
-///                                 name: "enrollment_closed_date".to_string(),
-///                                 field_type: "popUpCalendar".to_string(),
-///                                 data_type: Some("date".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "enrollment_closed_date".into(),
+///                                 field_type: "popUpCalendar".into(),
+///                                 data_type: Some("date".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -289,10 +289,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 comments: None,
 ///                             },
 ///                             Field {
-///                                 name: "enrollment_open".to_string(),
-///                                 field_type: "radio".to_string(),
-///                                 data_type: Some("string".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "enrollment_open".into(),
+///                                 field_type: "radio".into(),
+///                                 data_type: Some("string".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -300,30 +300,30 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 .with_timezone(&Utc)),
 ///                                 keep_history: true,
 ///                                 entries: Some(vec![Entry {
-///                                     entry_id: "1".to_string(),
+///                                     entry_id: "1".into(),
 ///                                     reviewed_by: None,
 ///                                     reviewed_by_unique_id: None,
 ///                                     reviewed_by_when: None,
 ///                                     value: Some(Value {
-///                                         by: "Paul Sanders".to_string(),
-///                                         by_unique_id: Some("1681162687395".to_string()),
-///                                         role: "Project Manager".to_string(),
+///                                         by: "Paul Sanders".into(),
+///                                         by_unique_id: Some("1681162687395".into()),
+///                                         role: "Project Manager".into(),
 ///                                         when: Some(DateTime::parse_from_rfc3339(
 ///                                             "2023-04-15T16:08:19Z",
 ///                                         )
 ///                                         .unwrap()
 ///                                         .with_timezone(&Utc)),
-///                                         value: "Yes".to_string(),
+///                                         value: "Yes".into(),
 ///                                     }),
 ///                                     reason: None,
 ///                                 }]),
 ///                                 comments: None,
 ///                             },
 ///                             Field {
-///                                 name: "enrollment_open_date".to_string(),
-///                                 field_type: "popUpCalendar".to_string(),
-///                                 data_type: Some("date".to_string()),
-///                                 error_code: "valid".to_string(),
+///                                 name: "enrollment_open_date".into(),
+///                                 field_type: "popUpCalendar".into(),
+///                                 data_type: Some("date".into()),
+///                                 error_code: "valid".into(),
 ///                                 when_created: Some(DateTime::parse_from_rfc3339(
 ///                                     "2023-04-15T16:07:14Z",
 ///                                 )
@@ -339,39 +339,39 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///             }]),
 ///         },
 ///         Site {
-///             name: "Artemis".to_string(),
-///             unique_id: "1691420994591".to_string(),
+///             name: "Artemis".into(),
+///             unique_id: "1691420994591".into(),
 ///             number_of_patients: 0,
 ///             count_of_randomized_patients: 0,
 ///             when_created: Some(DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc)),
-///             creator: "Paul Sanders".to_string(),
+///             creator: "Paul Sanders".into(),
 ///             number_of_forms: 1,
 ///             forms: Some(vec![Form {
-///                 name: "demographic.form.name.site.demographics".to_string(),
+///                 name: "demographic.form.name.site.demographics".into(),
 ///                 last_modified: Some(
 ///                     DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
 ///                         .unwrap()
 ///                         .with_timezone(&Utc),
 ///                 ),
-///                 who_last_modified_name: Some("Paul Sanders".to_string()),
-///                 who_last_modified_role: Some("Project Manager".to_string()),
+///                 who_last_modified_name: Some("Paul Sanders".into()),
+///                 who_last_modified_role: Some("Project Manager".into()),
 ///                 when_created: 1691420994611,
 ///                 has_errors: false,
 ///                 has_warnings: false,
 ///                 locked: false,
 ///                 user: None,
 ///                 date_time_changed: None,
-///                 form_title: "Site Demographics".to_string(),
+///                 form_title: "Site Demographics".into(),
 ///                 form_index: 1,
-///                 form_group: Some("Demographic".to_string()),
-///                 form_state: "In-Work".to_string(),
+///                 form_group: Some("Demographic".into()),
+///                 form_state: "In-Work".into(),
 ///                 lock_state: None,
 ///                 states: Some(vec![State {
-///                     value: "form.state.in.work".to_string(),
-///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: "1681162687395".to_string(),
+///                     value: "form.state.in.work".into(),
+///                     signer: "Paul Sanders - Project Manager".into(),
+///                     signer_unique_id: "1681162687395".into(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-08-07T15:14:23Z")
 ///                             .unwrap()
@@ -379,44 +379,44 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                     ),
 ///                 }]),
 ///                 categories: Some(vec![Category {
-///                     name: "Demographics".to_string(),
-///                     category_type: "normal".to_string(),
+///                     name: "Demographics".into(),
+///                     category_type: "normal".into(),
 ///                     highest_index: 0,
 ///                     fields: Some(vec![Field {
-///                         name: "address".to_string(),
-///                         field_type: "text".to_string(),
-///                         data_type: Some("string".to_string()),
-///                         error_code: "valid".to_string(),
+///                         name: "address".into(),
+///                         field_type: "text".into(),
+///                         data_type: Some("string".into()),
+///                         error_code: "valid".into(),
 ///                         when_created: Some(DateTime::parse_from_rfc3339("2023-08-07T15:09:54Z")
 ///                             .unwrap()
 ///                             .with_timezone(&Utc)),
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
-///                             entry_id: "1".to_string(),
+///                             entry_id: "1".into(),
 ///                             reviewed_by: None,
 ///                             reviewed_by_unique_id: None,
 ///                             reviewed_by_when: None,
 ///                             value: Some(Value {
-///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: Some("1681162687395".to_string()),
-///                                 role: "Project Manager".to_string(),
+///                                 by: "Paul Sanders".into(),
+///                                 by_unique_id: Some("1681162687395".into()),
+///                                 role: "Project Manager".into(),
 ///                                 when: Some(DateTime::parse_from_rfc3339("2023-08-07T15:14:21Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc)),
-///                                 value: "1111 Moon Drive".to_string(),
+///                                 value: "1111 Moon Drive".into(),
 ///                             }),
 ///                             reason: None,
 ///                         }]),
 ///                         comments: Some(vec![Comment {
-///                             comment_id: "1".to_string(),
+///                             comment_id: "1".into(),
 ///                             value: Some(Value {
-///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: Some("1681162687395".to_string()),
-///                                 role: "Project Manager".to_string(),
+///                                 by: "Paul Sanders".into(),
+///                                 by_unique_id: Some("1681162687395".into()),
+///                                 role: "Project Manager".into(),
 ///                                 when: Some(DateTime::parse_from_rfc3339("2023-08-07T15:14:21Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc)),
-///                                 value: "Some comment".to_string(),
+///                                 value: "Some comment".into(),
 ///                             }),
 ///                         }]),
 ///                     }]),
@@ -503,38 +503,38 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// let expected = SubjectNative {
 ///     patients: vec![
 ///         Patient {
-///             patient_id: "ABC-001".to_string(),
-///             unique_id: "1681574905819".to_string(),
+///             patient_id: "ABC-001".into(),
+///             unique_id: "1681574905819".into(),
 ///             when_created: Some(DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc)),
-///             creator: "Paul Sanders".to_string(),
-///             site_name: "Some Site".to_string(),
-///             site_unique_id: "1681574834910".to_string(),
-///             last_language: Some("English".to_string()),
+///             creator: "Paul Sanders".into(),
+///             site_name: "Some Site".into(),
+///             site_unique_id: "1681574834910".into(),
+///             last_language: Some("English".into()),
 ///             number_of_forms: 6,
 ///             forms: Some(vec![Form {
-///                 name: "day.0.form.name.demographics".to_string(),
+///                 name: "day.0.form.name.demographics".into(),
 ///                 last_modified: Some(DateTime::parse_from_rfc3339("2023-04-15T16:09:15Z")
 ///                     .unwrap()
 ///                     .with_timezone(&Utc)),
-///                 who_last_modified_name: Some("Paul Sanders".to_string()),
-///                 who_last_modified_role: Some("Project Manager".to_string()),
+///                 who_last_modified_name: Some("Paul Sanders".into()),
+///                 who_last_modified_role: Some("Project Manager".into()),
 ///                 when_created: 1681574905839,
 ///                 has_errors: false,
 ///                 has_warnings: false,
 ///                 locked: false,
 ///                 user: None,
 ///                 date_time_changed: None,
-///                 form_title: "Demographics".to_string(),
+///                 form_title: "Demographics".into(),
 ///                 form_index: 1,
-///                 form_group: Some("Day 0".to_string()),
-///                 form_state: "In-Work".to_string(),
+///                 form_group: Some("Day 0".into()),
+///                 form_state: "In-Work".into(),
 ///                 lock_state: None,
 ///                 states: Some(vec![State {
-///                     value: "form.state.in.work".to_string(),
-///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: "1681162687395".to_string(),
+///                     value: "form.state.in.work".into(),
+///                     signer: "Paul Sanders - Project Manager".into(),
+///                     signer_unique_id: "1681162687395".into(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                             .unwrap()
@@ -542,31 +542,31 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     ),
 ///                 }]),
 ///                 categories: Some(vec![Category {
-///                     name: "Demographics".to_string(),
-///                     category_type: "normal".to_string(),
+///                     name: "Demographics".into(),
+///                     category_type: "normal".into(),
 ///                     highest_index: 0,
 ///                     fields: Some(vec![Field {
-///                         name: "breed".to_string(),
-///                         field_type: "combo-box".to_string(),
-///                         data_type: Some("string".to_string()),
-///                         error_code: "valid".to_string(),
+///                         name: "breed".into(),
+///                         field_type: "combo-box".into(),
+///                         data_type: Some("string".into()),
+///                         error_code: "valid".into(),
 ///                         when_created: Some(DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
 ///                             .unwrap()
 ///                             .with_timezone(&Utc)),
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
-///                             entry_id: "1".to_string(),
+///                             entry_id: "1".into(),
 ///                             reviewed_by: None,
 ///                             reviewed_by_unique_id: None,
 ///                             reviewed_by_when: None,
 ///                             value: Some(Value {
-///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: Some("1681162687395".to_string()),
-///                                 role: "Project Manager".to_string(),
+///                                 by: "Paul Sanders".into(),
+///                                 by_unique_id: Some("1681162687395".into()),
+///                                 role: "Project Manager".into(),
 ///                                 when: Some(DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc)),
-///                                 value: "Labrador".to_string(),
+///                                 value: "Labrador".into(),
 ///                             }),
 ///                             reason: None,
 ///                         }]),
@@ -576,38 +576,38 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///             }]),
 ///         },
 ///         Patient {
-///             patient_id: "DEF-002".to_string(),
-///             unique_id: "1681574905820".to_string(),
+///             patient_id: "DEF-002".into(),
+///             unique_id: "1681574905820".into(),
 ///             when_created: Some(DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
 ///                 .unwrap()
 ///                 .with_timezone(&Utc)),
-///             creator: "Wade Watts".to_string(),
-///             site_name: "Another Site".to_string(),
-///             site_unique_id: "1681574834911".to_string(),
+///             creator: "Wade Watts".into(),
+///             site_name: "Another Site".into(),
+///             site_unique_id: "1681574834911".into(),
 ///             last_language: None,
 ///             number_of_forms: 8,
 ///             forms: Some(vec![Form {
-///                 name: "day.0.form.name.demographics".to_string(),
+///                 name: "day.0.form.name.demographics".into(),
 ///                 last_modified: Some(DateTime::parse_from_rfc3339("2023-04-16T16:10:15Z")
 ///                     .unwrap()
 ///                     .with_timezone(&Utc)),
-///                 who_last_modified_name: Some("Barney Rubble".to_string()),
-///                 who_last_modified_role: Some("Technician".to_string()),
+///                 who_last_modified_name: Some("Barney Rubble".into()),
+///                 who_last_modified_role: Some("Technician".into()),
 ///                 when_created: 1681574905838,
 ///                 has_errors: false,
 ///                 has_warnings: false,
 ///                 locked: false,
 ///                 user: None,
 ///                 date_time_changed: None,
-///                 form_title: "Demographics".to_string(),
+///                 form_title: "Demographics".into(),
 ///                 form_index: 1,
-///                 form_group: Some("Day 0".to_string()),
-///                 form_state: "In-Work".to_string(),
+///                 form_group: Some("Day 0".into()),
+///                 form_state: "In-Work".into(),
 ///                 lock_state: None,
 ///                 states: Some(vec![State {
-///                     value: "form.state.in.work".to_string(),
-///                     signer: "Paul Sanders - Project Manager".to_string(),
-///                     signer_unique_id: "1681162687395".to_string(),
+///                     value: "form.state.in.work".into(),
+///                     signer: "Paul Sanders - Project Manager".into(),
+///                     signer_unique_id: "1681162687395".into(),
 ///                     date_signed: Some(
 ///                         DateTime::parse_from_rfc3339("2023-04-16T16:10:02Z")
 ///                             .unwrap()
@@ -615,31 +615,31 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                     ),
 ///                 }]),
 ///                 categories: Some(vec![Category {
-///                     name: "Demographics".to_string(),
-///                     category_type: "normal".to_string(),
+///                     name: "Demographics".into(),
+///                     category_type: "normal".into(),
 ///                     highest_index: 0,
 ///                     fields: Some(vec![Field {
-///                         name: "breed".to_string(),
-///                         field_type: "combo-box".to_string(),
-///                         data_type: Some("string".to_string()),
-///                         error_code: "valid".to_string(),
+///                         name: "breed".into(),
+///                         field_type: "combo-box".into(),
+///                         data_type: Some("string".into()),
+///                         error_code: "valid".into(),
 ///                         when_created: Some(DateTime::parse_from_rfc3339("2023-04-15T16:08:26Z")
 ///                             .unwrap()
 ///                             .with_timezone(&Utc)),
 ///                         keep_history: true,
 ///                         entries: Some(vec![Entry {
-///                             entry_id: "1".to_string(),
+///                             entry_id: "1".into(),
 ///                             reviewed_by: None,
 ///                             reviewed_by_unique_id: None,
 ///                             reviewed_by_when: None,
 ///                             value: Some(Value {
-///                                 by: "Paul Sanders".to_string(),
-///                                 by_unique_id: Some("1681162687395".to_string()),
-///                                 role: "Project Manager".to_string(),
+///                                 by: "Paul Sanders".into(),
+///                                 by_unique_id: Some("1681162687395".into()),
+///                                 role: "Project Manager".into(),
 ///                                 when: Some(DateTime::parse_from_rfc3339("2023-04-15T16:09:02Z")
 ///                                     .unwrap()
 ///                                     .with_timezone(&Utc)),
-///                                 value: "Labrador".to_string(),
+///                                 value: "Labrador".into(),
 ///                             }),
 ///                             reason: None,
 ///                         }]),
@@ -687,6 +687,7 @@ fn extract_patient_chunks(xml: &str) -> Vec<&str> {
 
 #[allow(clippy::drain_collect)]
 fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
+    let mut interner = Interner::default();
     let mut xml_reader = Reader::from_str(patient_xml);
     xml_reader.config_mut().trim_text(false);
 
@@ -737,18 +738,18 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             current_categories.clear();
                         }
                         "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e)?);
+                            current_category = Some(Category::from_attributes(e, &mut interner)?);
                             in_category = true;
                             current_fields.clear();
                         }
                         "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e)?);
+                            current_field = Some(Field::from_attributes(e, &mut interner)?);
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
                         }
                         "entry" if in_field => {
-                            current_entry = Some(Entry::from_attributes(e)?);
+                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
@@ -756,12 +757,12 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            current_value = Some(Value::from_attributes(e)?);
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e)?);
+                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -865,7 +866,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let state = State::from_attributes(e)?;
+                            let state = State::from_attributes(e, &mut interner)?;
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
@@ -875,19 +876,19 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             }
                         }
                         "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e)?);
+                            current_categories.push(Category::from_attributes(e, &mut interner)?);
                         }
                         "field" if in_category => {
-                            current_fields.push(Field::from_attributes(e)?);
+                            current_fields.push(Field::from_attributes(e, &mut interner)?);
                         }
                         "value" if in_entry => {
-                            let value = Value::from_attributes(e)?;
+                            let value = Value::from_attributes(e, &mut interner)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.value = Some(value);
                             }
                         }
                         "reason" if in_entry => {
-                            let reason = Reason::from_attributes(e)?;
+                            let reason = Reason::from_attributes(e, &mut interner)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
@@ -932,6 +933,7 @@ fn extract_site_chunks(xml: &str) -> Vec<&str> {
 
 #[allow(clippy::drain_collect)]
 fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
+    let mut interner = Interner::default();
     let mut xml_reader = Reader::from_str(site_xml);
     xml_reader.config_mut().trim_text(false);
 
@@ -982,18 +984,18 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             current_categories.clear();
                         }
                         "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e)?);
+                            current_category = Some(Category::from_attributes(e, &mut interner)?);
                             in_category = true;
                             current_fields.clear();
                         }
                         "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e)?);
+                            current_field = Some(Field::from_attributes(e, &mut interner)?);
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
                         }
                         "entry" if in_field => {
-                            current_entry = Some(Entry::from_attributes(e)?);
+                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
@@ -1001,12 +1003,12 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            current_value = Some(Value::from_attributes(e)?);
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e)?);
+                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -1110,7 +1112,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let state = State::from_attributes(e)?;
+                            let state = State::from_attributes(e, &mut interner)?;
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
@@ -1120,20 +1122,20 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             }
                         }
                         "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e)?);
+                            current_categories.push(Category::from_attributes(e, &mut interner)?);
                         }
                         "field" if in_category => {
-                            let field = Field::from_attributes(e)?;
+                            let field = Field::from_attributes(e, &mut interner)?;
                             current_fields.push(field);
                         }
                         "value" if in_entry => {
-                            let value = Value::from_attributes(e)?;
+                            let value = Value::from_attributes(e, &mut interner)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.value = Some(value);
                             }
                         }
                         "reason" if in_entry => {
-                            let reason = Reason::from_attributes(e)?;
+                            let reason = Reason::from_attributes(e, &mut interner)?;
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
@@ -1214,34 +1216,34 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///
 /// let expected = UserNative {
 ///     users: vec![User {
-///         unique_id: "1691421275437".to_string(),
+///         unique_id: "1691421275437".into(),
 ///         last_language: None,
-///         creator: "Paul Sanders(1681162687395)".to_string(),
+///         creator: "Paul Sanders(1681162687395)".into(),
 ///         number_of_forms: 1,
 ///         forms: Some(vec![Form {
-///             name: "form.name.demographics".to_string(),
+///             name: "form.name.demographics".into(),
 ///             last_modified: Some(
 ///                 DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                     .unwrap()
 ///                     .with_timezone(&Utc),
 ///             ),
-///             who_last_modified_name: Some("Paul Sanders".to_string()),
-///             who_last_modified_role: Some("Project Manager".to_string()),
+///             who_last_modified_name: Some("Paul Sanders".into()),
+///             who_last_modified_role: Some("Project Manager".into()),
 ///             when_created: 1691421341578,
 ///             has_errors: false,
 ///             has_warnings: false,
 ///             locked: false,
 ///             user: None,
 ///             date_time_changed: None,
-///             form_title: "User Demographics".to_string(),
+///             form_title: "User Demographics".into(),
 ///             form_index: 1,
 ///             form_group: None,
-///             form_state: "In-Work".to_string(),
+///             form_state: "In-Work".into(),
 ///             lock_state: None,
 ///             states: Some(vec![State {
-///                 value: "form.state.in.work".to_string(),
-///                 signer: "Paul Sanders - Project Manager".to_string(),
-///                 signer_unique_id: "1681162687395".to_string(),
+///                 value: "form.state.in.work".into(),
+///                 signer: "Paul Sanders - Project Manager".into(),
+///                 signer_unique_id: "1681162687395".into(),
 ///                 date_signed: Some(
 ///                     DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                         .unwrap()
@@ -1250,15 +1252,15 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///             }]),
 ///             categories: Some(vec![
 ///                         Category {
-///                             name: "demographics".to_string(),
-///                             category_type: "normal".to_string(),
+///                             name: "demographics".into(),
+///                             category_type: "normal".into(),
 ///                             highest_index: 0,
 ///                             fields: Some(vec![
 ///                                 Field {
-///                                     name: "address".to_string(),
-///                                     field_type: "text".to_string(),
-///                                     data_type: Some("string".to_string()),
-///                                     error_code: "undefined".to_string(),
+///                                     name: "address".into(),
+///                                     field_type: "text".into(),
+///                                     data_type: Some("string".into()),
+///                                     error_code: "undefined".into(),
 ///                                     when_created: Some(DateTime::parse_from_rfc3339("2024-01-12T20:14:09Z")
 ///                                         .unwrap()
 ///                                         .with_timezone(&Utc)),
@@ -1267,27 +1269,27 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                     comments: None,
 ///                                 },
 ///                                 Field {
-///                                     name: "email".to_string(),
-///                                     field_type: "text".to_string(),
-///                                     data_type: Some("string".to_string()),
-///                                     error_code: "undefined".to_string(),
+///                                     name: "email".into(),
+///                                     field_type: "text".into(),
+///                                     data_type: Some("string".into()),
+///                                     error_code: "undefined".into(),
 ///                                     when_created: Some(DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                                         .unwrap()
 ///                                         .with_timezone(&Utc)),
 ///                                     keep_history: true,
 ///                                     entries: Some(vec![Entry {
-///                                         entry_id: "1".to_string(),
+///                                         entry_id: "1".into(),
 ///                                         reviewed_by: None,
 ///                                         reviewed_by_unique_id: None,
 ///                                         reviewed_by_when: None,
 ///                                         value: Some(Value {
-///                                             by: "Paul Sanders".to_string(),
-///                                             by_unique_id: Some("1681162687395".to_string()),
-///                                             role: "Project Manager".to_string(),
+///                                             by: "Paul Sanders".into(),
+///                                             by_unique_id: Some("1681162687395".into()),
+///                                             role: "Project Manager".into(),
 ///                                             when: Some(DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                                                 .unwrap()
 ///                                                 .with_timezone(&Utc)),
-///                                             value: "jazz@artemis.com".to_string(),
+///                                             value: "jazz@artemis.com".into(),
 ///                                         }),
 ///                                         reason: None,
 ///                                     }]),
@@ -1296,42 +1298,42 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                             ]),
 ///                         },
 ///                         Category {
-///                             name: "Administrative".to_string(),
-///                             category_type: "normal".to_string(),
+///                             name: "Administrative".into(),
+///                             category_type: "normal".into(),
 ///                             highest_index: 0,
 ///                             fields: Some(vec![
 ///                                 Field {
-///                                     name: "study_assignment".to_string(),
-///                                     field_type: "text".to_string(),
+///                                     name: "study_assignment".into(),
+///                                     field_type: "text".into(),
 ///                                     data_type: None,
-///                                     error_code: "undefined".to_string(),
+///                                     error_code: "undefined".into(),
 ///                                     when_created: Some(DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                                         .unwrap()
 ///                                         .with_timezone(&Utc)),
 ///                                     keep_history: true,
 ///                                     entries: Some(vec![
 ///                                         Entry {
-///                                             entry_id: "1".to_string(),
+///                                             entry_id: "1".into(),
 ///                                             reviewed_by: None,
 ///                                             reviewed_by_unique_id: None,
 ///                                             reviewed_by_when: None,
 ///                                             value: Some(Value {
-///                                                 by: "set from calculation".to_string(),
+///                                                 by: "set from calculation".into(),
 ///                                                 by_unique_id: None,
-///                                                 role: "System".to_string(),
+///                                                 role: "System".into(),
 ///                                                 when: Some(DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                                                     .unwrap()
 ///                                                     .with_timezone(&Utc)),
-///                                                 value: "On 07-Aug-2023 10:15 -0500, Paul Sanders assigned user from another study".to_string(),
+///                                                 value: "On 07-Aug-2023 10:15 -0500, Paul Sanders assigned user from another study".into(),
 ///                                             }),
 ///                                             reason: Some(Reason {
-///                                                 by: "set from calculation".to_string(),
+///                                                 by: "set from calculation".into(),
 ///                                                 by_unique_id: None,
-///                                                 role: "System".to_string(),
+///                                                 role: "System".into(),
 ///                                                 when: Some(DateTime::parse_from_rfc3339("2023-08-07T15:15:41Z")
 ///                                                     .unwrap()
 ///                                                     .with_timezone(&Utc)),
-///                                                 value: "calculated value".to_string(),
+///                                                 value: "calculated value".into(),
 ///                                             }),
 ///                                         },
 ///                                     ]),
@@ -1381,6 +1383,7 @@ fn extract_user_chunks(xml: &str) -> Vec<&str> {
 
 #[allow(clippy::drain_collect)]
 fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
+    let mut interner = Interner::default();
     let mut xml_reader = Reader::from_str(user_xml);
     xml_reader.config_mut().trim_text(false);
 
@@ -1428,15 +1431,15 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             in_form = true;
                         }
                         "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e)?);
+                            current_category = Some(Category::from_attributes(e, &mut interner)?);
                             in_category = true;
                         }
                         "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e)?);
+                            current_field = Some(Field::from_attributes(e, &mut interner)?);
                             in_field = true;
                         }
                         "entry" if in_field => {
-                            current_entry = Some(Entry::from_attributes(e)?);
+                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
                         "comment" if in_field => {
@@ -1444,12 +1447,12 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             in_comment = true;
                         }
                         "value" if in_entry || in_comment => {
-                            current_value = Some(Value::from_attributes(e)?);
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
                         }
                         "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e)?);
+                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
                             in_reason = true;
                             text_content.clear();
                         }
@@ -1553,14 +1556,14 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                 if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
                     match name {
                         "state" if in_form => {
-                            let state = State::from_attributes(e)?;
+                            let state = State::from_attributes(e, &mut interner)?;
                             current_states.push(state);
                         }
                         "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e)?);
+                            current_categories.push(Category::from_attributes(e, &mut interner)?);
                         }
                         "field" if in_category => {
-                            let field = Field::from_attributes(e)?;
+                            let field = Field::from_attributes(e, &mut interner)?;
                             current_fields.push(field);
                         }
                         _ => {}
@@ -1703,33 +1706,33 @@ mod tests {
 
         let states1 = form1.states.as_ref().expect("Form 1 should have states");
         assert_eq!(states1.len(), 1);
-        assert_eq!(states1[0].value, "form.state.in.work");
+        assert_eq!(&*states1[0].value, "form.state.in.work");
 
         let categories1 = form1
             .categories
             .as_ref()
             .expect("Form 1 should have categories");
         assert_eq!(categories1.len(), 1);
-        assert_eq!(categories1[0].name, "Test Category");
+        assert_eq!(&*categories1[0].name, "Test Category");
 
         let fields1 = categories1[0]
             .fields
             .as_ref()
             .expect("Category should have fields");
         assert_eq!(fields1.len(), 1);
-        assert_eq!(fields1[0].name, "test_field");
+        assert_eq!(&*fields1[0].name, "test_field");
 
         let entries1 = fields1[0]
             .entries
             .as_ref()
             .expect("Field should have entries");
         assert_eq!(entries1.len(), 1);
-        assert_eq!(entries1[0].entry_id, "1");
+        assert_eq!(&*entries1[0].entry_id, "1");
 
         let value1 = entries1[0].value.as_ref().expect("Entry should have value");
         assert_eq!(value1.value, "Test Value");
-        assert_eq!(value1.by, "Test User");
-        assert_eq!(value1.role, "Tester");
+        assert_eq!(&*value1.by, "Test User");
+        assert_eq!(&*value1.role, "Tester");
 
         let form2 = &forms[1];
         assert_eq!(form2.name, "test.form.2");
@@ -1739,7 +1742,7 @@ mod tests {
 
         let states2 = form2.states.as_ref().expect("Form 2 should have states");
         assert_eq!(states2.len(), 1);
-        assert_eq!(states2[0].value, "form.state.complete");
+        assert_eq!(&*states2[0].value, "form.state.complete");
     }
 
     #[test]
@@ -1788,7 +1791,7 @@ mod tests {
         assert_eq!(fields.len(), 2, "Should have 2 fields");
 
         let field_with_comments = &fields[0];
-        assert_eq!(field_with_comments.name, "field_with_comments");
+        assert_eq!(&*field_with_comments.name, "field_with_comments");
 
         let comments = field_with_comments
             .comments
@@ -1803,8 +1806,8 @@ mod tests {
             .as_ref()
             .expect("Comment 1 should have value");
         assert_eq!(comment1_value.value, "First comment");
-        assert_eq!(comment1_value.by, "Test User");
-        assert_eq!(comment1_value.role, "Tester");
+        assert_eq!(&*comment1_value.by, "Test User");
+        assert_eq!(&*comment1_value.role, "Tester");
 
         let comment2 = &comments[1];
         assert_eq!(comment2.comment_id, "2");
@@ -1813,11 +1816,11 @@ mod tests {
             .as_ref()
             .expect("Comment 2 should have value");
         assert_eq!(comment2_value.value, "Second comment");
-        assert_eq!(comment2_value.by, "Another User");
-        assert_eq!(comment2_value.role, "Reviewer");
+        assert_eq!(&*comment2_value.by, "Another User");
+        assert_eq!(&*comment2_value.role, "Reviewer");
 
         let field_without_comments = &fields[1];
-        assert_eq!(field_without_comments.name, "field_without_comments");
+        assert_eq!(&*field_without_comments.name, "field_without_comments");
         assert!(
             field_without_comments.comments.is_none(),
             "Field without comments should have no comments"
