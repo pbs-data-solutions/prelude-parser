@@ -263,7 +263,7 @@ pub struct SubjectNative {
 #[pymethods]
 impl SubjectNative {
     #[getter]
-    fn sites(&self) -> PyResult<Vec<Patient>> {
+    fn patients(&self) -> PyResult<Vec<Patient>> {
         Ok(self.patients.clone())
     }
 
