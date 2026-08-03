@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "python")]
@@ -34,7 +36,7 @@ pub struct User {
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 #[cfg(not(feature = "python"))]
@@ -63,14 +65,18 @@ impl User {
     }
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() { None } else { Some(forms) };
+        self.forms = if forms.is_empty() {
+            None
+        } else {
+            Some(Arc::new(forms))
+        };
     }
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all, skip_from_py_object)]
+#[pyclass(skip_from_py_object)]
 pub struct User {
     #[serde(rename = "uniqueId")]
     #[serde(alias = "@uniqueId")]
@@ -92,7 +98,7 @@ pub struct User {
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 #[cfg(feature = "python")]
@@ -121,7 +127,11 @@ impl User {
     }
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() { None } else { Some(forms) };
+        self.forms = if forms.is_empty() {
+            None
+        } else {
+            Some(Arc::new(forms))
+        };
     }
 }
 
@@ -144,8 +154,13 @@ impl User {
     }
 
     #[getter]
+    fn number_of_forms(&self) -> PyResult<usize> {
+        Ok(self.number_of_forms)
+    }
+
+    #[getter]
     fn forms(&self) -> PyResult<Option<Vec<Form>>> {
-        Ok(self.forms.clone())
+        Ok(self.forms.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -157,7 +172,7 @@ impl User {
 
         let mut form_dicts = Vec::new();
         if let Some(forms) = &self.forms {
-            for form in forms {
+            for form in forms.iter() {
                 let form_dict = form.to_dict(py)?;
                 form_dicts.push(form_dict);
             }

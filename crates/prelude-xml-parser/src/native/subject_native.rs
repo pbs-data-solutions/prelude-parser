@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 
 #[cfg(feature = "python")]
@@ -38,7 +40,7 @@ pub struct Patient {
     pub last_language: Option<String>,
     #[serde(rename = "numberOfForms")]
     pub number_of_forms: usize,
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 impl Patient {
@@ -78,7 +80,11 @@ impl Patient {
     }
 
     pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() { None } else { Some(forms) };
+        self.forms = if forms.is_empty() {
+            None
+        } else {
+            Some(Arc::new(forms))
+        };
     }
 }
 
@@ -124,7 +130,7 @@ pub struct Patient {
     pub number_of_forms: usize,
 
     #[serde(alias = "form")]
-    pub forms: Option<Vec<Form>>,
+    pub forms: Option<Arc<Vec<Form>>>,
 }
 
 #[cfg(feature = "python")]
@@ -175,7 +181,7 @@ impl Patient {
 
     #[getter]
     fn forms(&self) -> PyResult<Option<Vec<Form>>> {
-        Ok(self.forms.clone())
+        Ok(self.forms.as_deref().cloned())
     }
 
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
@@ -197,7 +203,7 @@ impl Patient {
 
         let mut form_dicts = Vec::new();
         if let Some(forms) = &self.forms {
-            for form in forms {
+            for form in forms.iter() {
                 let form_dict = form.to_dict(py)?;
                 form_dicts.push(form_dict);
             }

@@ -5,6 +5,9 @@ use chrono::{Datelike, Timelike};
 
 use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
+#[cfg(feature = "python")]
+use pyo3::{prelude::*, types::PyDateTime};
+
 use quick_xml::{
     escape::resolve_predefined_entity,
     events::{BytesRef, BytesStart},
@@ -233,9 +236,6 @@ pub(crate) fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Er
         ))
     }
 }
-
-#[cfg(feature = "python")]
-use pyo3::{prelude::*, types::PyDateTime};
 
 pub fn deserialize_empty_string_as_none_datetime<'de, D>(
     deserializer: D,

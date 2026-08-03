@@ -1,7 +1,7 @@
 pub mod errors;
 pub mod native;
 
-use std::{fs::read_to_string, path::Path};
+use std::{fs::read_to_string, path::Path, sync::Arc};
 
 use rayon::prelude::*;
 
@@ -144,7 +144,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }]),
+///                 }].into()),
 ///                 categories: Some(vec![
 ///                     Category {
 ///                         name: "Demographics".into(),
@@ -193,7 +193,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                         value: "Some Company".into(),
 ///                                     }),
 ///                                     reason: None,
-///                                 }]),
+///                                 }].into()),
 ///                                 comments: None,
 ///                             },
 ///                             Field {
@@ -264,10 +264,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                             value: "calculated value".into(),
 ///                                         }),
 ///                                     },
-///                                 ]),
+///                                 ].into()),
 ///                                 comments: None,
 ///                             },
-///                         ]),
+///                         ].into()),
 ///                     },
 ///                     Category {
 ///                         name: "Enrollment".into(),
@@ -316,7 +316,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                         value: "Yes".into(),
 ///                                     }),
 ///                                     reason: None,
-///                                 }]),
+///                                 }].into()),
 ///                                 comments: None,
 ///                             },
 ///                             Field {
@@ -333,10 +333,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 entries: None,
 ///                                 comments: None,
 ///                             },
-///                         ]),
+///                         ].into()),
 ///                     },
-///                 ]),
-///             }]),
+///                 ].into()),
+///             }].into()),
 ///         },
 ///         Site {
 ///             name: "Artemis".into(),
@@ -377,7 +377,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }]),
+///                 }].into()),
 ///                 categories: Some(vec![Category {
 ///                     name: "Demographics".into(),
 ///                     category_type: "normal".into(),
@@ -406,7 +406,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 value: "1111 Moon Drive".into(),
 ///                             }),
 ///                             reason: None,
-///                         }]),
+///                         }].into()),
 ///                         comments: Some(vec![Comment {
 ///                             comment_id: "1".into(),
 ///                             value: Some(Value {
@@ -418,10 +418,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     .with_timezone(&Utc)),
 ///                                 value: "Some comment".into(),
 ///                             }),
-///                         }]),
-///                     }]),
-///                 }]),
-///             }]),
+///                         }].into()),
+///                     }].into()),
+///                 }].into()),
+///             }].into()),
 ///         },
 ///     ],
 /// };
@@ -540,7 +540,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }]),
+///                 }].into()),
 ///                 categories: Some(vec![Category {
 ///                     name: "Demographics".into(),
 ///                     category_type: "normal".into(),
@@ -569,11 +569,11 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                                 value: "Labrador".into(),
 ///                             }),
 ///                             reason: None,
-///                         }]),
+///                         }].into()),
 ///                         comments: None,
-///                     }]),
-///                 }]),
-///             }]),
+///                     }].into()),
+///                 }].into()),
+///             }].into()),
 ///         },
 ///         Patient {
 ///             patient_id: "DEF-002".into(),
@@ -613,7 +613,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             .unwrap()
 ///                             .with_timezone(&Utc),
 ///                     ),
-///                 }]),
+///                 }].into()),
 ///                 categories: Some(vec![Category {
 ///                     name: "Demographics".into(),
 ///                     category_type: "normal".into(),
@@ -642,11 +642,11 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                                 value: "Labrador".into(),
 ///                             }),
 ///                             reason: None,
-///                         }]),
+///                         }].into()),
 ///                         comments: None,
-///                     }]),
-///                 }]),
-///             }]),
+///                     }].into()),
+///                 }].into()),
+///             }].into()),
 ///         },
 ///     ],
 /// };
@@ -794,10 +794,12 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(current_states.drain(..).collect());
+                                    form.states =
+                                        Some(Arc::new(current_states.drain(..).collect()));
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(current_categories.drain(..).collect());
+                                    form.categories =
+                                        Some(Arc::new(current_categories.drain(..).collect()));
                                 }
                                 current_forms.push(form);
                             }
@@ -806,7 +808,8 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(current_fields.drain(..).collect());
+                                    category.fields =
+                                        Some(Arc::new(current_fields.drain(..).collect()));
                                 }
                                 current_categories.push(category);
                             }
@@ -815,10 +818,12 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(current_entries.drain(..).collect());
+                                    field.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(current_comments.drain(..).collect());
+                                    field.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
                                 }
                                 current_fields.push(field);
                             }
@@ -1040,10 +1045,12 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(current_states.drain(..).collect());
+                                    form.states =
+                                        Some(Arc::new(current_states.drain(..).collect()));
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(current_categories.drain(..).collect());
+                                    form.categories =
+                                        Some(Arc::new(current_categories.drain(..).collect()));
                                 }
                                 current_forms.push(form);
                             }
@@ -1052,7 +1059,8 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(current_fields.drain(..).collect());
+                                    category.fields =
+                                        Some(Arc::new(current_fields.drain(..).collect()));
                                 }
                                 current_categories.push(category);
                             }
@@ -1061,10 +1069,12 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(current_entries.drain(..).collect());
+                                    field.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(current_comments.drain(..).collect());
+                                    field.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
                                 }
                                 current_fields.push(field);
                             }
@@ -1249,7 +1259,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                         .unwrap()
 ///                         .with_timezone(&Utc),
 ///                 ),
-///             }]),
+///             }].into()),
 ///             categories: Some(vec![
 ///                         Category {
 ///                             name: "demographics".into(),
@@ -1292,10 +1302,10 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                             value: "jazz@artemis.com".into(),
 ///                                         }),
 ///                                         reason: None,
-///                                     }]),
+///                                     }].into()),
 ///                                     comments: None,
 ///                                 },
-///                             ]),
+///                             ].into()),
 ///                         },
 ///                         Category {
 ///                             name: "Administrative".into(),
@@ -1336,13 +1346,13 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                                 value: "calculated value".into(),
 ///                                             }),
 ///                                         },
-///                                     ]),
+///                                     ].into()),
 ///                                     comments: None,
 ///                                 },
-///                             ]),
+///                             ].into()),
 ///                         },
-///             ]),
-///         }]),
+///             ].into()),
+///         }].into()),
 ///     }],
 /// };
 ///
@@ -1484,10 +1494,12 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "form" if in_form => {
                             if let Some(mut form) = current_form.take() {
                                 if !current_states.is_empty() {
-                                    form.states = Some(current_states.drain(..).collect());
+                                    form.states =
+                                        Some(Arc::new(current_states.drain(..).collect()));
                                 }
                                 if !current_categories.is_empty() {
-                                    form.categories = Some(current_categories.drain(..).collect());
+                                    form.categories =
+                                        Some(Arc::new(current_categories.drain(..).collect()));
                                 }
                                 current_forms.push(form);
                             }
@@ -1496,7 +1508,8 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "category" if in_category => {
                             if let Some(mut category) = current_category.take() {
                                 if !current_fields.is_empty() {
-                                    category.fields = Some(current_fields.drain(..).collect());
+                                    category.fields =
+                                        Some(Arc::new(current_fields.drain(..).collect()));
                                 }
                                 current_categories.push(category);
                             }
@@ -1505,10 +1518,12 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "field" if in_field => {
                             if let Some(mut field) = current_field.take() {
                                 if !current_entries.is_empty() {
-                                    field.entries = Some(current_entries.drain(..).collect());
+                                    field.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
                                 }
                                 if !current_comments.is_empty() {
-                                    field.comments = Some(current_comments.drain(..).collect());
+                                    field.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
                                 }
                                 current_fields.push(field);
                             }
