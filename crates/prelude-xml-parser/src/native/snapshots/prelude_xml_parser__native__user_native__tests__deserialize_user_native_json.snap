@@ -1,5 +1,5 @@
 ---
-source: src/native/user_native.rs
+source: crates/prelude-xml-parser/src/native/user_native.rs
 expression: result
 ---
 users:
@@ -27,7 +27,7 @@ users:
             signer: Paul Sanders - Project Manager
             signerUniqueId: "1681162687395"
             dateSigned: "2023-08-07T15:15:41Z"
-        lock_state: ~
+        lock_states: ~
         categories:
           - name: demographics
             categoryType: normal

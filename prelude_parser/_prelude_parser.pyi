@@ -47,6 +47,8 @@ class LockState:
     user_unique_id: str | None
     date_time_changed: datetime | None
 
+    def to_dict(self) -> dict: ...
+
 class Field:
     name: str
     field_type: str
@@ -54,7 +56,6 @@ class Field:
     error_code: str
     when_created: datetime | None
     keep_history: bool
-    lock_state: LockState | None
     entries: list[Entry] | None
     comments: list[Comment] | None
 
@@ -91,7 +92,7 @@ class Form:
     form_index: int
     form_group: str | None
     form_state: str
-    lock_state: LockState | None
+    lock_states: list[LockState] | None
     states: list[State] | None
     categories: list[Category] | None
 

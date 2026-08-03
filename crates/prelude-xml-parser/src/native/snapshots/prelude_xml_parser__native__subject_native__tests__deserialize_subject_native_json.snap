@@ -1,5 +1,5 @@
 ---
-source: src/native/subject_native.rs
+source: crates/prelude-xml-parser/src/native/subject_native.rs
 expression: result
 ---
 patients:
@@ -31,7 +31,7 @@ patients:
             signer: Paul Sanders - Project Manager
             signerUniqueId: "1681162687395"
             dateSigned: "2023-04-15T16:09:02Z"
-        lock_state: ~
+        lock_states: ~
         categories:
           - name: Demographics
             categoryType: normal
@@ -84,7 +84,7 @@ patients:
             signer: Paul Sanders - Project Manager
             signerUniqueId: "1681162687395"
             dateSigned: "2023-04-16T16:10:02Z"
-        lock_state: ~
+        lock_states: ~
         categories:
           - name: Demographics
             categoryType: normal

@@ -134,7 +134,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 form_index: 1,
 ///                 form_group: Some("Demographic".into()),
 ///                 form_state: "In-Work".into(),
-///                 lock_state: None,
+///                 lock_states: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".into(),
 ///                     signer: "Paul Sanders - Project Manager".into(),
@@ -367,7 +367,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                 form_index: 1,
 ///                 form_group: Some("Demographic".into()),
 ///                 form_state: "In-Work".into(),
-///                 lock_state: None,
+///                 lock_states: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".into(),
 ///                     signer: "Paul Sanders - Project Manager".into(),
@@ -530,7 +530,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 form_index: 1,
 ///                 form_group: Some("Day 0".into()),
 ///                 form_state: "In-Work".into(),
-///                 lock_state: None,
+///                 lock_states: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".into(),
 ///                     signer: "Paul Sanders - Project Manager".into(),
@@ -603,7 +603,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                 form_index: 1,
 ///                 form_group: Some("Day 0".into()),
 ///                 form_state: "In-Work".into(),
-///                 lock_state: None,
+///                 lock_states: None,
 ///                 states: Some(vec![State {
 ///                     value: "form.state.in.work".into(),
 ///                     signer: "Paul Sanders - Project Manager".into(),
@@ -695,6 +695,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut current_forms: Vec<Form> = Vec::new();
     let mut current_form: Option<Form> = None;
     let mut current_states: Vec<State> = Vec::new();
+    let mut current_lock_states: Vec<LockState> = Vec::new();
     let mut current_categories: Vec<Category> = Vec::new();
     let mut current_category: Option<Category> = None;
     let mut current_fields: Vec<Field> = Vec::new();
@@ -735,6 +736,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             current_form = Some(Form::from_attributes(e)?);
                             in_form = true;
                             current_states.clear();
+                            current_lock_states.clear();
                             current_categories.clear();
                         }
                         "category" if in_form => {
@@ -796,6 +798,10 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                                 if !current_states.is_empty() {
                                     form.states =
                                         Some(Arc::new(current_states.drain(..).collect()));
+                                }
+                                if !current_lock_states.is_empty() {
+                                    form.lock_states =
+                                        Some(Arc::new(current_lock_states.drain(..).collect()));
                                 }
                                 if !current_categories.is_empty() {
                                     form.categories =
@@ -875,10 +881,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
-                            let lock_state = LockState::from_attributes(e)?;
-                            if let Some(ref mut form) = current_form {
-                                form.lock_state = Some(lock_state);
-                            }
+                            current_lock_states.push(LockState::from_attributes(e)?);
                         }
                         "category" if in_form => {
                             current_categories.push(Category::from_attributes(e, &mut interner)?);
@@ -946,6 +949,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut current_forms: Vec<Form> = Vec::new();
     let mut current_form: Option<Form> = None;
     let mut current_states: Vec<State> = Vec::new();
+    let mut current_lock_states: Vec<LockState> = Vec::new();
     let mut current_categories: Vec<Category> = Vec::new();
     let mut current_category: Option<Category> = None;
     let mut current_fields: Vec<Field> = Vec::new();
@@ -986,6 +990,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             current_form = Some(Form::from_attributes(e)?);
                             in_form = true;
                             current_states.clear();
+                            current_lock_states.clear();
                             current_categories.clear();
                         }
                         "category" if in_form => {
@@ -1047,6 +1052,10 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                                 if !current_states.is_empty() {
                                     form.states =
                                         Some(Arc::new(current_states.drain(..).collect()));
+                                }
+                                if !current_lock_states.is_empty() {
+                                    form.lock_states =
+                                        Some(Arc::new(current_lock_states.drain(..).collect()));
                                 }
                                 if !current_categories.is_empty() {
                                     form.categories =
@@ -1126,10 +1135,7 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             current_states.push(state);
                         }
                         "lockState" if in_form => {
-                            let lock_state = LockState::from_attributes(e)?;
-                            if let Some(ref mut form) = current_form {
-                                form.lock_state = Some(lock_state);
-                            }
+                            current_lock_states.push(LockState::from_attributes(e)?);
                         }
                         "category" if in_form => {
                             current_categories.push(Category::from_attributes(e, &mut interner)?);
@@ -1249,7 +1255,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///             form_index: 1,
 ///             form_group: None,
 ///             form_state: "In-Work".into(),
-///             lock_state: None,
+///             lock_states: None,
 ///             states: Some(vec![State {
 ///                 value: "form.state.in.work".into(),
 ///                 signer: "Paul Sanders - Project Manager".into(),
@@ -1401,6 +1407,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut current_forms: Vec<Form> = Vec::new();
     let mut current_form: Option<Form> = None;
     let mut current_states: Vec<State> = Vec::new();
+    let mut current_lock_states: Vec<LockState> = Vec::new();
     let mut current_categories: Vec<Category> = Vec::new();
     let mut current_category: Option<Category> = None;
     let mut current_fields: Vec<Field> = Vec::new();
@@ -1497,6 +1504,10 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                                     form.states =
                                         Some(Arc::new(current_states.drain(..).collect()));
                                 }
+                                if !current_lock_states.is_empty() {
+                                    form.lock_states =
+                                        Some(Arc::new(current_lock_states.drain(..).collect()));
+                                }
                                 if !current_categories.is_empty() {
                                     form.categories =
                                         Some(Arc::new(current_categories.drain(..).collect()));
@@ -1582,10 +1593,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             current_fields.push(field);
                         }
                         "lockState" if in_form => {
-                            let lock_state = LockState::from_attributes(e)?;
-                            if let Some(ref mut form) = current_form {
-                                form.lock_state = Some(lock_state);
-                            }
+                            current_lock_states.push(LockState::from_attributes(e)?);
                         }
                         "value" if in_entry => {
                             let value = Value::from_attributes(e, &mut interner)?;
