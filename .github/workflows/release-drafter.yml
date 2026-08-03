@@ -10,7 +10,7 @@ jobs:
     name: Python release draft
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v7.6.0
+      - uses: release-drafter/release-drafter@v7.7.0
         with:
           config-name: release-draft-template.yml
         env:
@@ -20,7 +20,7 @@ jobs:
     name: Rust release draft
     runs-on: ubuntu-latest
     steps:
-      - uses: release-drafter/release-drafter@v7.6.0
+      - uses: release-drafter/release-drafter@v7.7.0
         with:
           config-name: rust-release-draft-template.yml
         env:
