@@ -110,6 +110,25 @@ fn add_item<'py>(
     Ok(form_data)
 }
 
+/// Map a `prelude-xml-parser` error onto the matching Python exception.
+///
+/// The crate distinguishes a missing file and a wrong file type from an actual parse failure, so
+/// the bindings surface the same distinction rather than collapsing everything into
+/// `ParsingError`. Messages match those raised by the flat-file path.
+fn native_error(e: prelude_xml_parser::errors::Error) -> PyErr {
+    use prelude_xml_parser::errors::Error as NativeError;
+
+    match e {
+        NativeError::FileNotFound(path) => {
+            FileNotFoundError::new_err(format!("File not found: {path:?}"))
+        }
+        NativeError::InvalidFileType(path) => {
+            InvalidFileTypeError::new_err(format!("{path:?} is not an xml file"))
+        }
+        other => ParsingError::new_err(format!("Error parsing xml file: {other:?}")),
+    }
+}
+
 fn xml_error(e: impl std::fmt::Display) -> PyErr {
     ParsingError::new_err(format!("Error parsing xml file: {e}"))
 }
@@ -418,9 +437,7 @@ fn parse_site_native_file(py: Python, xml_file: PathBuf) -> PyResult<SiteNative>
     let result = py.detach(|| parse_site_native_file_rs(&xml_file));
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {e:?}"
-        ))),
+        Err(e) => Err(native_error(e)),
     }
 }
 
@@ -442,9 +459,7 @@ fn parse_subject_native_file(py: Python, xml_file: PathBuf) -> PyResult<SubjectN
 
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {e:?}"
-        ))),
+        Err(e) => Err(native_error(e)),
     }
 }
 
@@ -465,9 +480,7 @@ fn parse_user_native_file(py: Python, xml_file: PathBuf) -> PyResult<UserNative>
 
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!(
-            "Error parsing xml file: {e:?}"
-        ))),
+        Err(e) => Err(native_error(e)),
     }
 }
 
