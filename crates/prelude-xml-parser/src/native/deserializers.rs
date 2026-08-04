@@ -27,11 +27,13 @@ pub(crate) struct Interner {
 
 impl Interner {
     pub(crate) fn intern(&mut self, value: &str) -> Arc<str> {
-        if let Some(existing) = self.seen.get(value) {
+        let value = unescape_attribute(value);
+
+        if let Some(existing) = self.seen.get(value.as_ref()) {
             return existing.clone();
         }
 
-        let shared: Arc<str> = Arc::from(value);
+        let shared: Arc<str> = Arc::from(value.as_ref());
         self.seen.insert(shared.clone());
 
         shared
@@ -44,6 +46,25 @@ impl Interner {
             Some(self.intern(value))
         }
     }
+}
+
+/// Resolve entity references in an attribute value.
+///
+/// quick-xml exposes attribute values with their references intact, so they have to be resolved
+/// before the value is stored. A value with no `&` is returned borrowed, so the overwhelmingly
+/// common case does not allocate. A value quick-xml cannot unescape is kept verbatim rather than
+/// rejected, matching how unresolvable references are handled in text content.
+pub(crate) fn unescape_attribute(value: &str) -> Cow<'_, str> {
+    if !value.contains('&') {
+        return Cow::Borrowed(value);
+    }
+
+    quick_xml::escape::unescape(value).unwrap_or(Cow::Borrowed(value))
+}
+
+/// Convert an attribute into an owned `String`, resolving any entity references.
+pub(crate) fn attribute_string(value: &str) -> String {
+    unescape_attribute(value).into_owned()
 }
 
 pub(crate) fn decode_error(e: impl std::fmt::Display) -> crate::errors::Error {
@@ -158,7 +179,7 @@ pub(crate) fn required_attribute(
     name: &str,
 ) -> Result<String, crate::errors::Error> {
     match value {
-        Some(value) => Ok(value.to_string()),
+        Some(value) => Ok(attribute_string(value)),
         None => Err(crate::errors::Error::ParsingError(
             quick_xml::de::DeError::Custom(format!("Missing {}", name)),
         )),
@@ -170,7 +191,7 @@ pub(crate) fn optional_string(s: &str) -> Option<String> {
     if s.is_empty() {
         None
     } else {
-        Some(s.to_string())
+        Some(attribute_string(s))
     }
 }
 

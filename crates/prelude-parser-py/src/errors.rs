@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
-use pyo3::create_exception;
-use pyo3::exceptions::PyException;
+use pyo3::{create_exception, exceptions::PyException};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
