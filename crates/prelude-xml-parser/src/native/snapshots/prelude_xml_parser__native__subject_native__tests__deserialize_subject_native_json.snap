@@ -56,6 +56,8 @@ patients:
                       value: Labrador
                     reason: ~
                 comments: ~
+                queries: ~
+            files: ~
   - patientId: DEF-002
     uniqueId: "1681574905820"
     whenCreated: "2023-04-16T16:10:02Z"
@@ -109,3 +111,5 @@ patients:
                       value: Labrador
                     reason: ~
                 comments: ~
+                queries: ~
+            files: ~

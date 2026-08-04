@@ -49,6 +49,32 @@ class LockState:
 
     def to_dict(self) -> dict: ...
 
+class Query:
+    query_id: str
+    reviewed_by: str | None
+    reviewed_by_unique_id: str | None
+    reviewed_by_when: datetime | None
+    value: Value | None
+    answer: Value | None
+
+    def to_dict(self) -> dict: ...
+
+class File:
+    name: str
+    file_type: str
+    data_type: str | None
+    error_code: str
+    when_created: datetime | None
+    keep_history: bool
+    file_location: str | None
+    size: int | None
+    entries: list[Entry] | None
+    comments: list[Comment] | None
+    queries: list[Query] | None
+    download_history: list[Comment] | None
+
+    def to_dict(self) -> dict: ...
+
 class Field:
     name: str
     field_type: str
@@ -58,6 +84,7 @@ class Field:
     keep_history: bool
     entries: list[Entry] | None
     comments: list[Comment] | None
+    queries: list[Query] | None
 
     def to_dict(self) -> dict: ...
 
@@ -66,6 +93,7 @@ class Category:
     category_type: str
     highest_index: int
     fields: list[Field] | None
+    files: list[File] | None
 
     def to_dict(self) -> dict: ...
 

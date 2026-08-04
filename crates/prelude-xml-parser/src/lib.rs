@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use crate::{
     errors::Error,
     native::{
-        common::{Category, Comment, Entry, Field, LockState, Reason, State, Value},
+        common::{Category, Comment, Entry, Field, File, LockState, Query, Reason, State, Value},
         deserializers::{decode_error, push_general_ref, take_trimmed, Interner},
         site_native::{Site, SiteNative},
         subject_native::{Form, Patient, SubjectNative},
@@ -165,6 +165,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: None,
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                             Field {
 ///                                 name: "company".into(),
@@ -196,6 +197,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     reason: None,
 ///                                 }].into()),
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                             Field {
 ///                                 name: "site_code_name".into(),
@@ -267,8 +269,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     },
 ///                                 ].into()),
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                         ].into()),
+///                         files: None,
 ///                     },
 ///                     Category {
 ///                         name: "Enrollment".into(),
@@ -288,6 +292,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: None,
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                             Field {
 ///                                 name: "enrollment_open".into(),
@@ -319,6 +324,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     reason: None,
 ///                                 }].into()),
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                             Field {
 ///                                 name: "enrollment_open_date".into(),
@@ -333,8 +339,10 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 keep_history: true,
 ///                                 entries: None,
 ///                                 comments: None,
+///                                 queries: None,
 ///                             },
 ///                         ].into()),
+///                         files: None,
 ///                     },
 ///                 ].into()),
 ///             }].into()),
@@ -420,7 +428,9 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                 value: "Some comment".into(),
 ///                             }),
 ///                         }].into()),
+///                         queries: None,
 ///                     }].into()),
+///                     files: None,
 ///                 }].into()),
 ///             }].into()),
 ///         },
@@ -572,7 +582,9 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             reason: None,
 ///                         }].into()),
 ///                         comments: None,
+///                         queries: None,
 ///                     }].into()),
+///                     files: None,
 ///                 }].into()),
 ///             }].into()),
 ///         },
@@ -645,7 +657,9 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                             reason: None,
 ///                         }].into()),
 ///                         comments: None,
+///                         queries: None,
 ///                     }].into()),
+///                     files: None,
 ///                 }].into()),
 ///             }].into()),
 ///         },
@@ -726,6 +740,12 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut current_entry: Option<Entry> = None;
     let mut current_comments: Vec<Comment> = Vec::new();
     let mut current_comment: Option<Comment> = None;
+    let mut current_files: Vec<File> = Vec::new();
+    let mut current_file: Option<File> = None;
+    let mut current_queries: Vec<Query> = Vec::new();
+    let mut current_query: Option<Query> = None;
+    let mut current_download_history: Vec<Comment> = Vec::new();
+    let mut current_download_entry: Option<Comment> = None;
     let mut current_value: Option<Value> = None;
     let mut current_reason: Option<Reason> = None;
     let mut text_content = String::new();
@@ -734,6 +754,9 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     let mut in_field = false;
     let mut in_entry = false;
     let mut in_comment = false;
+    let mut in_file = false;
+    let mut in_query = false;
+    let mut in_download_history = false;
     let mut in_value = false;
     let mut in_reason = false;
 
@@ -771,16 +794,38 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
+                            current_queries.clear();
                         }
-                        "entry" if in_field => {
+                        "file" if in_category => {
+                            current_file = Some(File::from_attributes(e, &mut interner)?);
+                            in_file = true;
+                            current_entries.clear();
+                            current_comments.clear();
+                            current_queries.clear();
+                            current_download_history.clear();
+                        }
+                        "entry" if in_field || in_file => {
                             current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
-                        "comment" if in_field => {
+                        "comment" if in_field || in_file => {
                             current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
-                        "value" if in_entry || in_comment => {
+                        "query" if in_field || in_file => {
+                            current_query = Some(Query::from_attributes(e, &mut interner)?);
+                            in_query = true;
+                        }
+                        "downloadHistory" if in_file => {
+                            current_download_entry = Some(Comment::from_attributes(e)?);
+                            in_download_history = true;
+                        }
+                        "answer" if in_query => {
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
+                            in_value = true;
+                            text_content.clear();
+                        }
+                        "value" if in_entry || in_comment || in_query || in_download_history => {
                             current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
@@ -839,6 +884,10 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                                     category.fields =
                                         Some(Arc::new(current_fields.drain(..).collect()));
                                 }
+                                if !current_files.is_empty() {
+                                    category.files =
+                                        Some(Arc::new(current_files.drain(..).collect()));
+                                }
                                 current_categories.push(category);
                             }
                             in_category = false;
@@ -853,9 +902,48 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                                     field.comments =
                                         Some(Arc::new(current_comments.drain(..).collect()));
                                 }
+                                if !current_queries.is_empty() {
+                                    field.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
                                 current_fields.push(field);
                             }
                             in_field = false;
+                        }
+                        "file" if in_file => {
+                            if let Some(mut file) = current_file.take() {
+                                if !current_entries.is_empty() {
+                                    file.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
+                                }
+                                if !current_comments.is_empty() {
+                                    file.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
+                                }
+                                if !current_queries.is_empty() {
+                                    file.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
+                                if !current_download_history.is_empty() {
+                                    file.download_history = Some(Arc::new(
+                                        current_download_history.drain(..).collect(),
+                                    ));
+                                }
+                                current_files.push(file);
+                            }
+                            in_file = false;
+                        }
+                        "query" if in_query => {
+                            if let Some(query) = current_query.take() {
+                                current_queries.push(query);
+                            }
+                            in_query = false;
+                        }
+                        "downloadHistory" if in_download_history => {
+                            if let Some(download) = current_download_entry.take() {
+                                current_download_history.push(download);
+                            }
+                            in_download_history = false;
                         }
                         "entry" if in_entry => {
                             if let Some(entry) = current_entry.take() {
@@ -869,10 +957,24 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                             }
                             in_comment = false;
                         }
+                        "answer" if in_value => {
+                            if let Some(mut value) = current_value.take() {
+                                value.value = take_trimmed(&mut text_content);
+                                if let Some(ref mut query) = current_query {
+                                    query.answer = Some(value);
+                                }
+                            }
+                            in_value = false;
+                        }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
                                 value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
+                                // innermost owner wins; these never nest within one another
+                                if let Some(ref mut download) = current_download_entry {
+                                    download.value = Some(value);
+                                } else if let Some(ref mut query) = current_query {
+                                    query.value = Some(value);
+                                } else if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
                                     comment.value = Some(value);
@@ -910,6 +1012,9 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
                         }
                         "field" if in_category => {
                             current_fields.push(Field::from_attributes(e, &mut interner)?);
+                        }
+                        "file" if in_category => {
+                            current_files.push(File::from_attributes(e, &mut interner)?);
                         }
                         "value" if in_entry => {
                             let value = Value::from_attributes(e, &mut interner)?;
@@ -962,6 +1067,12 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut current_entry: Option<Entry> = None;
     let mut current_comments: Vec<Comment> = Vec::new();
     let mut current_comment: Option<Comment> = None;
+    let mut current_files: Vec<File> = Vec::new();
+    let mut current_file: Option<File> = None;
+    let mut current_queries: Vec<Query> = Vec::new();
+    let mut current_query: Option<Query> = None;
+    let mut current_download_history: Vec<Comment> = Vec::new();
+    let mut current_download_entry: Option<Comment> = None;
     let mut current_value: Option<Value> = None;
     let mut current_reason: Option<Reason> = None;
     let mut text_content = String::new();
@@ -970,6 +1081,9 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
     let mut in_field = false;
     let mut in_entry = false;
     let mut in_comment = false;
+    let mut in_file = false;
+    let mut in_query = false;
+    let mut in_download_history = false;
     let mut in_value = false;
     let mut in_reason = false;
 
@@ -1007,16 +1121,38 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             in_field = true;
                             current_entries.clear();
                             current_comments.clear();
+                            current_queries.clear();
                         }
-                        "entry" if in_field => {
+                        "file" if in_category => {
+                            current_file = Some(File::from_attributes(e, &mut interner)?);
+                            in_file = true;
+                            current_entries.clear();
+                            current_comments.clear();
+                            current_queries.clear();
+                            current_download_history.clear();
+                        }
+                        "entry" if in_field || in_file => {
                             current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
-                        "comment" if in_field => {
+                        "comment" if in_field || in_file => {
                             current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
-                        "value" if in_entry || in_comment => {
+                        "query" if in_field || in_file => {
+                            current_query = Some(Query::from_attributes(e, &mut interner)?);
+                            in_query = true;
+                        }
+                        "downloadHistory" if in_file => {
+                            current_download_entry = Some(Comment::from_attributes(e)?);
+                            in_download_history = true;
+                        }
+                        "answer" if in_query => {
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
+                            in_value = true;
+                            text_content.clear();
+                        }
+                        "value" if in_entry || in_comment || in_query || in_download_history => {
                             current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
@@ -1075,6 +1211,10 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                                     category.fields =
                                         Some(Arc::new(current_fields.drain(..).collect()));
                                 }
+                                if !current_files.is_empty() {
+                                    category.files =
+                                        Some(Arc::new(current_files.drain(..).collect()));
+                                }
                                 current_categories.push(category);
                             }
                             in_category = false;
@@ -1089,9 +1229,48 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                                     field.comments =
                                         Some(Arc::new(current_comments.drain(..).collect()));
                                 }
+                                if !current_queries.is_empty() {
+                                    field.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
                                 current_fields.push(field);
                             }
                             in_field = false;
+                        }
+                        "file" if in_file => {
+                            if let Some(mut file) = current_file.take() {
+                                if !current_entries.is_empty() {
+                                    file.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
+                                }
+                                if !current_comments.is_empty() {
+                                    file.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
+                                }
+                                if !current_queries.is_empty() {
+                                    file.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
+                                if !current_download_history.is_empty() {
+                                    file.download_history = Some(Arc::new(
+                                        current_download_history.drain(..).collect(),
+                                    ));
+                                }
+                                current_files.push(file);
+                            }
+                            in_file = false;
+                        }
+                        "query" if in_query => {
+                            if let Some(query) = current_query.take() {
+                                current_queries.push(query);
+                            }
+                            in_query = false;
+                        }
+                        "downloadHistory" if in_download_history => {
+                            if let Some(download) = current_download_entry.take() {
+                                current_download_history.push(download);
+                            }
+                            in_download_history = false;
                         }
                         "entry" if in_entry => {
                             if let Some(entry) = current_entry.take() {
@@ -1105,10 +1284,24 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                             }
                             in_comment = false;
                         }
+                        "answer" if in_value => {
+                            if let Some(mut value) = current_value.take() {
+                                value.value = take_trimmed(&mut text_content);
+                                if let Some(ref mut query) = current_query {
+                                    query.answer = Some(value);
+                                }
+                            }
+                            in_value = false;
+                        }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
                                 value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
+                                // innermost owner wins; these never nest within one another
+                                if let Some(ref mut download) = current_download_entry {
+                                    download.value = Some(value);
+                                } else if let Some(ref mut query) = current_query {
+                                    query.value = Some(value);
+                                } else if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
                                     comment.value = Some(value);
@@ -1147,6 +1340,9 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
                         "field" if in_category => {
                             let field = Field::from_attributes(e, &mut interner)?;
                             current_fields.push(field);
+                        }
+                        "file" if in_category => {
+                            current_files.push(File::from_attributes(e, &mut interner)?);
                         }
                         "value" if in_entry => {
                             let value = Value::from_attributes(e, &mut interner)?;
@@ -1287,6 +1483,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                     keep_history: true,
 ///                                     entries: None,
 ///                                     comments: None,
+///                                     queries: None,
 ///                                 },
 ///                                 Field {
 ///                                     name: "email".into(),
@@ -1314,8 +1511,10 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         reason: None,
 ///                                     }].into()),
 ///                                     comments: None,
+///                                     queries: None,
 ///                                 },
 ///                             ].into()),
+///                             files: None,
 ///                         },
 ///                         Category {
 ///                             name: "Administrative".into(),
@@ -1358,8 +1557,10 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                         },
 ///                                     ].into()),
 ///                                     comments: None,
+///                                     queries: None,
 ///                                 },
 ///                             ].into()),
+///                             files: None,
 ///                         },
 ///             ].into()),
 ///         }].into()),
@@ -1402,6 +1603,12 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut current_entry: Option<Entry> = None;
     let mut current_comments: Vec<Comment> = Vec::new();
     let mut current_comment: Option<Comment> = None;
+    let mut current_files: Vec<File> = Vec::new();
+    let mut current_file: Option<File> = None;
+    let mut current_queries: Vec<Query> = Vec::new();
+    let mut current_query: Option<Query> = None;
+    let mut current_download_history: Vec<Comment> = Vec::new();
+    let mut current_download_entry: Option<Comment> = None;
     let mut current_value: Option<Value> = None;
     let mut current_reason: Option<Reason> = None;
     let mut text_content = String::new();
@@ -1410,6 +1617,9 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     let mut in_field = false;
     let mut in_entry = false;
     let mut in_comment = false;
+    let mut in_file = false;
+    let mut in_query = false;
+    let mut in_download_history = false;
     let mut in_value = false;
     let mut in_reason = false;
 
@@ -1441,15 +1651,32 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             current_field = Some(Field::from_attributes(e, &mut interner)?);
                             in_field = true;
                         }
-                        "entry" if in_field => {
+                        "file" if in_category => {
+                            current_file = Some(File::from_attributes(e, &mut interner)?);
+                            in_file = true;
+                        }
+                        "entry" if in_field || in_file => {
                             current_entry = Some(Entry::from_attributes(e, &mut interner)?);
                             in_entry = true;
                         }
-                        "comment" if in_field => {
+                        "comment" if in_field || in_file => {
                             current_comment = Some(Comment::from_attributes(e)?);
                             in_comment = true;
                         }
-                        "value" if in_entry || in_comment => {
+                        "query" if in_field || in_file => {
+                            current_query = Some(Query::from_attributes(e, &mut interner)?);
+                            in_query = true;
+                        }
+                        "downloadHistory" if in_file => {
+                            current_download_entry = Some(Comment::from_attributes(e)?);
+                            in_download_history = true;
+                        }
+                        "answer" if in_query => {
+                            current_value = Some(Value::from_attributes(e, &mut interner)?);
+                            in_value = true;
+                            text_content.clear();
+                        }
+                        "value" if in_entry || in_comment || in_query || in_download_history => {
                             current_value = Some(Value::from_attributes(e, &mut interner)?);
                             in_value = true;
                             text_content.clear();
@@ -1508,6 +1735,10 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                                     category.fields =
                                         Some(Arc::new(current_fields.drain(..).collect()));
                                 }
+                                if !current_files.is_empty() {
+                                    category.files =
+                                        Some(Arc::new(current_files.drain(..).collect()));
+                                }
                                 current_categories.push(category);
                             }
                             in_category = false;
@@ -1522,9 +1753,48 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                                     field.comments =
                                         Some(Arc::new(current_comments.drain(..).collect()));
                                 }
+                                if !current_queries.is_empty() {
+                                    field.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
                                 current_fields.push(field);
                             }
                             in_field = false;
+                        }
+                        "file" if in_file => {
+                            if let Some(mut file) = current_file.take() {
+                                if !current_entries.is_empty() {
+                                    file.entries =
+                                        Some(Arc::new(current_entries.drain(..).collect()));
+                                }
+                                if !current_comments.is_empty() {
+                                    file.comments =
+                                        Some(Arc::new(current_comments.drain(..).collect()));
+                                }
+                                if !current_queries.is_empty() {
+                                    file.queries =
+                                        Some(Arc::new(current_queries.drain(..).collect()));
+                                }
+                                if !current_download_history.is_empty() {
+                                    file.download_history = Some(Arc::new(
+                                        current_download_history.drain(..).collect(),
+                                    ));
+                                }
+                                current_files.push(file);
+                            }
+                            in_file = false;
+                        }
+                        "query" if in_query => {
+                            if let Some(query) = current_query.take() {
+                                current_queries.push(query);
+                            }
+                            in_query = false;
+                        }
+                        "downloadHistory" if in_download_history => {
+                            if let Some(download) = current_download_entry.take() {
+                                current_download_history.push(download);
+                            }
+                            in_download_history = false;
                         }
                         "entry" if in_entry => {
                             if let Some(entry) = current_entry.take() {
@@ -1538,10 +1808,24 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                             }
                             in_comment = false;
                         }
+                        "answer" if in_value => {
+                            if let Some(mut value) = current_value.take() {
+                                value.value = take_trimmed(&mut text_content);
+                                if let Some(ref mut query) = current_query {
+                                    query.answer = Some(value);
+                                }
+                            }
+                            in_value = false;
+                        }
                         "value" if in_value => {
                             if let Some(mut value) = current_value.take() {
                                 value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
+                                // innermost owner wins; these never nest within one another
+                                if let Some(ref mut download) = current_download_entry {
+                                    download.value = Some(value);
+                                } else if let Some(ref mut query) = current_query {
+                                    query.value = Some(value);
+                                } else if let Some(ref mut entry) = current_entry {
                                     entry.value = Some(value);
                                 } else if let Some(ref mut comment) = current_comment {
                                     comment.value = Some(value);
@@ -1577,6 +1861,9 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
                         "field" if in_category => {
                             let field = Field::from_attributes(e, &mut interner)?;
                             current_fields.push(field);
+                        }
+                        "file" if in_category => {
+                            current_files.push(File::from_attributes(e, &mut interner)?);
                         }
                         "lockState" if in_form => {
                             current_lock_states.push(LockState::from_attributes(e)?);

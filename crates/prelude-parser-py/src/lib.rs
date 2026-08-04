@@ -6,7 +6,9 @@ use std::{collections::HashMap, fs::read_to_string, path::PathBuf, str::from_utf
 use chrono::{Datelike, NaiveDate};
 use prelude_xml_parser::{
     native::{
-        common::{Category, Comment, Entry, Field, Form, LockState, Reason, State, Value},
+        common::{
+            Category, Comment, Entry, Field, File, Form, LockState, Query, Reason, State, Value,
+        },
         site_native::{Site, SiteNative},
         subject_native::{Patient, SubjectNative},
         user_native::{User, UserNative},
@@ -186,7 +188,7 @@ fn push_general_ref(text: &mut String, reference: &BytesRef<'_>) -> PyResult<()>
         return Ok(());
     }
 
-    let name = reference.decode().map_err(xml_error)?;
+    let name = reference.xml10_content().map_err(xml_error)?;
 
     match resolve_predefined_entity(&name) {
         Some(resolved) => text.push_str(resolved),
@@ -606,9 +608,11 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Comment>()?;
     m.add_class::<Entry>()?;
     m.add_class::<Field>()?;
+    m.add_class::<File>()?;
     m.add_class::<Form>()?;
     m.add_class::<LockState>()?;
     m.add_class::<Patient>()?;
+    m.add_class::<Query>()?;
     m.add_class::<Reason>()?;
     m.add_class::<Site>()?;
     m.add_class::<SiteNative>()?;

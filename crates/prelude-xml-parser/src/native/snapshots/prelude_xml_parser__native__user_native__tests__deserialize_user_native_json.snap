@@ -41,6 +41,7 @@ users:
                 keepHistory: true
                 entries: ~
                 comments: ~
+                queries: ~
               - name: email
                 fieldType: text
                 dataType: string
@@ -60,6 +61,8 @@ users:
                       value: jazz@artemis.com
                     reason: ~
                 comments: ~
+                queries: ~
+            files: ~
           - name: Administrative
             categoryType: normal
             highestIndex: 0
@@ -88,3 +91,5 @@ users:
                       when: "2023-08-07T15:15:41Z"
                       value: calculated value
                 comments: ~
+                queries: ~
+            files: ~
