@@ -1625,7 +1625,7 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
 }
 
 fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {
-    if !xml_path.exists() {
+    if !xml_path.is_file() {
         return Err(Error::FileNotFound(xml_path.to_path_buf()));
     }
 
