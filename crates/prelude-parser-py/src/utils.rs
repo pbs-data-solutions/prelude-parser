@@ -26,7 +26,7 @@ pub fn validate_file(xml_file: &PathBuf) -> Result<(), XmlFileValidationError> {
     }
 
     if let Some(extension) = xml_file.extension() {
-        if extension != "xml" {
+        if !extension.eq_ignore_ascii_case("xml") {
             return Err(XmlFileValidationError::InvalidFileType(xml_file.to_owned()));
         }
     } else {
