@@ -1630,7 +1630,7 @@ fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {
     }
 
     if let Some(extension) = xml_path.extension() {
-        if extension != "xml" {
+        if !extension.eq_ignore_ascii_case("xml") {
             return Err(Error::InvalidFileType(xml_path.to_owned()));
         }
     } else {
