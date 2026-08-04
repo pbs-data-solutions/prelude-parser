@@ -20,7 +20,7 @@ use prelude_xml_parser::{
 };
 use pyo3::{
     prelude::*,
-    types::{IntoPyDict, PyDict, PyList, PyString},
+    types::{PyDict, PyList, PyString},
 };
 use quick_xml::{
     escape::resolve_predefined_entity,
@@ -57,57 +57,99 @@ fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
     Ok(())
 }
 
-fn py_list_append<'py>(
-    py: Python<'py>,
-    value: Option<&str>,
-    list: &'py Bound<'py, PyList>,
-    date: &Bound<'py, PyAny>,
-) -> PyResult<&'py Bound<'py, PyList>> {
-    match value {
-        Some(t) => match t.parse::<usize>() {
-            Ok(int_val) => list.append(int_val)?,
-            Err(_) => match t.parse::<f64>() {
-                Ok(float_val) => list.append(float_val)?,
-                Err(_) => match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
-                    Ok(dt) => {
-                        let py_date = date.call1((dt.year(), dt.month(), dt.day()))?;
-                        list.append(py_date)?;
-                    }
-                    Err(_) => list.append(t)?,
-                },
-            },
-        },
-        None => list.append(py.None())?,
-    };
-
-    Ok(list)
+/// The type a whole column is given, decided from every value in it rather than value by value.
+///
+/// Per-value typing lets one column hold several Python types and, worse, merges distinct
+/// identifiers: `"0067"` and `"67"` both become `67`. Deciding per column keeps a column's type
+/// stable and keeps zero-padded identifiers intact.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ColumnType {
+    /// No non-empty value seen yet.
+    Unknown,
+    Integer,
+    Float,
+    Date,
+    Text,
 }
 
-fn add_item<'py>(
+/// Classify a single value in isolation.
+fn classify(value: &str) -> ColumnType {
+    if value.is_empty() {
+        return ColumnType::Unknown;
+    }
+
+    // A zero-padded number is an identifier, not a quantity: parsing it loses both the padding
+    // and the distinction between "0067" and "67".
+    let digits = value.strip_prefix(['+', '-']).unwrap_or(value);
+    if digits.len() > 1 && digits.starts_with('0') && digits.bytes().all(|b| b.is_ascii_digit()) {
+        return ColumnType::Text;
+    }
+
+    if value.parse::<i64>().is_ok() {
+        return ColumnType::Integer;
+    }
+
+    // Requiring a digit keeps "nan", "inf" and "infinity" as the text they almost certainly are.
+    if value.bytes().any(|b| b.is_ascii_digit()) && value.parse::<f64>().is_ok() {
+        return ColumnType::Float;
+    }
+
+    if NaiveDate::parse_from_str(value, "%d-%b-%Y").is_ok() {
+        return ColumnType::Date;
+    }
+
+    ColumnType::Text
+}
+
+/// Widen a column's type to also admit `value`.
+fn widen(current: ColumnType, value: &str) -> ColumnType {
+    let seen = classify(value);
+
+    match (current, seen) {
+        (ColumnType::Unknown, other) | (other, ColumnType::Unknown) => other,
+        (a, b) if a == b => a,
+        (ColumnType::Integer, ColumnType::Float) | (ColumnType::Float, ColumnType::Integer) => {
+            ColumnType::Float
+        }
+        _ => ColumnType::Text,
+    }
+}
+
+/// Convert a value according to the type decided for its column.
+fn to_py_value<'py>(
     py: Python<'py>,
-    key: &Bound<'py, PyString>,
     value: Option<&str>,
-    form_data: &'py Bound<'py, PyDict>,
+    column_type: ColumnType,
     date: &Bound<'py, PyAny>,
-) -> PyResult<&'py Bound<'py, PyDict>> {
-    match value {
-        Some(t) => match t.parse::<usize>() {
-            Ok(int_val) => form_data.set_item(key, int_val)?,
-            Err(_) => match t.parse::<f64>() {
-                Ok(float_val) => form_data.set_item(key, float_val)?,
-                Err(_) => match NaiveDate::parse_from_str(t, "%d-%b-%Y") {
-                    Ok(dt) => {
-                        let py_date = date.call1((dt.year(), dt.month(), dt.day()))?;
-                        form_data.set_item(key, py_date)?;
-                    }
-                    Err(_) => form_data.set_item(key, t)?,
-                },
-            },
-        },
-        None => form_data.set_item(key, py.None())?,
+) -> PyResult<Py<PyAny>> {
+    let Some(text) = value else {
+        return Ok(py.None());
     };
 
-    Ok(form_data)
+    if text.is_empty() {
+        return Ok(py.None());
+    }
+
+    let converted = match column_type {
+        ColumnType::Integer => match text.parse::<i64>() {
+            Ok(v) => v.into_pyobject(py)?.into_any().unbind(),
+            Err(_) => text.into_pyobject(py)?.into_any().unbind(),
+        },
+        ColumnType::Float => match text.parse::<f64>() {
+            Ok(v) => v.into_pyobject(py)?.into_any().unbind(),
+            Err(_) => text.into_pyobject(py)?.into_any().unbind(),
+        },
+        ColumnType::Date => match NaiveDate::parse_from_str(text, "%d-%b-%Y") {
+            Ok(d) => date
+                .call1((d.year(), d.month(), d.day()))?
+                .into_any()
+                .unbind(),
+            Err(_) => text.into_pyobject(py)?.into_any().unbind(),
+        },
+        _ => text.into_pyobject(py)?.into_any().unbind(),
+    };
+
+    Ok(converted)
 }
 
 /// Map a `prelude-xml-parser` error onto the matching Python exception.
@@ -166,6 +208,30 @@ fn convert_name(raw: &str, short_names: bool) -> String {
     }
 }
 
+/// A form's accumulated rows plus the columns discovered for it.
+struct FormTable {
+    name: String,
+    keys: Vec<Py<PyString>>,
+    types: Vec<ColumnType>,
+    index: HashMap<Vec<u8>, usize>,
+    rows: Vec<Vec<(usize, Option<String>)>>,
+}
+
+impl FormTable {
+    fn column<'py>(&mut self, py: Python<'py>, raw: &[u8], short_names: bool) -> PyResult<usize> {
+        if let Some(index) = self.index.get(raw) {
+            return Ok(*index);
+        }
+
+        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+        self.keys.push(PyString::new(py, &name).unbind());
+        self.types.push(ColumnType::Unknown);
+        self.index.insert(raw.to_vec(), self.keys.len() - 1);
+
+        Ok(self.keys.len() - 1)
+    }
+}
+
 fn parse_xml<'py>(
     py: Python<'py>,
     xml_file: &PathBuf,
@@ -177,15 +243,15 @@ fn parse_xml<'py>(
     let mut reader = Reader::from_str(&contents);
     reader.config_mut().trim_text(false);
 
-    let mut data: HashMap<String, Vec<Bound<'_, PyDict>>> = HashMap::new();
-    let mut form_names: HashMap<Vec<u8>, String> = HashMap::new();
-    let mut field_names: HashMap<Vec<u8>, Py<PyString>> = HashMap::new();
+    // Forms are kept in the order they appear so the resulting dict is reproducible.
+    let mut tables: Vec<FormTable> = Vec::new();
+    let mut table_index: HashMap<Vec<u8>, usize> = HashMap::new();
 
     let mut depth = 0usize;
     let mut saw_root = false;
-    let mut form_name: Option<String> = None;
-    let mut form_data: Option<Bound<'_, PyDict>> = None;
-    let mut field_key: Option<Py<PyString>> = None;
+    let mut current_table: Option<usize> = None;
+    let mut row: Vec<(usize, Option<String>)> = Vec::new();
+    let mut column: Option<usize> = None;
     let mut text: Option<String> = None;
 
     loop {
@@ -195,23 +261,37 @@ fn parse_xml<'py>(
             Event::Start(e) => {
                 depth += 1;
                 saw_root = true;
+
                 match depth {
                     2 => {
                         let raw = e.name().into_inner();
-                        let name = match form_names.get(raw) {
-                            Some(name) => name.clone(),
+                        let index = match table_index.get(raw) {
+                            Some(index) => *index,
                             None => {
                                 let name =
                                     convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
-                                form_names.insert(raw.to_vec(), name.clone());
-                                name
+                                tables.push(FormTable {
+                                    name,
+                                    keys: Vec::new(),
+                                    types: Vec::new(),
+                                    index: HashMap::new(),
+                                    rows: Vec::new(),
+                                });
+                                table_index.insert(raw.to_vec(), tables.len() - 1);
+                                tables.len() - 1
                             }
                         };
-                        form_name = Some(name);
-                        form_data = Some(PyDict::new(py));
+                        current_table = Some(index);
+                        row = Vec::new();
                     }
                     3 => {
-                        field_key = Some(field_key_for(py, &e, short_names, &mut field_names)?);
+                        if let Some(index) = current_table {
+                            column = Some(tables[index].column(
+                                py,
+                                e.name().into_inner(),
+                                short_names,
+                            )?);
+                        }
                         text = None;
                     }
                     _ => {}
@@ -221,31 +301,33 @@ fn parse_xml<'py>(
             Event::Empty(e) => match depth + 1 {
                 2 => {
                     let raw = e.name().into_inner();
-                    let name = match form_names.get(raw) {
-                        Some(name) => name.clone(),
-                        None => {
-                            let name =
-                                convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
-                            form_names.insert(raw.to_vec(), name.clone());
-                            name
-                        }
-                    };
-                    if !name.is_empty() {
-                        data.entry(name).or_default().push(PyDict::new(py));
+                    if !table_index.contains_key(raw) {
+                        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+                        tables.push(FormTable {
+                            name,
+                            keys: Vec::new(),
+                            types: Vec::new(),
+                            index: HashMap::new(),
+                            rows: Vec::new(),
+                        });
+                        table_index.insert(raw.to_vec(), tables.len() - 1);
+                    }
+                    if let Some(index) = table_index.get(raw) {
+                        let index = *index;
+                        tables[index].rows.push(Vec::new());
                     }
                 }
                 3 => {
-                    if let Some(ref dict) = form_data {
-                        let key = field_key_for(py, &e, short_names, &mut field_names)?;
-                        add_item(py, key.bind(py), None, dict, &date)?;
+                    if let Some(index) = current_table {
+                        let column =
+                            tables[index].column(py, e.name().into_inner(), short_names)?;
+                        row.push((column, None));
                     }
                 }
                 _ => {}
             },
 
             Event::Text(e) if depth == 3 => {
-                // xml10_content normalizes \r\n and \r to \n as the XML spec requires; decode does
-                // not
                 let decoded = e.xml10_content().map_err(xml_error)?;
                 text.get_or_insert_with(String::new).push_str(&decoded);
             }
@@ -257,16 +339,19 @@ fn parse_xml<'py>(
             Event::End(_) => {
                 match depth {
                     3 => {
-                        if let (Some(ref dict), Some(key)) = (&form_data, field_key.take()) {
-                            add_item(py, key.bind(py), text.as_deref(), dict, &date)?;
+                        if let (Some(index), Some(column)) = (current_table, column.take()) {
+                            let value = text.take();
+                            if let Some(ref value) = value {
+                                tables[index].types[column] =
+                                    widen(tables[index].types[column], value);
+                            }
+                            row.push((column, value));
                         }
                         text = None;
                     }
                     2 => {
-                        if let (Some(name), Some(dict)) = (form_name.take(), form_data.take()) {
-                            if !name.is_empty() {
-                                data.entry(name).or_default().push(dict);
-                            }
+                        if let Some(index) = current_table.take() {
+                            tables[index].rows.push(std::mem::take(&mut row));
                         }
                     }
                     _ => {}
@@ -284,29 +369,25 @@ fn parse_xml<'py>(
         ));
     }
 
-    let data_dict = data.into_py_dict(py)?;
-    Ok(data_dict)
-}
+    let data = PyDict::new(py);
+    for table in &tables {
+        if table.name.is_empty() {
+            continue;
+        }
 
-fn field_key_for<'py>(
-    py: Python<'py>,
-    e: &quick_xml::events::BytesStart<'_>,
-    short_names: bool,
-    cache: &mut HashMap<Vec<u8>, Py<PyString>>,
-) -> PyResult<Py<PyString>> {
-    let raw = e.name().into_inner();
-    if let Some(key) = cache.get(raw) {
-        return Ok(key.clone_ref(py));
+        let records = PyList::empty(py);
+        for row in &table.rows {
+            let record = PyDict::new(py);
+            for (column, value) in row {
+                let converted = to_py_value(py, value.as_deref(), table.types[*column], &date)?;
+                record.set_item(table.keys[*column].bind(py), converted)?;
+            }
+            records.append(record)?;
+        }
+        data.set_item(&table.name, records)?;
     }
 
-    let key = PyString::new(
-        py,
-        &convert_name(from_utf8(raw).map_err(xml_error)?, short_names),
-    )
-    .unbind();
-    cache.insert(raw.to_vec(), key.clone_ref(py));
-
-    Ok(key)
+    Ok(data)
 }
 
 fn parse_xml_pandas<'py>(
@@ -320,13 +401,35 @@ fn parse_xml_pandas<'py>(
     let mut reader = Reader::from_str(&contents);
     reader.config_mut().trim_text(false);
 
-    let data = PyDict::new(py);
-    let mut columns: HashMap<Vec<u8>, Py<PyList>> = HashMap::new();
+    let mut keys: Vec<Py<PyString>> = Vec::new();
+    let mut types: Vec<ColumnType> = Vec::new();
+    let mut values: Vec<Vec<Option<String>>> = Vec::new();
+    let mut index: HashMap<Vec<u8>, usize> = HashMap::new();
 
     let mut depth = 0usize;
     let mut saw_root = false;
-    let mut column: Option<Py<PyList>> = None;
+    let mut column: Option<usize> = None;
     let mut text: Option<String> = None;
+
+    let column_for = |py: Python<'py>,
+                      raw: &[u8],
+                      keys: &mut Vec<Py<PyString>>,
+                      types: &mut Vec<ColumnType>,
+                      values: &mut Vec<Vec<Option<String>>>,
+                      index: &mut HashMap<Vec<u8>, usize>|
+     -> PyResult<usize> {
+        if let Some(found) = index.get(raw) {
+            return Ok(*found);
+        }
+
+        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+        keys.push(PyString::new(py, &name).unbind());
+        types.push(ColumnType::Unknown);
+        values.push(Vec::new());
+        index.insert(raw.to_vec(), keys.len() - 1);
+
+        Ok(keys.len() - 1)
+    };
 
     loop {
         match reader.read_event().map_err(xml_error)? {
@@ -336,15 +439,29 @@ fn parse_xml_pandas<'py>(
                 depth += 1;
                 saw_root = true;
                 if depth == 3 {
-                    column = Some(column_for(py, &e, short_names, &mut columns, &data)?);
+                    column = Some(column_for(
+                        py,
+                        e.name().into_inner(),
+                        &mut keys,
+                        &mut types,
+                        &mut values,
+                        &mut index,
+                    )?);
                     text = None;
                 }
             }
 
             Event::Empty(e) => {
                 if depth + 1 == 3 {
-                    let list = column_for(py, &e, short_names, &mut columns, &data)?;
-                    py_list_append(py, None, list.bind(py), &date)?;
+                    let column = column_for(
+                        py,
+                        e.name().into_inner(),
+                        &mut keys,
+                        &mut types,
+                        &mut values,
+                        &mut index,
+                    )?;
+                    values[column].push(None);
                 }
             }
 
@@ -359,8 +476,12 @@ fn parse_xml_pandas<'py>(
 
             Event::End(_) => {
                 if depth == 3 {
-                    if let Some(list) = column.take() {
-                        py_list_append(py, text.as_deref(), list.bind(py), &date)?;
+                    if let Some(column) = column.take() {
+                        let value = text.take();
+                        if let Some(ref value) = value {
+                            types[column] = widen(types[column], value);
+                        }
+                        values[column].push(value);
                     }
                     text = None;
                 }
@@ -377,32 +498,16 @@ fn parse_xml_pandas<'py>(
         ));
     }
 
-    let data_dict = data.into_py_dict(py)?;
-    Ok(data_dict)
-}
-
-/// Look up (or create) the list backing a column, keyed by the raw tag so the name is converted
-/// once per distinct field rather than once per occurrence.
-fn column_for<'py>(
-    py: Python<'py>,
-    e: &quick_xml::events::BytesStart<'_>,
-    short_names: bool,
-    cache: &mut HashMap<Vec<u8>, Py<PyList>>,
-    data: &Bound<'py, PyDict>,
-) -> PyResult<Py<PyList>> {
-    let raw = e.name().into_inner();
-    if let Some(list) = cache.get(raw) {
-        return Ok(list.clone_ref(py));
+    let data = PyDict::new(py);
+    for (position, key) in keys.iter().enumerate() {
+        let list = PyList::empty(py);
+        for value in &values[position] {
+            list.append(to_py_value(py, value.as_deref(), types[position], &date)?)?;
+        }
+        data.set_item(key.bind(py), list)?;
     }
 
-    let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
-    let list = PyList::empty(py);
-    data.set_item(name, &list)?;
-
-    let list = list.unbind();
-    cache.insert(raw.to_vec(), list.clone_ref(py));
-
-    Ok(list)
+    Ok(data)
 }
 
 #[pyfunction]
