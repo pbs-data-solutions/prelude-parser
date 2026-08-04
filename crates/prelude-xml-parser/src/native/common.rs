@@ -371,6 +371,191 @@ pub struct Comment {
 
 #[cfg(feature = "python")]
 #[pymethods]
+impl Query {
+    #[getter]
+    fn query_id(&self) -> PyResult<String> {
+        Ok(self.query_id.to_string())
+    }
+
+    #[getter]
+    fn reviewed_by(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_unique_id(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by_unique_id.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_when<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.reviewed_by_when)
+    }
+
+    #[getter]
+    fn value(&self) -> PyResult<Option<Value>> {
+        Ok(self.value.clone())
+    }
+
+    #[getter]
+    fn answer(&self) -> PyResult<Option<Value>> {
+        Ok(self.answer.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("query_id", &*self.query_id)?;
+        dict.set_item("reviewed_by", &self.reviewed_by)?;
+        dict.set_item("reviewed_by_unique_id", &self.reviewed_by_unique_id)?;
+        dict.set_item(
+            "reviewed_by_when",
+            to_py_datetime_option(py, &self.reviewed_by_when)?,
+        )?;
+
+        match &self.value {
+            Some(value) => dict.set_item("value", value.to_dict(py)?)?,
+            None => dict.set_item("value", py.None())?,
+        }
+
+        match &self.answer {
+            Some(answer) => dict.set_item("answer", answer.to_dict(py)?)?,
+            None => dict.set_item("answer", py.None())?,
+        }
+
+        Ok(dict)
+    }
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl File {
+    #[getter]
+    fn name(&self) -> PyResult<String> {
+        Ok(self.name.to_string())
+    }
+
+    #[getter]
+    fn file_type(&self) -> PyResult<String> {
+        Ok(self.file_type.to_string())
+    }
+
+    #[getter]
+    fn data_type(&self) -> PyResult<Option<String>> {
+        Ok(self.data_type.as_deref().map(str::to_string))
+    }
+
+    #[getter]
+    fn error_code(&self) -> PyResult<String> {
+        Ok(self.error_code.to_string())
+    }
+
+    #[getter]
+    fn when_created<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.when_created)
+    }
+
+    #[getter]
+    fn keep_history(&self) -> PyResult<bool> {
+        Ok(self.keep_history)
+    }
+
+    #[getter]
+    fn file_location(&self) -> PyResult<Option<String>> {
+        Ok(self.file_location.clone())
+    }
+
+    #[getter]
+    fn size(&self) -> PyResult<Option<usize>> {
+        Ok(self.size)
+    }
+
+    #[getter]
+    fn entries(&self) -> PyResult<Option<Vec<Entry>>> {
+        Ok(self.entries.as_deref().cloned())
+    }
+
+    #[getter]
+    fn comments(&self) -> PyResult<Option<Vec<Comment>>> {
+        Ok(self.comments.as_deref().cloned())
+    }
+
+    #[getter]
+    fn queries(&self) -> PyResult<Option<Vec<Query>>> {
+        Ok(self.queries.as_deref().cloned())
+    }
+
+    #[getter]
+    fn download_history(&self) -> PyResult<Option<Vec<Comment>>> {
+        Ok(self.download_history.as_deref().cloned())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("name", &*self.name)?;
+        dict.set_item("file_type", &*self.file_type)?;
+        dict.set_item("data_type", self.data_type.as_deref())?;
+        dict.set_item("error_code", &*self.error_code)?;
+        dict.set_item(
+            "when_created",
+            to_py_datetime_option(py, &self.when_created)?,
+        )?;
+        dict.set_item("keep_history", self.keep_history)?;
+        dict.set_item("file_location", &self.file_location)?;
+        dict.set_item("size", self.size)?;
+
+        for (key, items) in [(
+            "entries",
+            self.entries.as_deref().map(|v| {
+                v.iter()
+                    .map(|x| x.to_dict(py))
+                    .collect::<PyResult<Vec<_>>>()
+            }),
+        )] {
+            match items {
+                Some(items) => dict.set_item(key, items?)?,
+                None => dict.set_item(key, py.None())?,
+            }
+        }
+
+        match self.comments.as_deref() {
+            Some(items) => dict.set_item(
+                "comments",
+                items
+                    .iter()
+                    .map(|x| x.to_dict(py))
+                    .collect::<PyResult<Vec<_>>>()?,
+            )?,
+            None => dict.set_item("comments", py.None())?,
+        }
+
+        match self.queries.as_deref() {
+            Some(items) => dict.set_item(
+                "queries",
+                items
+                    .iter()
+                    .map(|x| x.to_dict(py))
+                    .collect::<PyResult<Vec<_>>>()?,
+            )?,
+            None => dict.set_item("queries", py.None())?,
+        }
+
+        match self.download_history.as_deref() {
+            Some(items) => dict.set_item(
+                "download_history",
+                items
+                    .iter()
+                    .map(|x| x.to_dict(py))
+                    .collect::<PyResult<Vec<_>>>()?,
+            )?,
+            None => dict.set_item("download_history", py.None())?,
+        }
+
+        Ok(dict)
+    }
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
 impl Comment {
     #[getter]
     fn comment_id(&self) -> PyResult<String> {
@@ -393,6 +578,194 @@ impl Comment {
 
         Ok(dict)
     }
+}
+
+#[cfg(not(feature = "python"))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct Query {
+    #[serde(rename = "queryId")]
+    #[serde(alias = "@id")]
+    #[serde(alias = "queryId")]
+    pub query_id: Arc<str>,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
+    pub value: Option<Value>,
+    pub answer: Option<Value>,
+}
+
+#[cfg(not(feature = "python"))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct File {
+    #[serde(rename = "name")]
+    #[serde(alias = "@name")]
+    #[serde(alias = "name")]
+    pub name: Arc<str>,
+
+    #[serde(rename = "fileType")]
+    #[serde(alias = "@type")]
+    #[serde(alias = "fileType")]
+    pub file_type: Arc<str>,
+
+    #[serde(rename = "dataType")]
+    #[serde(alias = "@dataType")]
+    #[serde(alias = "dataType")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub data_type: Option<Arc<str>>,
+
+    #[serde(rename = "errorCode")]
+    #[serde(alias = "@errorCode")]
+    #[serde(alias = "errorCode")]
+    pub error_code: Arc<str>,
+
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
+    pub when_created: Option<DateTime<Utc>>,
+
+    #[serde(rename = "keepHistory")]
+    #[serde(alias = "@keepHistory")]
+    #[serde(alias = "keepHistory")]
+    pub keep_history: bool,
+
+    #[serde(rename = "fileLocation")]
+    #[serde(alias = "@fileLocation")]
+    #[serde(alias = "fileLocation")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub file_location: Option<String>,
+
+    #[serde(rename = "size")]
+    #[serde(alias = "@size")]
+    #[serde(alias = "size")]
+    #[serde(default)]
+    pub size: Option<usize>,
+
+    #[serde(alias = "entry")]
+    pub entries: Option<Arc<Vec<Entry>>>,
+
+    #[serde(alias = "comment")]
+    pub comments: Option<Arc<Vec<Comment>>>,
+
+    #[serde(alias = "query")]
+    pub queries: Option<Arc<Vec<Query>>>,
+
+    #[serde(rename = "downloadHistory")]
+    #[serde(alias = "downloadHistory")]
+    pub download_history: Option<Arc<Vec<Comment>>>,
+}
+
+#[cfg(feature = "python")]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[pyclass(skip_from_py_object)]
+pub struct Query {
+    #[serde(rename = "queryId")]
+    #[serde(alias = "@id")]
+    #[serde(alias = "queryId")]
+    pub query_id: Arc<str>,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
+    pub value: Option<Value>,
+    pub answer: Option<Value>,
+}
+
+#[cfg(feature = "python")]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[pyclass(skip_from_py_object)]
+pub struct File {
+    #[serde(rename = "name")]
+    #[serde(alias = "@name")]
+    #[serde(alias = "name")]
+    pub name: Arc<str>,
+
+    #[serde(rename = "fileType")]
+    #[serde(alias = "@type")]
+    #[serde(alias = "fileType")]
+    pub file_type: Arc<str>,
+
+    #[serde(rename = "dataType")]
+    #[serde(alias = "@dataType")]
+    #[serde(alias = "dataType")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
+    pub data_type: Option<Arc<str>>,
+
+    #[serde(rename = "errorCode")]
+    #[serde(alias = "@errorCode")]
+    #[serde(alias = "errorCode")]
+    pub error_code: Arc<str>,
+
+    #[serde(rename = "whenCreated")]
+    #[serde(alias = "@whenCreated")]
+    #[serde(alias = "whenCreated")]
+    pub when_created: Option<DateTime<Utc>>,
+
+    #[serde(rename = "keepHistory")]
+    #[serde(alias = "@keepHistory")]
+    #[serde(alias = "keepHistory")]
+    pub keep_history: bool,
+
+    #[serde(rename = "fileLocation")]
+    #[serde(alias = "@fileLocation")]
+    #[serde(alias = "fileLocation")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub file_location: Option<String>,
+
+    #[serde(rename = "size")]
+    #[serde(alias = "@size")]
+    #[serde(alias = "size")]
+    #[serde(default)]
+    pub size: Option<usize>,
+
+    #[serde(alias = "entry")]
+    pub entries: Option<Arc<Vec<Entry>>>,
+
+    #[serde(alias = "comment")]
+    pub comments: Option<Arc<Vec<Comment>>>,
+
+    #[serde(alias = "query")]
+    pub queries: Option<Arc<Vec<Query>>>,
+
+    #[serde(rename = "downloadHistory")]
+    #[serde(alias = "downloadHistory")]
+    pub download_history: Option<Arc<Vec<Comment>>>,
 }
 
 #[cfg(not(feature = "python"))]
@@ -431,6 +804,9 @@ pub struct Field {
 
     #[serde(alias = "comment")]
     pub comments: Option<Arc<Vec<Comment>>>,
+
+    #[serde(alias = "query")]
+    pub queries: Option<Arc<Vec<Query>>>,
 }
 
 #[cfg(feature = "python")]
@@ -471,6 +847,9 @@ pub struct Field {
 
     #[serde(alias = "comment")]
     pub comments: Option<Arc<Vec<Comment>>>,
+
+    #[serde(alias = "query")]
+    pub queries: Option<Arc<Vec<Query>>>,
 }
 
 #[cfg(feature = "python")]
@@ -519,6 +898,11 @@ impl Field {
         Ok(self.comments.as_deref().cloned())
     }
 
+    #[getter]
+    fn queries(&self) -> PyResult<Option<Vec<Query>>> {
+        Ok(self.queries.as_deref().cloned())
+    }
+
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
         dict.set_item("name", &*self.name)?;
@@ -556,6 +940,15 @@ impl Field {
             dict.set_item("comments", py.None())?;
         }
 
+        let mut queries_dicts = Vec::new();
+        if let Some(queries) = &self.queries {
+            for item in queries.iter() {
+                queries_dicts.push(item.to_dict(py)?);
+            }
+            dict.set_item("queries", queries_dicts)?;
+        } else {
+            dict.set_item("queries", py.None())?;
+        }
         Ok(dict)
     }
 }
@@ -580,6 +973,9 @@ pub struct Category {
 
     #[serde(alias = "field")]
     pub fields: Option<Arc<Vec<Field>>>,
+
+    #[serde(alias = "file")]
+    pub files: Option<Arc<Vec<File>>>,
 }
 
 #[cfg(feature = "python")]
@@ -603,6 +999,9 @@ pub struct Category {
 
     #[serde(alias = "field")]
     pub fields: Option<Arc<Vec<Field>>>,
+
+    #[serde(alias = "file")]
+    pub files: Option<Arc<Vec<File>>>,
 }
 
 #[cfg(feature = "python")]
@@ -628,6 +1027,11 @@ impl Category {
         Ok(self.fields.as_deref().cloned())
     }
 
+    #[getter]
+    fn files(&self) -> PyResult<Option<Vec<File>>> {
+        Ok(self.files.as_deref().cloned())
+    }
+
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
         dict.set_item("name", &*self.name)?;
@@ -645,6 +1049,15 @@ impl Category {
             dict.set_item("fields", py.None())?;
         }
 
+        let mut files_dicts = Vec::new();
+        if let Some(files) = &self.files {
+            for item in files.iter() {
+                files_dicts.push(item.to_dict(py)?);
+            }
+            dict.set_item("files", files_dicts)?;
+        } else {
+            dict.set_item("files", py.None())?;
+        }
         Ok(dict)
     }
 }
@@ -1294,6 +1707,7 @@ impl Category {
             category_type: interner.intern(category_type),
             highest_index: highest_index.parse().unwrap_or(0),
             fields: None,
+            files: None,
         })
     }
 }
@@ -1329,6 +1743,7 @@ impl Field {
             keep_history: keep_history == "true",
             entries: None,
             comments: None,
+            queries: None,
         })
     }
 }
@@ -1416,6 +1831,80 @@ impl Reason {
             role: interner.intern(role),
             when: checked_datetime(when)?,
             value: String::new(),
+        })
+    }
+}
+
+impl Query {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
+        let mut id: Option<&str> = None;
+        let mut query_id: Option<&str> = None;
+        let mut reviewed_by = "";
+        let mut reviewed_by_unique_id = "";
+        let mut reviewed_by_when = "";
+
+        visit_attributes(e, |key, attr| match key {
+            b"id" => id = Some(attr),
+            b"queryId" => query_id = Some(attr),
+            b"reviewedBy" => reviewed_by = attr,
+            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            b"reviewedByWhen" => reviewed_by_when = attr,
+            _ => {}
+        })?;
+
+        Ok(Query {
+            query_id: interner.intern(id.or(query_id).unwrap_or_default()),
+            reviewed_by: optional_string(reviewed_by),
+            reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
+            reviewed_by_when: optional_datetime(reviewed_by_when),
+            value: None,
+            answer: None,
+        })
+    }
+}
+
+impl File {
+    pub(crate) fn from_attributes(
+        e: &BytesStart<'_>,
+        interner: &mut Interner,
+    ) -> Result<Self, crate::errors::Error> {
+        let mut name = "";
+        let mut file_type = "";
+        let mut data_type = "";
+        let mut error_code = "";
+        let mut when_created = "";
+        let mut keep_history = "";
+        let mut file_location = "";
+        let mut size = "";
+
+        visit_attributes(e, |key, attr| match key {
+            b"name" => name = attr,
+            b"type" => file_type = attr,
+            b"dataType" => data_type = attr,
+            b"errorCode" => error_code = attr,
+            b"whenCreated" => when_created = attr,
+            b"keepHistory" => keep_history = attr,
+            b"fileLocation" => file_location = attr,
+            b"size" => size = attr,
+            _ => {}
+        })?;
+
+        Ok(File {
+            name: interner.intern(name),
+            file_type: interner.intern(file_type),
+            data_type: interner.intern_optional(data_type),
+            error_code: interner.intern(error_code),
+            when_created: checked_datetime(when_created)?,
+            keep_history: keep_history == "true",
+            file_location: optional_string(file_location),
+            size: size.parse().ok(),
+            entries: None,
+            comments: None,
+            queries: None,
+            download_history: None,
         })
     }
 }

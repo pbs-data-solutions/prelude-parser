@@ -88,7 +88,7 @@ pub(crate) fn push_general_ref(
         return Ok(());
     }
 
-    let name = reference.decode().map_err(decode_error)?;
+    let name = reference.xml10_content().map_err(decode_error)?;
 
     match resolve_predefined_entity(&name) {
         Some(resolved) => text.push_str(resolved),
