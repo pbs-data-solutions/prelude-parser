@@ -664,26 +664,47 @@ pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error
     Ok(SubjectNative { patients })
 }
 
-fn extract_patient_chunks(xml: &str) -> Vec<&str> {
+/// Split the document into one slice per top-level record.
+///
+/// The scan is textual, so the character after the tag name has to be checked: searching for
+/// `"<patient "` alone misses `<patient>` when the element carries no attributes, which silently
+/// yields no records at all.
+fn extract_chunks<'a>(xml: &'a str, tag: &str) -> Vec<&'a str> {
+    let open = format!("<{tag}");
+    let close = format!("</{tag}>");
+
     let mut chunks = Vec::new();
     let mut pos = 0;
-    loop {
-        match xml[pos..].find("<patient ") {
-            None => break,
-            Some(rel) => {
-                let start = pos + rel;
-                match xml[start..].find("</patient>") {
-                    None => break,
-                    Some(rel_end) => {
-                        let end = start + rel_end + "</patient>".len();
-                        chunks.push(&xml[start..end]);
-                        pos = end;
-                    }
-                }
-            }
+
+    while let Some(rel) = xml[pos..].find(&open) {
+        let start = pos + rel;
+        let after_name = start + open.len();
+
+        // Anything else means we matched a longer tag that merely starts with this name.
+        let ends_name = xml[after_name..]
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_whitespace() || c == '>');
+
+        if !ends_name {
+            pos = after_name;
+            continue;
         }
+
+        let Some(rel_end) = xml[start..].find(&close) else {
+            break;
+        };
+
+        let end = start + rel_end + close.len();
+        chunks.push(&xml[start..end]);
+        pos = end;
     }
+
     chunks
+}
+
+fn extract_patient_chunks(xml: &str) -> Vec<&str> {
+    extract_chunks(xml, "patient")
 }
 
 #[allow(clippy::drain_collect)]
@@ -919,25 +940,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
 }
 
 fn extract_site_chunks(xml: &str) -> Vec<&str> {
-    let mut chunks = Vec::new();
-    let mut pos = 0;
-    loop {
-        match xml[pos..].find("<site ") {
-            None => break,
-            Some(rel) => {
-                let start = pos + rel;
-                match xml[start..].find("</site>") {
-                    None => break,
-                    Some(rel_end) => {
-                        let end = start + rel_end + "</site>".len();
-                        chunks.push(&xml[start..end]);
-                        pos = end;
-                    }
-                }
-            }
-        }
-    }
-    chunks
+    extract_chunks(xml, "site")
 }
 
 #[allow(clippy::drain_collect)]
@@ -1377,25 +1380,7 @@ pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
 }
 
 fn extract_user_chunks(xml: &str) -> Vec<&str> {
-    let mut chunks = Vec::new();
-    let mut pos = 0;
-    loop {
-        match xml[pos..].find("<user ") {
-            None => break,
-            Some(rel) => {
-                let start = pos + rel;
-                match xml[start..].find("</user>") {
-                    None => break,
-                    Some(rel_end) => {
-                        let end = start + rel_end + "</user>".len();
-                        chunks.push(&xml[start..end]);
-                        pos = end;
-                    }
-                }
-            }
-        }
-    }
-    chunks
+    extract_chunks(xml, "user")
 }
 
 #[allow(clippy::drain_collect)]
