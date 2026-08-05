@@ -12,7 +12,8 @@ use pyo3::{
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
-    checked_datetime, optional_string, required_attribute, visit_attributes,
+    checked_datetime, deserialize_empty_string_as_none_datetime, optional_string,
+    required_attribute, visit_attributes,
 };
 
 #[cfg(feature = "python")]
@@ -20,7 +21,9 @@ use crate::native::deserializers::{deserialize_empty_string_as_none, to_py_datet
 
 use serde::{Deserialize, Serialize};
 
-pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, State, Value};
+pub use crate::native::common::{
+    Category, Comment, Entry, Export, Field, Form, Reason, State, Value,
+};
 
 #[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -31,6 +34,12 @@ pub struct Patient {
     pub unique_id: String,
     #[serde(rename = "whenCreated")]
     pub when_created: Option<DateTime<Utc>>,
+    #[serde(rename = "passwordChangeDate")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub password_change_date: Option<DateTime<Utc>>,
     pub creator: String,
     #[serde(rename = "siteName")]
     pub site_name: String,
@@ -48,6 +57,7 @@ impl Patient {
         let mut patient_id: Option<&str> = None;
         let mut unique_id: Option<&str> = None;
         let mut when_created = "";
+        let mut password_change_date = "";
         let mut creator: Option<&str> = None;
         let mut site_name: Option<&str> = None;
         let mut site_unique_id: Option<&str> = None;
@@ -58,6 +68,7 @@ impl Patient {
             b"patientId" => patient_id = Some(attr),
             b"uniqueId" => unique_id = Some(attr),
             b"whenCreated" => when_created = attr,
+            b"passwordChangeDate" => password_change_date = attr,
             b"creator" => creator = Some(attr),
             b"siteName" => site_name = Some(attr),
             b"siteUniqueId" => site_unique_id = Some(attr),
@@ -70,6 +81,7 @@ impl Patient {
             patient_id: required_attribute(patient_id, "patientId")?,
             unique_id: required_attribute(unique_id, "uniqueId")?,
             when_created: checked_datetime(when_created)?,
+            password_change_date: checked_datetime(password_change_date)?,
             creator: required_attribute(creator, "creator")?,
             site_name: required_attribute(site_name, "siteName")?,
             site_unique_id: required_attribute(site_unique_id, "siteUniqueId")?,
@@ -105,6 +117,15 @@ pub struct Patient {
     #[serde(alias = "@whenCreated")]
     #[serde(alias = "whenCreated")]
     pub when_created: Option<DateTime<Utc>>,
+    #[serde(rename = "passwordChangeDate")]
+    #[serde(alias = "@passwordChangeDate")]
+    #[serde(alias = "passwordChangeDate")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub password_change_date: Option<DateTime<Utc>>,
+
     #[serde(rename = "creator")]
     #[serde(alias = "@creator")]
     #[serde(alias = "creator")]
@@ -155,6 +176,17 @@ impl Patient {
     }
 
     #[getter]
+    fn password_change_date<'py>(
+        &self,
+        py: Python<'py>,
+    ) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        self.password_change_date
+            .as_ref()
+            .map(|dt| to_py_datetime(py, dt))
+            .transpose()
+    }
+
+    #[getter]
     fn creator(&self) -> PyResult<String> {
         Ok(self.creator.clone())
     }
@@ -195,6 +227,13 @@ impl Patient {
                 .map(|dt| to_py_datetime(py, dt))
                 .transpose()?,
         )?;
+        dict.set_item(
+            "password_change_date",
+            self.password_change_date
+                .as_ref()
+                .map(|dt| to_py_datetime(py, dt))
+                .transpose()?,
+        )?;
         dict.set_item("creator", &self.creator)?;
         dict.set_item("site_name", &self.site_name)?;
         dict.set_item("site_unique_id", &self.site_unique_id)?;
@@ -220,6 +259,8 @@ impl Patient {
 /// Contains the information from the Prelude native subject XML.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SubjectNative {
+    #[serde(default)]
+    pub export: Option<Export>,
     pub patients: Vec<Patient>,
 }
 
@@ -255,6 +296,9 @@ impl SubjectNative {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all, skip_from_py_object)]
 pub struct SubjectNative {
+    #[serde(default)]
+    pub export: Option<Export>,
+
     #[serde(alias = "patient")]
     pub patients: Vec<Patient>,
 }
@@ -262,6 +306,11 @@ pub struct SubjectNative {
 #[cfg(feature = "python")]
 #[pymethods]
 impl SubjectNative {
+    #[getter]
+    fn export(&self) -> PyResult<Option<Export>> {
+        Ok(self.export.clone())
+    }
+
     #[getter]
     fn patients(&self) -> PyResult<Vec<Patient>> {
         Ok(self.patients.clone())
@@ -274,6 +323,10 @@ impl SubjectNative {
         for patient in &self.patients {
             let patient_dict = patient.to_dict(py)?;
             patient_dicts.push(patient_dict);
+        }
+        match &self.export {
+            Some(export) => dict.set_item("export", export.to_dict(py)?)?,
+            None => dict.set_item("export", py.None())?,
         }
         dict.set_item("patients", patient_dicts)?;
         Ok(dict)
