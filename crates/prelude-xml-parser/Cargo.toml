@@ -1,6 +1,6 @@
 [package]
 name = "prelude-xml-parser"
-version = "0.11.1"
+version = "0.12.0"
 description = "Deserialize Prelude EDC native XML files into Rust stucts."
 documentation = "https://docs.rs/prelude-xml-parser"
 readme = "README.md"
