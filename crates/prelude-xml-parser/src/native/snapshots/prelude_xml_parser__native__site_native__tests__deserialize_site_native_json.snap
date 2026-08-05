@@ -1,7 +1,8 @@
 ---
-source: src/native/site_native.rs
+source: crates/prelude-xml-parser/src/native/site_native.rs
 expression: result
 ---
+export: ~
 sites:
   - name: Some Site
     uniqueId: "1681574834910"

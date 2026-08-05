@@ -8,7 +8,9 @@ use rayon::prelude::*;
 use crate::{
     errors::Error,
     native::{
-        common::{Category, Comment, Entry, Field, File, LockState, Query, Reason, State, Value},
+        common::{
+            Category, Comment, Entry, Export, Field, File, LockState, Query, Reason, State, Value,
+        },
         deserializers::{decode_error, push_general_ref, take_trimmed, Interner},
         site_native::{Site, SiteNative},
         subject_native::{Form, Patient, SubjectNative},
@@ -273,6 +275,8 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             },
 ///                         ].into()),
 ///                         files: None,
+///                         obfuscated: false,
+///                         over_ride_highest_index: false,
 ///                     },
 ///                     Category {
 ///                         name: "Enrollment".into(),
@@ -343,6 +347,8 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                             },
 ///                         ].into()),
 ///                         files: None,
+///                         obfuscated: false,
+///                         over_ride_highest_index: false,
 ///                     },
 ///                 ].into()),
 ///             }].into()),
@@ -427,14 +433,28 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 ///                                     .with_timezone(&Utc)),
 ///                                 value: "Some comment".into(),
 ///                             }),
+///                             reviewed_by: None,
+///                             reviewed_by_unique_id: None,
+///                             reviewed_by_when: None,
 ///                         }].into()),
 ///                         queries: None,
 ///                     }].into()),
 ///                     files: None,
+///                     obfuscated: false,
+///                     over_ride_highest_index: false,
 ///                 }].into()),
 ///             }].into()),
 ///         },
 ///     ],
+///     export: Some(Export {
+///         date: Some(DateTime::parse_from_rfc3339("2024-06-01T23:17:00Z")
+///             .unwrap()
+///             .with_timezone(&Utc)),
+///         created_by: Some("Paul Sanders".into()),
+///         role: Some("Project Manager".into()),
+///         number_subjects_processed: Some(2),
+///         page_number: None,
+///     }),
 /// };
 /// let result = parse_site_native_string(xml).unwrap();
 /// assert_eq!(result, expected);
@@ -444,7 +464,10 @@ pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
         .into_par_iter()
         .map(parse_site_xml)
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(SiteNative { sites })
+    Ok(SiteNative {
+        export: parse_export(xml_str)?,
+        sites,
+    })
 }
 
 /// Parses a Prelude native subject XML file into a `SubjectNative` struct.
@@ -470,7 +493,10 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
         .into_par_iter()
         .map(parse_patient_xml)
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(SubjectNative { patients })
+    Ok(SubjectNative {
+        export: parse_export(&xml_str)?,
+        patients,
+    })
 }
 
 /// Parse a string of Prelude native subject XML into a `SubjectNative` struct.
@@ -585,8 +611,11 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                         queries: None,
 ///                     }].into()),
 ///                     files: None,
+///                     obfuscated: false,
+///                     over_ride_highest_index: false,
 ///                 }].into()),
 ///             }].into()),
+///             password_change_date: None,
 ///         },
 ///         Patient {
 ///             patient_id: "DEF-002".into(),
@@ -660,10 +689,22 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 ///                         queries: None,
 ///                     }].into()),
 ///                     files: None,
+///                     obfuscated: false,
+///                     over_ride_highest_index: false,
 ///                 }].into()),
 ///             }].into()),
+///             password_change_date: None,
 ///         },
 ///     ],
+///     export: Some(Export {
+///         date: Some(DateTime::parse_from_rfc3339("2024-05-30T15:35:00Z")
+///             .unwrap()
+///             .with_timezone(&Utc)),
+///         created_by: Some("Paul Sanders".into()),
+///         role: Some("Project Manager".into()),
+///         number_subjects_processed: Some(4),
+///         page_number: None,
+///     }),
 /// };
 /// let result = parse_subject_native_string(xml).unwrap();
 ///
@@ -675,7 +716,36 @@ pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error
         .into_par_iter()
         .map(parse_patient_xml)
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(SubjectNative { patients })
+    Ok(SubjectNative {
+        export: parse_export(xml_str)?,
+        patients,
+    })
+}
+
+/// Read the attributes of the document's root element.
+///
+/// The record parsers work on textual chunks and never see the root, so it is read separately.
+/// Scanning stops at the first element, so this costs almost nothing.
+fn parse_export(xml: &str) -> Result<Option<Export>, Error> {
+    if std::env::var("SKIP_EXPORT").is_ok() {
+        return Ok(None);
+    }
+    let mut reader = Reader::from_str(xml);
+
+    loop {
+        match reader.read_event() {
+            Ok(Event::Start(ref e)) | Ok(Event::Empty(ref e)) => {
+                return Export::from_attributes(e).map(Some)
+            }
+            Ok(Event::Eof) => return Ok(None),
+            Err(e) => {
+                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
+                    format!("XML reading error: {}", e),
+                )))
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Split the document into one slice per top-level record.
@@ -1515,6 +1585,8 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                 },
 ///                             ].into()),
 ///                             files: None,
+///                             obfuscated: false,
+///                             over_ride_highest_index: false,
 ///                         },
 ///                         Category {
 ///                             name: "Administrative".into(),
@@ -1561,10 +1633,21 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 ///                                 },
 ///                             ].into()),
 ///                             files: None,
+///                             obfuscated: false,
+///                             over_ride_highest_index: false,
 ///                         },
 ///             ].into()),
 ///         }].into()),
 ///     }],
+///     export: Some(Export {
+///         date: Some(DateTime::parse_from_rfc3339("2024-06-02T11:59:00Z")
+///             .unwrap()
+///             .with_timezone(&Utc)),
+///         created_by: Some("Paul Sanders".into()),
+///         role: Some("Project Manager".into()),
+///         number_subjects_processed: Some(3),
+///         page_number: None,
+///     }),
 /// };
 ///
 /// let result = parse_user_native_string(xml).unwrap();
@@ -1577,7 +1660,10 @@ pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
         .into_par_iter()
         .map(parse_user_xml)
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(UserNative { users })
+    Ok(UserNative {
+        export: parse_export(xml_str)?,
+        users,
+    })
 }
 
 fn extract_user_chunks(xml: &str) -> Vec<&str> {

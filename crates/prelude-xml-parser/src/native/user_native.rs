@@ -5,7 +5,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "python")]
 use pyo3::{exceptions::PyValueError, prelude::*, types::PyDict};
 
-pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, State, Value};
+pub use crate::native::common::{
+    Category, Comment, Entry, Export, Field, Form, Reason, State, Value,
+};
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
@@ -190,6 +192,9 @@ impl User {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserNative {
+    #[serde(default)]
+    pub export: Option<Export>,
+
     #[serde(alias = "user")]
     pub users: Vec<User>,
 }
@@ -225,6 +230,9 @@ impl UserNative {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all, skip_from_py_object)]
 pub struct UserNative {
+    #[serde(default)]
+    pub export: Option<Export>,
+
     #[serde(alias = "user")]
     pub users: Vec<User>,
 }
@@ -232,6 +240,11 @@ pub struct UserNative {
 #[cfg(feature = "python")]
 #[pymethods]
 impl UserNative {
+    #[getter]
+    fn export(&self) -> PyResult<Option<Export>> {
+        Ok(self.export.clone())
+    }
+
     #[getter]
     fn users(&self) -> PyResult<Vec<User>> {
         Ok(self.users.clone())
@@ -244,6 +257,10 @@ impl UserNative {
         for user in &self.users {
             let user_dict = user.to_dict(py)?;
             user_dicts.push(user_dict);
+        }
+        match &self.export {
+            Some(export) => dict.set_item("export", export.to_dict(py)?)?,
+            None => dict.set_item("export", py.None())?,
         }
         dict.set_item("users", user_dicts)?;
         Ok(dict)

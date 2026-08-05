@@ -37,6 +37,9 @@ class Entry:
 
 class Comment:
     comment_id: str
+    reviewed_by: str | None
+    reviewed_by_unique_id: str | None
+    reviewed_by_when: datetime | None
     value: Value | None
 
     def to_dict(self) -> dict: ...
@@ -92,6 +95,8 @@ class Category:
     name: str
     category_type: str
     highest_index: int
+    obfuscated: bool
+    over_ride_highest_index: bool
     fields: list[Field] | None
     files: list[File] | None
 
@@ -130,6 +135,7 @@ class Patient:
     patient_id: str
     unique_id: str
     when_created: datetime | None
+    password_change_date: datetime | None
     creator: str
     site_name: str
     site_unique_id: str
@@ -160,19 +166,31 @@ class User:
 
     def to_dict(self) -> dict: ...
 
+class Export:
+    date: datetime | None
+    created_by: str | None
+    role: str | None
+    number_subjects_processed: int | None
+    page_number: str | None
+
+    def to_dict(self) -> dict: ...
+
 class SiteNative:
+    export: Export | None
     sites: list[Site]
 
     def to_dict(self) -> dict: ...
     def to_json(self) -> str: ...
 
 class SubjectNative:
+    export: Export | None
     patients: list[Patient]
 
     def to_dict(self) -> dict: ...
     def to_json(self) -> str: ...
 
 class UserNative:
+    export: Export | None
     users: list[User]
 
     def to_dict(self) -> dict: ...

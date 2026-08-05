@@ -7,7 +7,8 @@ use chrono::{Datelike, NaiveDate};
 use prelude_xml_parser::{
     native::{
         common::{
-            Category, Comment, Entry, Field, File, Form, LockState, Query, Reason, State, Value,
+            Category, Comment, Entry, Export, Field, File, Form, LockState, Query, Reason, State,
+            Value,
         },
         site_native::{Site, SiteNative},
         subject_native::{Patient, SubjectNative},
@@ -607,6 +608,7 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Category>()?;
     m.add_class::<Comment>()?;
     m.add_class::<Entry>()?;
+    m.add_class::<Export>()?;
     m.add_class::<Field>()?;
     m.add_class::<File>()?;
     m.add_class::<Form>()?;

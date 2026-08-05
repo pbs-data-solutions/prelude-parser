@@ -2,6 +2,7 @@
 source: crates/prelude-xml-parser/src/native/user_native.rs
 expression: result
 ---
+export: ~
 users:
   - uniqueId: "1691421275437"
     lastLanguage: ~
@@ -32,6 +33,8 @@ users:
           - name: demographics
             categoryType: normal
             highestIndex: 0
+            obfuscated: false
+            overRideHighestIndex: false
             fields:
               - name: address
                 fieldType: text
@@ -66,6 +69,8 @@ users:
           - name: Administrative
             categoryType: normal
             highestIndex: 0
+            obfuscated: false
+            overRideHighestIndex: false
             fields:
               - name: study_assignment
                 fieldType: text

@@ -251,6 +251,10 @@ pub(crate) fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Er
         Ok(dt.with_timezone(&Utc))
     } else if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
         Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = DateTime::parse_from_str(s, "%d-%b-%Y %H:%M:%S %z") {
+        Ok(dt.with_timezone(&Utc))
+    } else if let Ok(dt) = DateTime::parse_from_str(s, "%d-%b-%Y %H:%M %z") {
+        Ok(dt.with_timezone(&Utc))
     } else {
         Err(crate::errors::Error::ParsingError(
             quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),

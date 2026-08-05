@@ -2,10 +2,12 @@
 source: crates/prelude-xml-parser/src/native/subject_native.rs
 expression: result
 ---
+export: ~
 patients:
   - patientId: ABC-001
     uniqueId: "1681574905819"
     whenCreated: "2023-04-15T16:09:02Z"
+    passwordChangeDate: ~
     creator: Paul Sanders
     siteName: Some Site
     siteUniqueId: "1681574834910"
@@ -36,6 +38,8 @@ patients:
           - name: Demographics
             categoryType: normal
             highestIndex: 0
+            obfuscated: false
+            overRideHighestIndex: false
             fields:
               - name: breed
                 fieldType: combo-box
@@ -61,6 +65,7 @@ patients:
   - patientId: DEF-002
     uniqueId: "1681574905820"
     whenCreated: "2023-04-16T16:10:02Z"
+    passwordChangeDate: ~
     creator: Wade Watts
     siteName: Another Site
     siteUniqueId: "1681574834911"
@@ -91,6 +96,8 @@ patients:
           - name: Demographics
             categoryType: normal
             highestIndex: 0
+            obfuscated: false
+            overRideHighestIndex: false
             fields:
               - name: breed
                 fieldType: combo-box

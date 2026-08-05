@@ -1,3 +1,84 @@
+#[cfg(not(feature = "python"))]
+/// The attributes on the `export_from_vision_EDC` root element: who produced the export, when, and
+/// how much of the study it covers.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct Export {
+    #[serde(rename = "date")]
+    #[serde(alias = "@date")]
+    #[serde(alias = "date")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub date: Option<DateTime<Utc>>,
+
+    #[serde(rename = "createdBy")]
+    #[serde(alias = "@createdBy")]
+    #[serde(alias = "createdBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub created_by: Option<String>,
+
+    #[serde(rename = "role")]
+    #[serde(alias = "@role")]
+    #[serde(alias = "role")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub role: Option<String>,
+
+    #[serde(rename = "numberSubjectsProcessed")]
+    #[serde(alias = "@numberSubjectsProcessed")]
+    #[serde(alias = "numberSubjectsProcessed")]
+    #[serde(default)]
+    pub number_subjects_processed: Option<usize>,
+
+    /// Present when the export was split, e.g. `"1 of 6"`.
+    #[serde(rename = "pageNumber")]
+    #[serde(alias = "@pageNumber")]
+    #[serde(alias = "pageNumber")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub page_number: Option<String>,
+}
+
+#[cfg(feature = "python")]
+/// The attributes on the `export_from_vision_EDC` root element: who produced the export, when, and
+/// how much of the study it covers.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[pyclass(skip_from_py_object)]
+pub struct Export {
+    #[serde(rename = "date")]
+    #[serde(alias = "@date")]
+    #[serde(alias = "date")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub date: Option<DateTime<Utc>>,
+
+    #[serde(rename = "createdBy")]
+    #[serde(alias = "@createdBy")]
+    #[serde(alias = "createdBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub created_by: Option<String>,
+
+    #[serde(rename = "role")]
+    #[serde(alias = "@role")]
+    #[serde(alias = "role")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub role: Option<String>,
+
+    #[serde(rename = "numberSubjectsProcessed")]
+    #[serde(alias = "@numberSubjectsProcessed")]
+    #[serde(alias = "numberSubjectsProcessed")]
+    #[serde(default)]
+    pub number_subjects_processed: Option<usize>,
+
+    /// Present when the export was split, e.g. `"1 of 6"`.
+    #[serde(rename = "pageNumber")]
+    #[serde(alias = "@pageNumber")]
+    #[serde(alias = "pageNumber")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub page_number: Option<String>,
+}
+
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
@@ -355,17 +436,61 @@ pub struct Comment {
     #[serde(alias = "@id")]
     #[serde(alias = "commentId")]
     pub comment_id: String,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
     pub value: Option<Value>,
 }
 
 #[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass(get_all, skip_from_py_object)]
+#[pyclass(skip_from_py_object)]
 pub struct Comment {
     #[serde(rename = "commentId")]
     #[serde(alias = "@id")]
     #[serde(alias = "commentId")]
     pub comment_id: String,
+
+    #[serde(rename = "reviewedBy")]
+    #[serde(alias = "@reviewedBy")]
+    #[serde(alias = "reviewedBy")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by: Option<String>,
+
+    #[serde(rename = "reviewedByUniqueId")]
+    #[serde(alias = "@reviewedByUniqueId")]
+    #[serde(alias = "reviewedByUniqueId")]
+    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
+    pub reviewed_by_unique_id: Option<String>,
+
+    #[serde(rename = "reviewedByWhen")]
+    #[serde(alias = "@reviewedByWhen")]
+    #[serde(alias = "reviewedByWhen")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_empty_string_as_none_datetime"
+    )]
+    pub reviewed_by_when: Option<DateTime<Utc>>,
+
     pub value: Option<Value>,
 }
 
@@ -567,9 +692,30 @@ impl Comment {
         Ok(self.value.clone())
     }
 
+    #[getter]
+    fn reviewed_by(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_unique_id(&self) -> PyResult<Option<String>> {
+        Ok(self.reviewed_by_unique_id.clone())
+    }
+
+    #[getter]
+    fn reviewed_by_when<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.reviewed_by_when)
+    }
+
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
         dict.set_item("comment_id", &self.comment_id)?;
+        dict.set_item("reviewed_by", &self.reviewed_by)?;
+        dict.set_item("reviewed_by_unique_id", &self.reviewed_by_unique_id)?;
+        dict.set_item(
+            "reviewed_by_when",
+            to_py_datetime_option(py, &self.reviewed_by_when)?,
+        )?;
         if let Some(value) = &self.value {
             dict.set_item("value", value.to_dict(py)?)?;
         } else {
@@ -971,6 +1117,18 @@ pub struct Category {
     #[serde(alias = "highestIndex")]
     pub highest_index: usize,
 
+    #[serde(rename = "obfuscated")]
+    #[serde(alias = "@obfuscated")]
+    #[serde(alias = "obfuscated")]
+    #[serde(default)]
+    pub obfuscated: bool,
+
+    #[serde(rename = "overRideHighestIndex")]
+    #[serde(alias = "@overRideHighestIndex")]
+    #[serde(alias = "overRideHighestIndex")]
+    #[serde(default)]
+    pub over_ride_highest_index: bool,
+
     #[serde(alias = "field")]
     pub fields: Option<Arc<Vec<Field>>>,
 
@@ -996,6 +1154,18 @@ pub struct Category {
     #[serde(alias = "@highestIndex")]
     #[serde(alias = "highestIndex")]
     pub highest_index: usize,
+
+    #[serde(rename = "obfuscated")]
+    #[serde(alias = "@obfuscated")]
+    #[serde(alias = "obfuscated")]
+    #[serde(default)]
+    pub obfuscated: bool,
+
+    #[serde(rename = "overRideHighestIndex")]
+    #[serde(alias = "@overRideHighestIndex")]
+    #[serde(alias = "overRideHighestIndex")]
+    #[serde(default)]
+    pub over_ride_highest_index: bool,
 
     #[serde(alias = "field")]
     pub fields: Option<Arc<Vec<Field>>>,
@@ -1032,11 +1202,23 @@ impl Category {
         Ok(self.files.as_deref().cloned())
     }
 
+    #[getter]
+    fn obfuscated(&self) -> PyResult<bool> {
+        Ok(self.obfuscated)
+    }
+
+    #[getter]
+    fn over_ride_highest_index(&self) -> PyResult<bool> {
+        Ok(self.over_ride_highest_index)
+    }
+
     pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new(py);
         dict.set_item("name", &*self.name)?;
         dict.set_item("category_type", &*self.category_type)?;
         dict.set_item("highest_index", self.highest_index)?;
+        dict.set_item("obfuscated", self.obfuscated)?;
+        dict.set_item("over_ride_highest_index", self.over_ride_highest_index)?;
 
         let mut field_dicts = Vec::new();
         if let Some(fields) = &self.fields {
@@ -1694,11 +1876,15 @@ impl Category {
         let mut name = "";
         let mut category_type = "";
         let mut highest_index = "";
+        let mut obfuscated = "";
+        let mut over_ride_highest_index = "";
 
         visit_attributes(e, |key, attr| match key {
             b"name" => name = attr,
             b"type" => category_type = attr,
             b"highestIndex" => highest_index = attr,
+            b"obfuscated" => obfuscated = attr,
+            b"overRideHighestIndex" => over_ride_highest_index = attr,
             _ => {}
         })?;
 
@@ -1706,6 +1892,8 @@ impl Category {
             name: interner.intern(name),
             category_type: interner.intern(category_type),
             highest_index: highest_index.parse().unwrap_or(0),
+            obfuscated: obfuscated == "true",
+            over_ride_highest_index: over_ride_highest_index == "true",
             fields: None,
             files: None,
         })
@@ -1835,6 +2023,73 @@ impl Reason {
     }
 }
 
+impl Export {
+    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
+        let mut date = "";
+        let mut created_by = "";
+        let mut role = "";
+        let mut number_subjects_processed = "";
+        let mut page_number = "";
+
+        visit_attributes(e, |key, attr| match key {
+            b"date" => date = attr,
+            b"createdBy" => created_by = attr,
+            b"role" => role = attr,
+            b"numberSubjectsProcessed" => number_subjects_processed = attr,
+            b"pageNumber" => page_number = attr,
+            _ => {}
+        })?;
+
+        Ok(Export {
+            date: optional_datetime(date),
+            created_by: optional_string(created_by),
+            role: optional_string(role),
+            number_subjects_processed: number_subjects_processed.parse().ok(),
+            page_number: optional_string(page_number),
+        })
+    }
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl Export {
+    #[getter]
+    fn date<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyDateTime>>> {
+        to_py_datetime_option(py, &self.date)
+    }
+
+    #[getter]
+    fn created_by(&self) -> PyResult<Option<String>> {
+        Ok(self.created_by.clone())
+    }
+
+    #[getter]
+    fn role(&self) -> PyResult<Option<String>> {
+        Ok(self.role.clone())
+    }
+
+    #[getter]
+    fn number_subjects_processed(&self) -> PyResult<Option<usize>> {
+        Ok(self.number_subjects_processed)
+    }
+
+    #[getter]
+    fn page_number(&self) -> PyResult<Option<String>> {
+        Ok(self.page_number.clone())
+    }
+
+    pub fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("date", to_py_datetime_option(py, &self.date)?)?;
+        dict.set_item("created_by", &self.created_by)?;
+        dict.set_item("role", &self.role)?;
+        dict.set_item("number_subjects_processed", self.number_subjects_processed)?;
+        dict.set_item("page_number", &self.page_number)?;
+
+        Ok(dict)
+    }
+}
+
 impl Query {
     pub(crate) fn from_attributes(
         e: &BytesStart<'_>,
@@ -1912,15 +2167,23 @@ impl File {
 impl Comment {
     pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
         let mut comment_id = "";
+        let mut reviewed_by = "";
+        let mut reviewed_by_unique_id = "";
+        let mut reviewed_by_when = "";
 
-        visit_attributes(e, |key, attr| {
-            if key == b"id" {
-                comment_id = attr;
-            }
+        visit_attributes(e, |key, attr| match key {
+            b"id" => comment_id = attr,
+            b"reviewedBy" => reviewed_by = attr,
+            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            b"reviewedByWhen" => reviewed_by_when = attr,
+            _ => {}
         })?;
 
         Ok(Comment {
             comment_id: attribute_string(comment_id),
+            reviewed_by: optional_string(reviewed_by),
+            reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
+            reviewed_by_when: optional_datetime(reviewed_by_when),
             value: None,
         })
     }

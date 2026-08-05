@@ -11,7 +11,9 @@ use pyo3::{
 
 use serde::{Deserialize, Serialize};
 
-pub use crate::native::common::{Category, Comment, Entry, Field, Form, Reason, State, Value};
+pub use crate::native::common::{
+    Category, Comment, Entry, Export, Field, Form, Reason, State, Value,
+};
 
 use quick_xml::events::BytesStart;
 
@@ -264,6 +266,9 @@ impl Site {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SiteNative {
+    #[serde(default)]
+    pub export: Option<Export>,
+
     #[serde(alias = "site")]
     pub sites: Vec<Site>,
 }
@@ -301,6 +306,9 @@ impl SiteNative {
 #[serde(rename_all = "camelCase")]
 #[pyclass(get_all, skip_from_py_object)]
 pub struct SiteNative {
+    #[serde(default)]
+    pub export: Option<Export>,
+
     #[serde(alias = "site")]
     pub sites: Vec<Site>,
 }
@@ -308,6 +316,11 @@ pub struct SiteNative {
 #[cfg(feature = "python")]
 #[pymethods]
 impl SiteNative {
+    #[getter]
+    fn export(&self) -> PyResult<Option<Export>> {
+        Ok(self.export.clone())
+    }
+
     #[getter]
     fn sites(&self) -> PyResult<Vec<Site>> {
         Ok(self.sites.clone())
@@ -320,6 +333,10 @@ impl SiteNative {
         for site in &self.sites {
             let site_dict = site.to_dict(py)?;
             site_dicts.push(site_dict);
+        }
+        match &self.export {
+            Some(export) => dict.set_item("export", export.to_dict(py)?)?,
+            None => dict.set_item("export", py.None())?,
         }
         dict.set_item("sites", site_dicts)?;
         Ok(dict)
