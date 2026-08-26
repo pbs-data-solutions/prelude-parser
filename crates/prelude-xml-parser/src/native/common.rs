@@ -1262,20 +1262,20 @@ impl Form {
         let mut form_state = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = attr,
-            b"lastModified" => last_modified = attr,
-            b"whoLastModifiedName" => who_last_modified_name = attr,
-            b"whoLastModifiedRole" => who_last_modified_role = attr,
-            b"whenCreated" => when_created = attr,
-            b"hasErrors" => has_errors = attr,
-            b"hasWarnings" => has_warnings = attr,
-            b"locked" => locked = attr,
-            b"user" => user = attr,
-            b"dateTimeChanged" => date_time_changed = attr,
-            b"formTitle" => form_title = attr,
-            b"formIndex" => form_index = attr,
-            b"formGroup" => form_group = attr,
-            b"formState" => form_state = attr,
+            "name" => name = attr,
+            "lastModified" => last_modified = attr,
+            "whoLastModifiedName" => who_last_modified_name = attr,
+            "whoLastModifiedRole" => who_last_modified_role = attr,
+            "whenCreated" => when_created = attr,
+            "hasErrors" => has_errors = attr,
+            "hasWarnings" => has_warnings = attr,
+            "locked" => locked = attr,
+            "user" => user = attr,
+            "dateTimeChanged" => date_time_changed = attr,
+            "formTitle" => form_title = attr,
+            "formIndex" => form_index = attr,
+            "formGroup" => form_group = attr,
+            "formState" => form_state = attr,
             _ => {}
         })?;
 
@@ -1828,10 +1828,10 @@ impl State {
         let mut date_signed = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"value" => value = attr,
-            b"signer" => signer = attr,
-            b"signerUniqueId" => signer_unique_id = attr,
-            b"dateSigned" => date_signed = attr,
+            "value" => value = attr,
+            "signer" => signer = attr,
+            "signerUniqueId" => signer_unique_id = attr,
+            "dateSigned" => date_signed = attr,
             _ => {}
         })?;
 
@@ -1852,10 +1852,10 @@ impl LockState {
         let mut date_time_changed = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"locked" => locked = attr,
-            b"user" => user = attr,
-            b"userUniqueId" => user_unique_id = attr,
-            b"dateTimeChanged" => date_time_changed = attr,
+            "locked" => locked = attr,
+            "user" => user = attr,
+            "userUniqueId" => user_unique_id = attr,
+            "dateTimeChanged" => date_time_changed = attr,
             _ => {}
         })?;
 
@@ -1880,11 +1880,11 @@ impl Category {
         let mut over_ride_highest_index = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = attr,
-            b"type" => category_type = attr,
-            b"highestIndex" => highest_index = attr,
-            b"obfuscated" => obfuscated = attr,
-            b"overRideHighestIndex" => over_ride_highest_index = attr,
+            "name" => name = attr,
+            "type" => category_type = attr,
+            "highestIndex" => highest_index = attr,
+            "obfuscated" => obfuscated = attr,
+            "overRideHighestIndex" => over_ride_highest_index = attr,
             _ => {}
         })?;
 
@@ -1913,12 +1913,12 @@ impl Field {
         let mut keep_history = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = attr,
-            b"type" => field_type = attr,
-            b"dataType" => data_type = attr,
-            b"errorCode" => error_code = attr,
-            b"whenCreated" => when_created = attr,
-            b"keepHistory" => keep_history = attr,
+            "name" => name = attr,
+            "type" => field_type = attr,
+            "dataType" => data_type = attr,
+            "errorCode" => error_code = attr,
+            "whenCreated" => when_created = attr,
+            "keepHistory" => keep_history = attr,
             _ => {}
         })?;
 
@@ -1948,11 +1948,11 @@ impl Entry {
         let mut reviewed_by_when = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"id" => id = Some(attr),
-            b"entryId" => entry_id = Some(attr),
-            b"reviewedBy" => reviewed_by = attr,
-            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
-            b"reviewedByWhen" => reviewed_by_when = attr,
+            "id" => id = Some(attr),
+            "entryId" => entry_id = Some(attr),
+            "reviewedBy" => reviewed_by = attr,
+            "reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            "reviewedByWhen" => reviewed_by_when = attr,
             _ => {}
         })?;
 
@@ -1978,10 +1978,10 @@ impl Value {
         let mut when = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"by" => by = attr,
-            b"byUniqueId" => by_unique_id = attr,
-            b"role" => role = attr,
-            b"when" => when = attr,
+            "by" => by = attr,
+            "byUniqueId" => by_unique_id = attr,
+            "role" => role = attr,
+            "when" => when = attr,
             _ => {}
         })?;
 
@@ -2006,10 +2006,10 @@ impl Reason {
         let mut when = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"by" => by = attr,
-            b"byUniqueId" => by_unique_id = attr,
-            b"role" => role = attr,
-            b"when" => when = attr,
+            "by" => by = attr,
+            "byUniqueId" => by_unique_id = attr,
+            "role" => role = attr,
+            "when" => when = attr,
             _ => {}
         })?;
 
@@ -2032,11 +2032,11 @@ impl Export {
         let mut page_number = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"date" => date = attr,
-            b"createdBy" => created_by = attr,
-            b"role" => role = attr,
-            b"numberSubjectsProcessed" => number_subjects_processed = attr,
-            b"pageNumber" => page_number = attr,
+            "date" => date = attr,
+            "createdBy" => created_by = attr,
+            "role" => role = attr,
+            "numberSubjectsProcessed" => number_subjects_processed = attr,
+            "pageNumber" => page_number = attr,
             _ => {}
         })?;
 
@@ -2102,11 +2102,11 @@ impl Query {
         let mut reviewed_by_when = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"id" => id = Some(attr),
-            b"queryId" => query_id = Some(attr),
-            b"reviewedBy" => reviewed_by = attr,
-            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
-            b"reviewedByWhen" => reviewed_by_when = attr,
+            "id" => id = Some(attr),
+            "queryId" => query_id = Some(attr),
+            "reviewedBy" => reviewed_by = attr,
+            "reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            "reviewedByWhen" => reviewed_by_when = attr,
             _ => {}
         })?;
 
@@ -2136,14 +2136,14 @@ impl File {
         let mut size = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = attr,
-            b"type" => file_type = attr,
-            b"dataType" => data_type = attr,
-            b"errorCode" => error_code = attr,
-            b"whenCreated" => when_created = attr,
-            b"keepHistory" => keep_history = attr,
-            b"fileLocation" => file_location = attr,
-            b"size" => size = attr,
+            "name" => name = attr,
+            "type" => file_type = attr,
+            "dataType" => data_type = attr,
+            "errorCode" => error_code = attr,
+            "whenCreated" => when_created = attr,
+            "keepHistory" => keep_history = attr,
+            "fileLocation" => file_location = attr,
+            "size" => size = attr,
             _ => {}
         })?;
 
@@ -2172,10 +2172,10 @@ impl Comment {
         let mut reviewed_by_when = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"id" => comment_id = attr,
-            b"reviewedBy" => reviewed_by = attr,
-            b"reviewedByUniqueId" => reviewed_by_unique_id = attr,
-            b"reviewedByWhen" => reviewed_by_when = attr,
+            "id" => comment_id = attr,
+            "reviewedBy" => reviewed_by = attr,
+            "reviewedByUniqueId" => reviewed_by_unique_id = attr,
+            "reviewedByWhen" => reviewed_by_when = attr,
             _ => {}
         })?;
 

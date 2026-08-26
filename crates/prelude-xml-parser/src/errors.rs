@@ -19,8 +19,8 @@ pub enum Error {
     IO(#[from] std::io::Error),
 
     /// A parsing error occurred.
-    #[error(transparent)]
-    ParsingError(#[from] quick_xml::de::DeError),
+    #[error("{0}")]
+    ParsingError(String),
 
     /// An unknown error occurred.
     #[error("Unknown error")]

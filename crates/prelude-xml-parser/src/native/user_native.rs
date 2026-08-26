@@ -50,10 +50,10 @@ impl User {
         let mut number_of_forms = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"uniqueId" => unique_id = Some(attr),
-            b"lastLanguage" => last_language = attr,
-            b"creator" => creator = Some(attr),
-            b"numberOfForms" => number_of_forms = attr,
+            "uniqueId" => unique_id = Some(attr),
+            "lastLanguage" => last_language = attr,
+            "creator" => creator = Some(attr),
+            "numberOfForms" => number_of_forms = attr,
             _ => {}
         })?;
 
@@ -112,10 +112,10 @@ impl User {
         let mut number_of_forms = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"uniqueId" => unique_id = Some(attr),
-            b"lastLanguage" => last_language = attr,
-            b"creator" => creator = Some(attr),
-            b"numberOfForms" => number_of_forms = attr,
+            "uniqueId" => unique_id = Some(attr),
+            "lastLanguage" => last_language = attr,
+            "creator" => creator = Some(attr),
+            "numberOfForms" => number_of_forms = attr,
             _ => {}
         })?;
 

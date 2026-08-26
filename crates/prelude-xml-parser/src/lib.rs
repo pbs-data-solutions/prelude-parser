@@ -11,7 +11,7 @@ use crate::{
         common::{
             Category, Comment, Entry, Export, Field, File, LockState, Query, Reason, State, Value,
         },
-        deserializers::{decode_error, push_general_ref, take_trimmed, Interner},
+        deserializers::{push_general_ref, take_trimmed, Interner},
         site_native::{Site, SiteNative},
         subject_native::{Form, Patient, SubjectNative},
         user_native::{User, UserNative},
@@ -738,11 +738,7 @@ fn parse_export(xml: &str) -> Result<Option<Export>, Error> {
                 return Export::from_attributes(e).map(Some)
             }
             Ok(Event::Eof) => return Ok(None),
-            Err(e) => {
-                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                    format!("XML reading error: {}", e),
-                )))
-            }
+            Err(e) => return Err(Error::ParsingError(format!("XML reading error: {}", e))),
             _ => {}
         }
     }
@@ -832,86 +828,77 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
 
     loop {
         match xml_reader.read_event() {
-            Err(e) => {
-                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                    format!("XML reading error: {}", e),
-                )))
-            }
+            Err(e) => return Err(Error::ParsingError(format!("XML reading error: {}", e))),
             Ok(Event::Eof) => break,
 
-            Ok(Event::Start(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "patient" => {
-                            current_patient = Some(Patient::from_attributes(e)?);
-                            current_forms.clear();
-                        }
-                        "form" if current_patient.is_some() => {
-                            current_form = Some(Form::from_attributes(e)?);
-                            in_form = true;
-                            current_states.clear();
-                            current_lock_states.clear();
-                            current_categories.clear();
-                        }
-                        "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e, &mut interner)?);
-                            in_category = true;
-                            current_fields.clear();
-                        }
-                        "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e, &mut interner)?);
-                            in_field = true;
-                            current_entries.clear();
-                            current_comments.clear();
-                            current_queries.clear();
-                        }
-                        "file" if in_category => {
-                            current_file = Some(File::from_attributes(e, &mut interner)?);
-                            in_file = true;
-                            current_entries.clear();
-                            current_comments.clear();
-                            current_queries.clear();
-                            current_download_history.clear();
-                        }
-                        "entry" if in_field || in_file => {
-                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
-                            in_entry = true;
-                        }
-                        "comment" if in_field || in_file => {
-                            current_comment = Some(Comment::from_attributes(e)?);
-                            in_comment = true;
-                        }
-                        "query" if in_field || in_file => {
-                            current_query = Some(Query::from_attributes(e, &mut interner)?);
-                            in_query = true;
-                        }
-                        "downloadHistory" if in_file => {
-                            current_download_entry = Some(Comment::from_attributes(e)?);
-                            in_download_history = true;
-                        }
-                        "answer" if in_query => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "value" if in_entry || in_comment || in_query || in_download_history => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
-                            in_reason = true;
-                            text_content.clear();
-                        }
-                        _ => {}
-                    }
+            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
+                "patient" => {
+                    current_patient = Some(Patient::from_attributes(e)?);
+                    current_forms.clear();
                 }
-            }
+                "form" if current_patient.is_some() => {
+                    current_form = Some(Form::from_attributes(e)?);
+                    in_form = true;
+                    current_states.clear();
+                    current_lock_states.clear();
+                    current_categories.clear();
+                }
+                "category" if in_form => {
+                    current_category = Some(Category::from_attributes(e, &mut interner)?);
+                    in_category = true;
+                    current_fields.clear();
+                }
+                "field" if in_category => {
+                    current_field = Some(Field::from_attributes(e, &mut interner)?);
+                    in_field = true;
+                    current_entries.clear();
+                    current_comments.clear();
+                    current_queries.clear();
+                }
+                "file" if in_category => {
+                    current_file = Some(File::from_attributes(e, &mut interner)?);
+                    in_file = true;
+                    current_entries.clear();
+                    current_comments.clear();
+                    current_queries.clear();
+                    current_download_history.clear();
+                }
+                "entry" if in_field || in_file => {
+                    current_entry = Some(Entry::from_attributes(e, &mut interner)?);
+                    in_entry = true;
+                }
+                "comment" if in_field || in_file => {
+                    current_comment = Some(Comment::from_attributes(e)?);
+                    in_comment = true;
+                }
+                "query" if in_field || in_file => {
+                    current_query = Some(Query::from_attributes(e, &mut interner)?);
+                    in_query = true;
+                }
+                "downloadHistory" if in_file => {
+                    current_download_entry = Some(Comment::from_attributes(e)?);
+                    in_download_history = true;
+                }
+                "answer" if in_query => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "value" if in_entry || in_comment || in_query || in_download_history => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "reason" if in_entry => {
+                    current_reason = Some(Reason::from_attributes(e, &mut interner)?);
+                    in_reason = true;
+                    text_content.clear();
+                }
+                _ => {}
+            },
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content());
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
@@ -919,199 +906,180 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
             }
 
             Ok(Event::End(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "patient" => {
-                            if let Some(mut patient) = current_patient.take() {
-                                if !current_forms.is_empty() {
-                                    patient.set_forms(current_forms.drain(..).collect());
-                                }
-                                current_patient = Some(patient);
+                match e.local_name().as_ref() {
+                    "patient" => {
+                        if let Some(mut patient) = current_patient.take() {
+                            if !current_forms.is_empty() {
+                                patient.set_forms(current_forms.drain(..).collect());
                             }
+                            current_patient = Some(patient);
                         }
-                        "form" if in_form => {
-                            if let Some(mut form) = current_form.take() {
-                                if !current_states.is_empty() {
-                                    form.states =
-                                        Some(Arc::new(current_states.drain(..).collect()));
-                                }
-                                if !current_lock_states.is_empty() {
-                                    form.lock_states =
-                                        Some(Arc::new(current_lock_states.drain(..).collect()));
-                                }
-                                if !current_categories.is_empty() {
-                                    form.categories =
-                                        Some(Arc::new(current_categories.drain(..).collect()));
-                                }
-                                current_forms.push(form);
-                            }
-                            in_form = false;
-                        }
-                        "category" if in_category => {
-                            if let Some(mut category) = current_category.take() {
-                                if !current_fields.is_empty() {
-                                    category.fields =
-                                        Some(Arc::new(current_fields.drain(..).collect()));
-                                }
-                                if !current_files.is_empty() {
-                                    category.files =
-                                        Some(Arc::new(current_files.drain(..).collect()));
-                                }
-                                current_categories.push(category);
-                            }
-                            in_category = false;
-                        }
-                        "field" if in_field => {
-                            if let Some(mut field) = current_field.take() {
-                                if !current_entries.is_empty() {
-                                    field.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    field.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    field.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                current_fields.push(field);
-                            }
-                            in_field = false;
-                        }
-                        "file" if in_file => {
-                            if let Some(mut file) = current_file.take() {
-                                if !current_entries.is_empty() {
-                                    file.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    file.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    file.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                if !current_download_history.is_empty() {
-                                    file.download_history = Some(Arc::new(
-                                        current_download_history.drain(..).collect(),
-                                    ));
-                                }
-                                current_files.push(file);
-                            }
-                            in_file = false;
-                        }
-                        "query" if in_query => {
-                            if let Some(query) = current_query.take() {
-                                current_queries.push(query);
-                            }
-                            in_query = false;
-                        }
-                        "downloadHistory" if in_download_history => {
-                            if let Some(download) = current_download_entry.take() {
-                                current_download_history.push(download);
-                            }
-                            in_download_history = false;
-                        }
-                        "entry" if in_entry => {
-                            if let Some(entry) = current_entry.take() {
-                                current_entries.push(entry);
-                            }
-                            in_entry = false;
-                        }
-                        "comment" if in_comment => {
-                            if let Some(comment) = current_comment.take() {
-                                current_comments.push(comment);
-                            }
-                            in_comment = false;
-                        }
-                        "answer" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut query) = current_query {
-                                    query.answer = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "value" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                // innermost owner wins; these never nest within one another
-                                if let Some(ref mut download) = current_download_entry {
-                                    download.value = Some(value);
-                                } else if let Some(ref mut query) = current_query {
-                                    query.value = Some(value);
-                                } else if let Some(ref mut entry) = current_entry {
-                                    entry.value = Some(value);
-                                } else if let Some(ref mut comment) = current_comment {
-                                    comment.value = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "reason" if in_reason => {
-                            if let Some(mut reason) = current_reason.take() {
-                                reason.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
-                                    entry.reason = Some(reason);
-                                }
-                            }
-                            in_reason = false;
-                        }
-                        _ => {}
                     }
-                }
-            }
-
-            Ok(Event::Empty(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "state" if in_form => {
-                            let state = State::from_attributes(e, &mut interner)?;
-                            current_states.push(state);
+                    "form" if in_form => {
+                        if let Some(mut form) = current_form.take() {
+                            if !current_states.is_empty() {
+                                form.states = Some(Arc::new(current_states.drain(..).collect()));
+                            }
+                            if !current_lock_states.is_empty() {
+                                form.lock_states =
+                                    Some(Arc::new(current_lock_states.drain(..).collect()));
+                            }
+                            if !current_categories.is_empty() {
+                                form.categories =
+                                    Some(Arc::new(current_categories.drain(..).collect()));
+                            }
+                            current_forms.push(form);
                         }
-                        "lockState" if in_form => {
-                            current_lock_states.push(LockState::from_attributes(e)?);
+                        in_form = false;
+                    }
+                    "category" if in_category => {
+                        if let Some(mut category) = current_category.take() {
+                            if !current_fields.is_empty() {
+                                category.fields =
+                                    Some(Arc::new(current_fields.drain(..).collect()));
+                            }
+                            if !current_files.is_empty() {
+                                category.files = Some(Arc::new(current_files.drain(..).collect()));
+                            }
+                            current_categories.push(category);
                         }
-                        "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e, &mut interner)?);
+                        in_category = false;
+                    }
+                    "field" if in_field => {
+                        if let Some(mut field) = current_field.take() {
+                            if !current_entries.is_empty() {
+                                field.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                field.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                field.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
+                            current_fields.push(field);
                         }
-                        "field" if in_category => {
-                            current_fields.push(Field::from_attributes(e, &mut interner)?);
+                        in_field = false;
+                    }
+                    "file" if in_file => {
+                        if let Some(mut file) = current_file.take() {
+                            if !current_entries.is_empty() {
+                                file.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                file.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                file.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
+                            if !current_download_history.is_empty() {
+                                file.download_history =
+                                    Some(Arc::new(current_download_history.drain(..).collect()));
+                            }
+                            current_files.push(file);
                         }
-                        "file" if in_category => {
-                            current_files.push(File::from_attributes(e, &mut interner)?);
+                        in_file = false;
+                    }
+                    "query" if in_query => {
+                        if let Some(query) = current_query.take() {
+                            current_queries.push(query);
                         }
-                        "value" if in_entry => {
-                            let value = Value::from_attributes(e, &mut interner)?;
-                            if let Some(ref mut entry) = current_entry {
-                                entry.value = Some(value);
+                        in_query = false;
+                    }
+                    "downloadHistory" if in_download_history => {
+                        if let Some(download) = current_download_entry.take() {
+                            current_download_history.push(download);
+                        }
+                        in_download_history = false;
+                    }
+                    "entry" if in_entry => {
+                        if let Some(entry) = current_entry.take() {
+                            current_entries.push(entry);
+                        }
+                        in_entry = false;
+                    }
+                    "comment" if in_comment => {
+                        if let Some(comment) = current_comment.take() {
+                            current_comments.push(comment);
+                        }
+                        in_comment = false;
+                    }
+                    "answer" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            if let Some(ref mut query) = current_query {
+                                query.answer = Some(value);
                             }
                         }
-                        "reason" if in_entry => {
-                            let reason = Reason::from_attributes(e, &mut interner)?;
+                        in_value = false;
+                    }
+                    "value" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            // innermost owner wins; these never nest within one another
+                            if let Some(ref mut download) = current_download_entry {
+                                download.value = Some(value);
+                            } else if let Some(ref mut query) = current_query {
+                                query.value = Some(value);
+                            } else if let Some(ref mut entry) = current_entry {
+                                entry.value = Some(value);
+                            } else if let Some(ref mut comment) = current_comment {
+                                comment.value = Some(value);
+                            }
+                        }
+                        in_value = false;
+                    }
+                    "reason" if in_reason => {
+                        if let Some(mut reason) = current_reason.take() {
+                            reason.value = take_trimmed(&mut text_content);
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
                         }
-                        _ => {}
+                        in_reason = false;
                     }
+                    _ => {}
                 }
             }
+
+            Ok(Event::Empty(ref e)) => match e.local_name().as_ref() {
+                "state" if in_form => {
+                    let state = State::from_attributes(e, &mut interner)?;
+                    current_states.push(state);
+                }
+                "lockState" if in_form => {
+                    current_lock_states.push(LockState::from_attributes(e)?);
+                }
+                "category" if in_form => {
+                    current_categories.push(Category::from_attributes(e, &mut interner)?);
+                }
+                "field" if in_category => {
+                    current_fields.push(Field::from_attributes(e, &mut interner)?);
+                }
+                "file" if in_category => {
+                    current_files.push(File::from_attributes(e, &mut interner)?);
+                }
+                "value" if in_entry => {
+                    let value = Value::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.value = Some(value);
+                    }
+                }
+                "reason" if in_entry => {
+                    let reason = Reason::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.reason = Some(reason);
+                    }
+                }
+                _ => {}
+            },
 
             _ => {}
         }
     }
 
-    current_patient.ok_or_else(|| {
-        Error::ParsingError(quick_xml::de::DeError::Custom(
-            "No patient found in chunk".to_string(),
-        ))
-    })
+    current_patient.ok_or_else(|| Error::ParsingError("No patient found in chunk".to_string()))
 }
 
 fn extract_site_chunks(xml: &str) -> Vec<&str> {
@@ -1159,86 +1127,77 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
 
     loop {
         match xml_reader.read_event() {
-            Err(e) => {
-                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                    format!("XML reading error: {}", e),
-                )))
-            }
+            Err(e) => return Err(Error::ParsingError(format!("XML reading error: {}", e))),
             Ok(Event::Eof) => break,
 
-            Ok(Event::Start(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "site" => {
-                            current_site = Some(Site::from_attributes(e)?);
-                            current_forms.clear();
-                        }
-                        "form" if current_site.is_some() => {
-                            current_form = Some(Form::from_attributes(e)?);
-                            in_form = true;
-                            current_states.clear();
-                            current_lock_states.clear();
-                            current_categories.clear();
-                        }
-                        "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e, &mut interner)?);
-                            in_category = true;
-                            current_fields.clear();
-                        }
-                        "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e, &mut interner)?);
-                            in_field = true;
-                            current_entries.clear();
-                            current_comments.clear();
-                            current_queries.clear();
-                        }
-                        "file" if in_category => {
-                            current_file = Some(File::from_attributes(e, &mut interner)?);
-                            in_file = true;
-                            current_entries.clear();
-                            current_comments.clear();
-                            current_queries.clear();
-                            current_download_history.clear();
-                        }
-                        "entry" if in_field || in_file => {
-                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
-                            in_entry = true;
-                        }
-                        "comment" if in_field || in_file => {
-                            current_comment = Some(Comment::from_attributes(e)?);
-                            in_comment = true;
-                        }
-                        "query" if in_field || in_file => {
-                            current_query = Some(Query::from_attributes(e, &mut interner)?);
-                            in_query = true;
-                        }
-                        "downloadHistory" if in_file => {
-                            current_download_entry = Some(Comment::from_attributes(e)?);
-                            in_download_history = true;
-                        }
-                        "answer" if in_query => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "value" if in_entry || in_comment || in_query || in_download_history => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
-                            in_reason = true;
-                            text_content.clear();
-                        }
-                        _ => {}
-                    }
+            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
+                "site" => {
+                    current_site = Some(Site::from_attributes(e)?);
+                    current_forms.clear();
                 }
-            }
+                "form" if current_site.is_some() => {
+                    current_form = Some(Form::from_attributes(e)?);
+                    in_form = true;
+                    current_states.clear();
+                    current_lock_states.clear();
+                    current_categories.clear();
+                }
+                "category" if in_form => {
+                    current_category = Some(Category::from_attributes(e, &mut interner)?);
+                    in_category = true;
+                    current_fields.clear();
+                }
+                "field" if in_category => {
+                    current_field = Some(Field::from_attributes(e, &mut interner)?);
+                    in_field = true;
+                    current_entries.clear();
+                    current_comments.clear();
+                    current_queries.clear();
+                }
+                "file" if in_category => {
+                    current_file = Some(File::from_attributes(e, &mut interner)?);
+                    in_file = true;
+                    current_entries.clear();
+                    current_comments.clear();
+                    current_queries.clear();
+                    current_download_history.clear();
+                }
+                "entry" if in_field || in_file => {
+                    current_entry = Some(Entry::from_attributes(e, &mut interner)?);
+                    in_entry = true;
+                }
+                "comment" if in_field || in_file => {
+                    current_comment = Some(Comment::from_attributes(e)?);
+                    in_comment = true;
+                }
+                "query" if in_field || in_file => {
+                    current_query = Some(Query::from_attributes(e, &mut interner)?);
+                    in_query = true;
+                }
+                "downloadHistory" if in_file => {
+                    current_download_entry = Some(Comment::from_attributes(e)?);
+                    in_download_history = true;
+                }
+                "answer" if in_query => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "value" if in_entry || in_comment || in_query || in_download_history => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "reason" if in_entry => {
+                    current_reason = Some(Reason::from_attributes(e, &mut interner)?);
+                    in_reason = true;
+                    text_content.clear();
+                }
+                _ => {}
+            },
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content());
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
@@ -1246,200 +1205,181 @@ fn parse_site_xml(site_xml: &str) -> Result<Site, Error> {
             }
 
             Ok(Event::End(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "site" => {
-                            if let Some(mut site) = current_site.take() {
-                                if !current_forms.is_empty() {
-                                    site.set_forms(current_forms.drain(..).collect());
-                                }
-                                current_site = Some(site);
+                match e.local_name().as_ref() {
+                    "site" => {
+                        if let Some(mut site) = current_site.take() {
+                            if !current_forms.is_empty() {
+                                site.set_forms(current_forms.drain(..).collect());
                             }
+                            current_site = Some(site);
                         }
-                        "form" if in_form => {
-                            if let Some(mut form) = current_form.take() {
-                                if !current_states.is_empty() {
-                                    form.states =
-                                        Some(Arc::new(current_states.drain(..).collect()));
-                                }
-                                if !current_lock_states.is_empty() {
-                                    form.lock_states =
-                                        Some(Arc::new(current_lock_states.drain(..).collect()));
-                                }
-                                if !current_categories.is_empty() {
-                                    form.categories =
-                                        Some(Arc::new(current_categories.drain(..).collect()));
-                                }
-                                current_forms.push(form);
-                            }
-                            in_form = false;
-                        }
-                        "category" if in_category => {
-                            if let Some(mut category) = current_category.take() {
-                                if !current_fields.is_empty() {
-                                    category.fields =
-                                        Some(Arc::new(current_fields.drain(..).collect()));
-                                }
-                                if !current_files.is_empty() {
-                                    category.files =
-                                        Some(Arc::new(current_files.drain(..).collect()));
-                                }
-                                current_categories.push(category);
-                            }
-                            in_category = false;
-                        }
-                        "field" if in_field => {
-                            if let Some(mut field) = current_field.take() {
-                                if !current_entries.is_empty() {
-                                    field.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    field.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    field.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                current_fields.push(field);
-                            }
-                            in_field = false;
-                        }
-                        "file" if in_file => {
-                            if let Some(mut file) = current_file.take() {
-                                if !current_entries.is_empty() {
-                                    file.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    file.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    file.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                if !current_download_history.is_empty() {
-                                    file.download_history = Some(Arc::new(
-                                        current_download_history.drain(..).collect(),
-                                    ));
-                                }
-                                current_files.push(file);
-                            }
-                            in_file = false;
-                        }
-                        "query" if in_query => {
-                            if let Some(query) = current_query.take() {
-                                current_queries.push(query);
-                            }
-                            in_query = false;
-                        }
-                        "downloadHistory" if in_download_history => {
-                            if let Some(download) = current_download_entry.take() {
-                                current_download_history.push(download);
-                            }
-                            in_download_history = false;
-                        }
-                        "entry" if in_entry => {
-                            if let Some(entry) = current_entry.take() {
-                                current_entries.push(entry);
-                            }
-                            in_entry = false;
-                        }
-                        "comment" if in_comment => {
-                            if let Some(comment) = current_comment.take() {
-                                current_comments.push(comment);
-                            }
-                            in_comment = false;
-                        }
-                        "answer" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut query) = current_query {
-                                    query.answer = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "value" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                // innermost owner wins; these never nest within one another
-                                if let Some(ref mut download) = current_download_entry {
-                                    download.value = Some(value);
-                                } else if let Some(ref mut query) = current_query {
-                                    query.value = Some(value);
-                                } else if let Some(ref mut entry) = current_entry {
-                                    entry.value = Some(value);
-                                } else if let Some(ref mut comment) = current_comment {
-                                    comment.value = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "reason" if in_reason => {
-                            if let Some(mut reason) = current_reason.take() {
-                                reason.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
-                                    entry.reason = Some(reason);
-                                }
-                            }
-                            in_reason = false;
-                        }
-                        _ => {}
                     }
-                }
-            }
-
-            Ok(Event::Empty(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "state" if in_form => {
-                            let state = State::from_attributes(e, &mut interner)?;
-                            current_states.push(state);
+                    "form" if in_form => {
+                        if let Some(mut form) = current_form.take() {
+                            if !current_states.is_empty() {
+                                form.states = Some(Arc::new(current_states.drain(..).collect()));
+                            }
+                            if !current_lock_states.is_empty() {
+                                form.lock_states =
+                                    Some(Arc::new(current_lock_states.drain(..).collect()));
+                            }
+                            if !current_categories.is_empty() {
+                                form.categories =
+                                    Some(Arc::new(current_categories.drain(..).collect()));
+                            }
+                            current_forms.push(form);
                         }
-                        "lockState" if in_form => {
-                            current_lock_states.push(LockState::from_attributes(e)?);
+                        in_form = false;
+                    }
+                    "category" if in_category => {
+                        if let Some(mut category) = current_category.take() {
+                            if !current_fields.is_empty() {
+                                category.fields =
+                                    Some(Arc::new(current_fields.drain(..).collect()));
+                            }
+                            if !current_files.is_empty() {
+                                category.files = Some(Arc::new(current_files.drain(..).collect()));
+                            }
+                            current_categories.push(category);
                         }
-                        "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e, &mut interner)?);
-                        }
-                        "field" if in_category => {
-                            let field = Field::from_attributes(e, &mut interner)?;
+                        in_category = false;
+                    }
+                    "field" if in_field => {
+                        if let Some(mut field) = current_field.take() {
+                            if !current_entries.is_empty() {
+                                field.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                field.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                field.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
                             current_fields.push(field);
                         }
-                        "file" if in_category => {
-                            current_files.push(File::from_attributes(e, &mut interner)?);
+                        in_field = false;
+                    }
+                    "file" if in_file => {
+                        if let Some(mut file) = current_file.take() {
+                            if !current_entries.is_empty() {
+                                file.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                file.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                file.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
+                            if !current_download_history.is_empty() {
+                                file.download_history =
+                                    Some(Arc::new(current_download_history.drain(..).collect()));
+                            }
+                            current_files.push(file);
                         }
-                        "value" if in_entry => {
-                            let value = Value::from_attributes(e, &mut interner)?;
-                            if let Some(ref mut entry) = current_entry {
-                                entry.value = Some(value);
+                        in_file = false;
+                    }
+                    "query" if in_query => {
+                        if let Some(query) = current_query.take() {
+                            current_queries.push(query);
+                        }
+                        in_query = false;
+                    }
+                    "downloadHistory" if in_download_history => {
+                        if let Some(download) = current_download_entry.take() {
+                            current_download_history.push(download);
+                        }
+                        in_download_history = false;
+                    }
+                    "entry" if in_entry => {
+                        if let Some(entry) = current_entry.take() {
+                            current_entries.push(entry);
+                        }
+                        in_entry = false;
+                    }
+                    "comment" if in_comment => {
+                        if let Some(comment) = current_comment.take() {
+                            current_comments.push(comment);
+                        }
+                        in_comment = false;
+                    }
+                    "answer" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            if let Some(ref mut query) = current_query {
+                                query.answer = Some(value);
                             }
                         }
-                        "reason" if in_entry => {
-                            let reason = Reason::from_attributes(e, &mut interner)?;
+                        in_value = false;
+                    }
+                    "value" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            // innermost owner wins; these never nest within one another
+                            if let Some(ref mut download) = current_download_entry {
+                                download.value = Some(value);
+                            } else if let Some(ref mut query) = current_query {
+                                query.value = Some(value);
+                            } else if let Some(ref mut entry) = current_entry {
+                                entry.value = Some(value);
+                            } else if let Some(ref mut comment) = current_comment {
+                                comment.value = Some(value);
+                            }
+                        }
+                        in_value = false;
+                    }
+                    "reason" if in_reason => {
+                        if let Some(mut reason) = current_reason.take() {
+                            reason.value = take_trimmed(&mut text_content);
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
                         }
-                        _ => {}
+                        in_reason = false;
                     }
+                    _ => {}
                 }
             }
+
+            Ok(Event::Empty(ref e)) => match e.local_name().as_ref() {
+                "state" if in_form => {
+                    let state = State::from_attributes(e, &mut interner)?;
+                    current_states.push(state);
+                }
+                "lockState" if in_form => {
+                    current_lock_states.push(LockState::from_attributes(e)?);
+                }
+                "category" if in_form => {
+                    current_categories.push(Category::from_attributes(e, &mut interner)?);
+                }
+                "field" if in_category => {
+                    let field = Field::from_attributes(e, &mut interner)?;
+                    current_fields.push(field);
+                }
+                "file" if in_category => {
+                    current_files.push(File::from_attributes(e, &mut interner)?);
+                }
+                "value" if in_entry => {
+                    let value = Value::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.value = Some(value);
+                    }
+                }
+                "reason" if in_entry => {
+                    let reason = Reason::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.reason = Some(reason);
+                    }
+                }
+                _ => {}
+            },
 
             _ => {}
         }
     }
 
-    current_site.ok_or_else(|| {
-        Error::ParsingError(quick_xml::de::DeError::Custom(
-            "No site found in chunk".to_string(),
-        ))
-    })
+    current_site.ok_or_else(|| Error::ParsingError("No site found in chunk".to_string()))
 }
 
 /// Parses a Prelude native user XML file into a `UserNative` struct.
@@ -1711,74 +1651,65 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
 
     loop {
         match xml_reader.read_event() {
-            Err(e) => {
-                return Err(Error::ParsingError(quick_xml::de::DeError::Custom(
-                    format!("XML reading error: {}", e),
-                )))
-            }
+            Err(e) => return Err(Error::ParsingError(format!("XML reading error: {}", e))),
             Ok(Event::Eof) => break,
 
-            Ok(Event::Start(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "user" => {
-                            current_user = Some(User::from_attributes(e)?);
-                        }
-                        "form" => {
-                            current_form = Some(Form::from_attributes(e)?);
-                            in_form = true;
-                        }
-                        "category" if in_form => {
-                            current_category = Some(Category::from_attributes(e, &mut interner)?);
-                            in_category = true;
-                        }
-                        "field" if in_category => {
-                            current_field = Some(Field::from_attributes(e, &mut interner)?);
-                            in_field = true;
-                        }
-                        "file" if in_category => {
-                            current_file = Some(File::from_attributes(e, &mut interner)?);
-                            in_file = true;
-                        }
-                        "entry" if in_field || in_file => {
-                            current_entry = Some(Entry::from_attributes(e, &mut interner)?);
-                            in_entry = true;
-                        }
-                        "comment" if in_field || in_file => {
-                            current_comment = Some(Comment::from_attributes(e)?);
-                            in_comment = true;
-                        }
-                        "query" if in_field || in_file => {
-                            current_query = Some(Query::from_attributes(e, &mut interner)?);
-                            in_query = true;
-                        }
-                        "downloadHistory" if in_file => {
-                            current_download_entry = Some(Comment::from_attributes(e)?);
-                            in_download_history = true;
-                        }
-                        "answer" if in_query => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "value" if in_entry || in_comment || in_query || in_download_history => {
-                            current_value = Some(Value::from_attributes(e, &mut interner)?);
-                            in_value = true;
-                            text_content.clear();
-                        }
-                        "reason" if in_entry => {
-                            current_reason = Some(Reason::from_attributes(e, &mut interner)?);
-                            in_reason = true;
-                            text_content.clear();
-                        }
-                        _ => {}
-                    }
+            Ok(Event::Start(ref e)) => match e.local_name().as_ref() {
+                "user" => {
+                    current_user = Some(User::from_attributes(e)?);
                 }
-            }
+                "form" => {
+                    current_form = Some(Form::from_attributes(e)?);
+                    in_form = true;
+                }
+                "category" if in_form => {
+                    current_category = Some(Category::from_attributes(e, &mut interner)?);
+                    in_category = true;
+                }
+                "field" if in_category => {
+                    current_field = Some(Field::from_attributes(e, &mut interner)?);
+                    in_field = true;
+                }
+                "file" if in_category => {
+                    current_file = Some(File::from_attributes(e, &mut interner)?);
+                    in_file = true;
+                }
+                "entry" if in_field || in_file => {
+                    current_entry = Some(Entry::from_attributes(e, &mut interner)?);
+                    in_entry = true;
+                }
+                "comment" if in_field || in_file => {
+                    current_comment = Some(Comment::from_attributes(e)?);
+                    in_comment = true;
+                }
+                "query" if in_field || in_file => {
+                    current_query = Some(Query::from_attributes(e, &mut interner)?);
+                    in_query = true;
+                }
+                "downloadHistory" if in_file => {
+                    current_download_entry = Some(Comment::from_attributes(e)?);
+                    in_download_history = true;
+                }
+                "answer" if in_query => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "value" if in_entry || in_comment || in_query || in_download_history => {
+                    current_value = Some(Value::from_attributes(e, &mut interner)?);
+                    in_value = true;
+                    text_content.clear();
+                }
+                "reason" if in_entry => {
+                    current_reason = Some(Reason::from_attributes(e, &mut interner)?);
+                    in_reason = true;
+                    text_content.clear();
+                }
+                _ => {}
+            },
 
             Ok(Event::Text(e)) if (in_value || in_reason) => {
-                text_content.push_str(&e.xml10_content().map_err(decode_error)?);
+                text_content.push_str(&e.xml10_content());
             }
 
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
@@ -1786,200 +1717,181 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
             }
 
             Ok(Event::End(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "user" => {
-                            if let Some(mut user) = current_user.take() {
-                                if !current_forms.is_empty() {
-                                    user.set_forms(current_forms.drain(..).collect());
-                                }
-                                current_user = Some(user);
+                match e.local_name().as_ref() {
+                    "user" => {
+                        if let Some(mut user) = current_user.take() {
+                            if !current_forms.is_empty() {
+                                user.set_forms(current_forms.drain(..).collect());
                             }
+                            current_user = Some(user);
                         }
-                        "form" if in_form => {
-                            if let Some(mut form) = current_form.take() {
-                                if !current_states.is_empty() {
-                                    form.states =
-                                        Some(Arc::new(current_states.drain(..).collect()));
-                                }
-                                if !current_lock_states.is_empty() {
-                                    form.lock_states =
-                                        Some(Arc::new(current_lock_states.drain(..).collect()));
-                                }
-                                if !current_categories.is_empty() {
-                                    form.categories =
-                                        Some(Arc::new(current_categories.drain(..).collect()));
-                                }
-                                current_forms.push(form);
-                            }
-                            in_form = false;
-                        }
-                        "category" if in_category => {
-                            if let Some(mut category) = current_category.take() {
-                                if !current_fields.is_empty() {
-                                    category.fields =
-                                        Some(Arc::new(current_fields.drain(..).collect()));
-                                }
-                                if !current_files.is_empty() {
-                                    category.files =
-                                        Some(Arc::new(current_files.drain(..).collect()));
-                                }
-                                current_categories.push(category);
-                            }
-                            in_category = false;
-                        }
-                        "field" if in_field => {
-                            if let Some(mut field) = current_field.take() {
-                                if !current_entries.is_empty() {
-                                    field.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    field.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    field.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                current_fields.push(field);
-                            }
-                            in_field = false;
-                        }
-                        "file" if in_file => {
-                            if let Some(mut file) = current_file.take() {
-                                if !current_entries.is_empty() {
-                                    file.entries =
-                                        Some(Arc::new(current_entries.drain(..).collect()));
-                                }
-                                if !current_comments.is_empty() {
-                                    file.comments =
-                                        Some(Arc::new(current_comments.drain(..).collect()));
-                                }
-                                if !current_queries.is_empty() {
-                                    file.queries =
-                                        Some(Arc::new(current_queries.drain(..).collect()));
-                                }
-                                if !current_download_history.is_empty() {
-                                    file.download_history = Some(Arc::new(
-                                        current_download_history.drain(..).collect(),
-                                    ));
-                                }
-                                current_files.push(file);
-                            }
-                            in_file = false;
-                        }
-                        "query" if in_query => {
-                            if let Some(query) = current_query.take() {
-                                current_queries.push(query);
-                            }
-                            in_query = false;
-                        }
-                        "downloadHistory" if in_download_history => {
-                            if let Some(download) = current_download_entry.take() {
-                                current_download_history.push(download);
-                            }
-                            in_download_history = false;
-                        }
-                        "entry" if in_entry => {
-                            if let Some(entry) = current_entry.take() {
-                                current_entries.push(entry);
-                            }
-                            in_entry = false;
-                        }
-                        "comment" if in_comment => {
-                            if let Some(comment) = current_comment.take() {
-                                current_comments.push(comment);
-                            }
-                            in_comment = false;
-                        }
-                        "answer" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut query) = current_query {
-                                    query.answer = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "value" if in_value => {
-                            if let Some(mut value) = current_value.take() {
-                                value.value = take_trimmed(&mut text_content);
-                                // innermost owner wins; these never nest within one another
-                                if let Some(ref mut download) = current_download_entry {
-                                    download.value = Some(value);
-                                } else if let Some(ref mut query) = current_query {
-                                    query.value = Some(value);
-                                } else if let Some(ref mut entry) = current_entry {
-                                    entry.value = Some(value);
-                                } else if let Some(ref mut comment) = current_comment {
-                                    comment.value = Some(value);
-                                }
-                            }
-                            in_value = false;
-                        }
-                        "reason" if in_reason => {
-                            if let Some(mut reason) = current_reason.take() {
-                                reason.value = take_trimmed(&mut text_content);
-                                if let Some(ref mut entry) = current_entry {
-                                    entry.reason = Some(reason);
-                                }
-                            }
-                            in_reason = false;
-                        }
-                        _ => {}
                     }
-                }
-            }
-
-            Ok(Event::Empty(ref e)) => {
-                let name_bytes = e.local_name();
-                if let Ok(name) = std::str::from_utf8(name_bytes.as_ref()) {
-                    match name {
-                        "state" if in_form => {
-                            let state = State::from_attributes(e, &mut interner)?;
-                            current_states.push(state);
+                    "form" if in_form => {
+                        if let Some(mut form) = current_form.take() {
+                            if !current_states.is_empty() {
+                                form.states = Some(Arc::new(current_states.drain(..).collect()));
+                            }
+                            if !current_lock_states.is_empty() {
+                                form.lock_states =
+                                    Some(Arc::new(current_lock_states.drain(..).collect()));
+                            }
+                            if !current_categories.is_empty() {
+                                form.categories =
+                                    Some(Arc::new(current_categories.drain(..).collect()));
+                            }
+                            current_forms.push(form);
                         }
-                        "category" if in_form => {
-                            current_categories.push(Category::from_attributes(e, &mut interner)?);
+                        in_form = false;
+                    }
+                    "category" if in_category => {
+                        if let Some(mut category) = current_category.take() {
+                            if !current_fields.is_empty() {
+                                category.fields =
+                                    Some(Arc::new(current_fields.drain(..).collect()));
+                            }
+                            if !current_files.is_empty() {
+                                category.files = Some(Arc::new(current_files.drain(..).collect()));
+                            }
+                            current_categories.push(category);
                         }
-                        "field" if in_category => {
-                            let field = Field::from_attributes(e, &mut interner)?;
+                        in_category = false;
+                    }
+                    "field" if in_field => {
+                        if let Some(mut field) = current_field.take() {
+                            if !current_entries.is_empty() {
+                                field.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                field.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                field.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
                             current_fields.push(field);
                         }
-                        "file" if in_category => {
-                            current_files.push(File::from_attributes(e, &mut interner)?);
+                        in_field = false;
+                    }
+                    "file" if in_file => {
+                        if let Some(mut file) = current_file.take() {
+                            if !current_entries.is_empty() {
+                                file.entries = Some(Arc::new(current_entries.drain(..).collect()));
+                            }
+                            if !current_comments.is_empty() {
+                                file.comments =
+                                    Some(Arc::new(current_comments.drain(..).collect()));
+                            }
+                            if !current_queries.is_empty() {
+                                file.queries = Some(Arc::new(current_queries.drain(..).collect()));
+                            }
+                            if !current_download_history.is_empty() {
+                                file.download_history =
+                                    Some(Arc::new(current_download_history.drain(..).collect()));
+                            }
+                            current_files.push(file);
                         }
-                        "lockState" if in_form => {
-                            current_lock_states.push(LockState::from_attributes(e)?);
+                        in_file = false;
+                    }
+                    "query" if in_query => {
+                        if let Some(query) = current_query.take() {
+                            current_queries.push(query);
                         }
-                        "value" if in_entry => {
-                            let value = Value::from_attributes(e, &mut interner)?;
-                            if let Some(ref mut entry) = current_entry {
-                                entry.value = Some(value);
+                        in_query = false;
+                    }
+                    "downloadHistory" if in_download_history => {
+                        if let Some(download) = current_download_entry.take() {
+                            current_download_history.push(download);
+                        }
+                        in_download_history = false;
+                    }
+                    "entry" if in_entry => {
+                        if let Some(entry) = current_entry.take() {
+                            current_entries.push(entry);
+                        }
+                        in_entry = false;
+                    }
+                    "comment" if in_comment => {
+                        if let Some(comment) = current_comment.take() {
+                            current_comments.push(comment);
+                        }
+                        in_comment = false;
+                    }
+                    "answer" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            if let Some(ref mut query) = current_query {
+                                query.answer = Some(value);
                             }
                         }
-                        "reason" if in_entry => {
-                            let reason = Reason::from_attributes(e, &mut interner)?;
+                        in_value = false;
+                    }
+                    "value" if in_value => {
+                        if let Some(mut value) = current_value.take() {
+                            value.value = take_trimmed(&mut text_content);
+                            // innermost owner wins; these never nest within one another
+                            if let Some(ref mut download) = current_download_entry {
+                                download.value = Some(value);
+                            } else if let Some(ref mut query) = current_query {
+                                query.value = Some(value);
+                            } else if let Some(ref mut entry) = current_entry {
+                                entry.value = Some(value);
+                            } else if let Some(ref mut comment) = current_comment {
+                                comment.value = Some(value);
+                            }
+                        }
+                        in_value = false;
+                    }
+                    "reason" if in_reason => {
+                        if let Some(mut reason) = current_reason.take() {
+                            reason.value = take_trimmed(&mut text_content);
                             if let Some(ref mut entry) = current_entry {
                                 entry.reason = Some(reason);
                             }
                         }
-                        _ => {}
+                        in_reason = false;
                     }
+                    _ => {}
                 }
             }
+
+            Ok(Event::Empty(ref e)) => match e.local_name().as_ref() {
+                "state" if in_form => {
+                    let state = State::from_attributes(e, &mut interner)?;
+                    current_states.push(state);
+                }
+                "category" if in_form => {
+                    current_categories.push(Category::from_attributes(e, &mut interner)?);
+                }
+                "field" if in_category => {
+                    let field = Field::from_attributes(e, &mut interner)?;
+                    current_fields.push(field);
+                }
+                "file" if in_category => {
+                    current_files.push(File::from_attributes(e, &mut interner)?);
+                }
+                "lockState" if in_form => {
+                    current_lock_states.push(LockState::from_attributes(e)?);
+                }
+                "value" if in_entry => {
+                    let value = Value::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.value = Some(value);
+                    }
+                }
+                "reason" if in_entry => {
+                    let reason = Reason::from_attributes(e, &mut interner)?;
+                    if let Some(ref mut entry) = current_entry {
+                        entry.reason = Some(reason);
+                    }
+                }
+                _ => {}
+            },
 
             _ => {}
         }
     }
 
-    current_user.ok_or_else(|| {
-        Error::ParsingError(quick_xml::de::DeError::Custom(
-            "No user element found".to_string(),
-        ))
-    })
+    current_user.ok_or_else(|| Error::ParsingError("No user element found".to_string()))
 }
 
 fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {

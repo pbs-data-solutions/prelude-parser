@@ -70,13 +70,13 @@ impl Site {
         let mut number_of_forms = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = Some(attr),
-            b"uniqueId" => unique_id = Some(attr),
-            b"numberOfPatients" => number_of_patients = attr,
-            b"countOfRandomizedPatients" => count_of_randomized_patients = attr,
-            b"whenCreated" => when_created = attr,
-            b"creator" => creator = Some(attr),
-            b"numberOfForms" => number_of_forms = attr,
+            "name" => name = Some(attr),
+            "uniqueId" => unique_id = Some(attr),
+            "numberOfPatients" => number_of_patients = attr,
+            "countOfRandomizedPatients" => count_of_randomized_patients = attr,
+            "whenCreated" => when_created = attr,
+            "creator" => creator = Some(attr),
+            "numberOfForms" => number_of_forms = attr,
             _ => {}
         })?;
 
@@ -150,13 +150,13 @@ impl Site {
         let mut number_of_forms = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"name" => name = Some(attr),
-            b"uniqueId" => unique_id = Some(attr),
-            b"numberOfPatients" => number_of_patients = attr,
-            b"countOfRandomizedPatients" => count_of_randomized_patients = attr,
-            b"whenCreated" => when_created = attr,
-            b"creator" => creator = Some(attr),
-            b"numberOfForms" => number_of_forms = attr,
+            "name" => name = Some(attr),
+            "uniqueId" => unique_id = Some(attr),
+            "numberOfPatients" => number_of_patients = attr,
+            "countOfRandomizedPatients" => count_of_randomized_patients = attr,
+            "whenCreated" => when_created = attr,
+            "creator" => creator = Some(attr),
+            "numberOfForms" => number_of_forms = attr,
             _ => {}
         })?;
 

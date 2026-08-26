@@ -476,7 +476,7 @@ checksum = "3d20d5497ef88037a52ff98267d066e7f11fcc5e99bbfbd58a42336193aacec3"
 
 [[package]]
 name = "prelude-parser-py"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "chrono",
  "prelude-xml-parser",
@@ -487,7 +487,7 @@ dependencies = [
 
 [[package]]
 name = "prelude-xml-parser"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "chrono",
  "criterion",
@@ -569,12 +569,11 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.41.0"
+version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+checksum = "41b1177fdf999d2321d3fb46ff47159d9c1fb9ad66a4879f8c50a0b504615e9b"
 dependencies = [
  "memchr",
- "serde",
 ]
 
 [[package]]
