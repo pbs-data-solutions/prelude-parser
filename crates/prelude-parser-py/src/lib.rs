@@ -1,7 +1,7 @@
 mod errors;
 mod utils;
 
-use std::{collections::HashMap, fs::read_to_string, path::PathBuf, str::from_utf8};
+use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
 use chrono::{Datelike, NaiveDate};
 use prelude_xml_parser::{
@@ -170,7 +170,7 @@ fn native_error(e: prelude_xml_parser::errors::Error) -> PyErr {
         NativeError::InvalidFileType(path) => {
             InvalidFileTypeError::new_err(format!("{path:?} is not an xml file"))
         }
-        other => ParsingError::new_err(format!("Error parsing xml file: {other:?}")),
+        other => ParsingError::new_err(format!("Error parsing xml file: {other}")),
     }
 }
 
@@ -189,7 +189,7 @@ fn push_general_ref(text: &mut String, reference: &BytesRef<'_>) -> PyResult<()>
         return Ok(());
     }
 
-    let name = reference.xml10_content().map_err(xml_error)?;
+    let name = reference.xml10_content();
 
     match resolve_predefined_entity(&name) {
         Some(resolved) => text.push_str(resolved),
@@ -216,20 +216,20 @@ struct FormTable {
     name: String,
     keys: Vec<Py<PyString>>,
     types: Vec<ColumnType>,
-    index: HashMap<Vec<u8>, usize>,
+    index: HashMap<String, usize>,
     rows: Vec<Vec<(usize, Option<String>)>>,
 }
 
 impl FormTable {
-    fn column<'py>(&mut self, py: Python<'py>, raw: &[u8], short_names: bool) -> PyResult<usize> {
+    fn column<'py>(&mut self, py: Python<'py>, raw: &str, short_names: bool) -> PyResult<usize> {
         if let Some(index) = self.index.get(raw) {
             return Ok(*index);
         }
 
-        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+        let name = convert_name(raw, short_names);
         self.keys.push(PyString::new(py, &name).unbind());
         self.types.push(ColumnType::Unknown);
-        self.index.insert(raw.to_vec(), self.keys.len() - 1);
+        self.index.insert(raw.to_string(), self.keys.len() - 1);
 
         Ok(self.keys.len() - 1)
     }
@@ -248,7 +248,7 @@ fn parse_xml<'py>(
 
     // Forms are kept in the order they appear so the resulting dict is reproducible.
     let mut tables: Vec<FormTable> = Vec::new();
-    let mut table_index: HashMap<Vec<u8>, usize> = HashMap::new();
+    let mut table_index: HashMap<String, usize> = HashMap::new();
 
     let mut depth = 0usize;
     let mut saw_root = false;
@@ -271,8 +271,7 @@ fn parse_xml<'py>(
                         let index = match table_index.get(raw) {
                             Some(index) => *index,
                             None => {
-                                let name =
-                                    convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+                                let name = convert_name(raw, short_names);
                                 tables.push(FormTable {
                                     name,
                                     keys: Vec::new(),
@@ -280,7 +279,7 @@ fn parse_xml<'py>(
                                     index: HashMap::new(),
                                     rows: Vec::new(),
                                 });
-                                table_index.insert(raw.to_vec(), tables.len() - 1);
+                                table_index.insert(raw.to_string(), tables.len() - 1);
                                 tables.len() - 1
                             }
                         };
@@ -305,7 +304,7 @@ fn parse_xml<'py>(
                 2 => {
                     let raw = e.name().into_inner();
                     if !table_index.contains_key(raw) {
-                        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+                        let name = convert_name(raw, short_names);
                         tables.push(FormTable {
                             name,
                             keys: Vec::new(),
@@ -313,7 +312,7 @@ fn parse_xml<'py>(
                             index: HashMap::new(),
                             rows: Vec::new(),
                         });
-                        table_index.insert(raw.to_vec(), tables.len() - 1);
+                        table_index.insert(raw.to_string(), tables.len() - 1);
                     }
                     if let Some(index) = table_index.get(raw) {
                         let index = *index;
@@ -331,7 +330,7 @@ fn parse_xml<'py>(
             },
 
             Event::Text(e) if depth == 3 => {
-                let decoded = e.xml10_content().map_err(xml_error)?;
+                let decoded = e.xml10_content();
                 text.get_or_insert_with(String::new).push_str(&decoded);
             }
 
@@ -407,7 +406,7 @@ fn parse_xml_pandas<'py>(
     let mut keys: Vec<Py<PyString>> = Vec::new();
     let mut types: Vec<ColumnType> = Vec::new();
     let mut values: Vec<Vec<Option<String>>> = Vec::new();
-    let mut index: HashMap<Vec<u8>, usize> = HashMap::new();
+    let mut index: HashMap<String, usize> = HashMap::new();
 
     let mut depth = 0usize;
     let mut saw_root = false;
@@ -415,21 +414,21 @@ fn parse_xml_pandas<'py>(
     let mut text: Option<String> = None;
 
     let column_for = |py: Python<'py>,
-                      raw: &[u8],
+                      raw: &str,
                       keys: &mut Vec<Py<PyString>>,
                       types: &mut Vec<ColumnType>,
                       values: &mut Vec<Vec<Option<String>>>,
-                      index: &mut HashMap<Vec<u8>, usize>|
+                      index: &mut HashMap<String, usize>|
      -> PyResult<usize> {
         if let Some(found) = index.get(raw) {
             return Ok(*found);
         }
 
-        let name = convert_name(from_utf8(raw).map_err(xml_error)?, short_names);
+        let name = convert_name(raw, short_names);
         keys.push(PyString::new(py, &name).unbind());
         types.push(ColumnType::Unknown);
         values.push(Vec::new());
-        index.insert(raw.to_vec(), keys.len() - 1);
+        index.insert(raw.to_string(), keys.len() - 1);
 
         Ok(keys.len() - 1)
     };
@@ -469,7 +468,7 @@ fn parse_xml_pandas<'py>(
             }
 
             Event::Text(e) if depth == 3 => {
-                let decoded = e.xml10_content().map_err(xml_error)?;
+                let decoded = e.xml10_content();
                 text.get_or_insert_with(String::new).push_str(&decoded);
             }
 
@@ -556,7 +555,7 @@ fn parse_site_native_string(py: Python, xml_str: &str) -> PyResult<SiteNative> {
 
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e}"))),
     }
 }
 
@@ -577,7 +576,7 @@ fn parse_subject_native_string(py: Python, xml_str: &str) -> PyResult<SubjectNat
     let result = py.detach(|| parse_subject_native_string_rs(xml_str));
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e}"))),
     }
 }
 
@@ -599,7 +598,7 @@ fn parse_user_native_string(py: Python, xml_str: &str) -> PyResult<UserNative> {
 
     match result {
         Ok(native) => Ok(native),
-        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e:?}"))),
+        Err(e) => Err(ParsingError::new_err(format!("Error parsing xml: {e}"))),
     }
 }
 

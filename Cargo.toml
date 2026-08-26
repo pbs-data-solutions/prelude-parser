@@ -16,6 +16,6 @@ codegen-units = 1
 [workspace.dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
 pyo3 = "0.29.0"
-quick-xml = "0.41.0"
+quick-xml = "0.42.0"
 serde = { version = "1.0.228", features = ["derive", "rc"] }
 thiserror = "2.0.18"

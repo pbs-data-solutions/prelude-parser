@@ -65,15 +65,15 @@ impl Patient {
         let mut number_of_forms = "";
 
         visit_attributes(e, |key, attr| match key {
-            b"patientId" => patient_id = Some(attr),
-            b"uniqueId" => unique_id = Some(attr),
-            b"whenCreated" => when_created = attr,
-            b"passwordChangeDate" => password_change_date = attr,
-            b"creator" => creator = Some(attr),
-            b"siteName" => site_name = Some(attr),
-            b"siteUniqueId" => site_unique_id = Some(attr),
-            b"lastLanguage" => last_language = attr,
-            b"numberOfForms" => number_of_forms = attr,
+            "patientId" => patient_id = Some(attr),
+            "uniqueId" => unique_id = Some(attr),
+            "whenCreated" => when_created = attr,
+            "passwordChangeDate" => password_change_date = attr,
+            "creator" => creator = Some(attr),
+            "siteName" => site_name = Some(attr),
+            "siteUniqueId" => site_unique_id = Some(attr),
+            "lastLanguage" => last_language = attr,
+            "numberOfForms" => number_of_forms = attr,
             _ => {}
         })?;
 

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashSet, str::from_utf8, sync::Arc};
+use std::{borrow::Cow, collections::HashSet, sync::Arc};
 
 #[cfg(feature = "python")]
 use chrono::{Datelike, Timelike};
@@ -68,10 +68,7 @@ pub(crate) fn attribute_string(value: &str) -> String {
 }
 
 pub(crate) fn decode_error(e: impl std::fmt::Display) -> crate::errors::Error {
-    crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(format!(
-        "Text decoding error: {}",
-        e
-    )))
+    crate::errors::Error::ParsingError(format!("Text decoding error: {}", e))
 }
 
 /// Append the resolved form of a `&...;` reference to the text being accumulated.
@@ -88,7 +85,7 @@ pub(crate) fn push_general_ref(
         return Ok(());
     }
 
-    let name = reference.xml10_content().map_err(decode_error)?;
+    let name = reference.xml10_content();
 
     match resolve_predefined_entity(&name) {
         Some(resolved) => text.push_str(resolved),
@@ -123,27 +120,15 @@ pub(crate) fn take_trimmed(text: &mut String) -> String {
 /// building an intermediate map, which matters because this runs for every element in the file.
 pub(crate) fn visit_attributes<'a>(
     e: &'a BytesStart<'a>,
-    mut visit: impl FnMut(&'a [u8], &'a str),
+    mut visit: impl FnMut(&'a str, &'a str),
 ) -> Result<(), crate::errors::Error> {
     for attr in e.attributes() {
-        let attr = attr.map_err(|e| {
-            crate::errors::Error::ParsingError(quick_xml::de::DeError::Custom(format!(
-                "Attribute error: {}",
-                e
-            )))
-        })?;
+        let attr = attr
+            .map_err(|e| crate::errors::Error::ParsingError(format!("Attribute error: {}", e)))?;
 
         let Cow::Borrowed(value) = attr.value else {
             return Err(crate::errors::Error::ParsingError(
-                quick_xml::de::DeError::Custom(
-                    "Attribute value was not borrowed from the source".to_string(),
-                ),
-            ));
-        };
-
-        let Ok(value) = from_utf8(value) else {
-            return Err(crate::errors::Error::ParsingError(
-                quick_xml::de::DeError::Custom("Attribute was not valid UTF-8".to_string()),
+                "Attribute value was not borrowed from the source".to_string(),
             ));
         };
 
@@ -180,9 +165,10 @@ pub(crate) fn required_attribute(
 ) -> Result<String, crate::errors::Error> {
     match value {
         Some(value) => Ok(attribute_string(value)),
-        None => Err(crate::errors::Error::ParsingError(
-            quick_xml::de::DeError::Custom(format!("Missing {}", name)),
-        )),
+        None => Err(crate::errors::Error::ParsingError(format!(
+            "Missing {}",
+            name
+        ))),
     }
 }
 
@@ -256,9 +242,10 @@ pub(crate) fn parse_datetime(s: &str) -> Result<DateTime<Utc>, crate::errors::Er
     } else if let Ok(dt) = DateTime::parse_from_str(s, "%d-%b-%Y %H:%M %z") {
         Ok(dt.with_timezone(&Utc))
     } else {
-        Err(crate::errors::Error::ParsingError(
-            quick_xml::de::DeError::Custom(format!("Invalid datetime format: {}", s)),
-        ))
+        Err(crate::errors::Error::ParsingError(format!(
+            "Invalid datetime format: {}",
+            s
+        )))
     }
 }
 
