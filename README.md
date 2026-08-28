@@ -39,6 +39,7 @@ Parse a Prelude flat XML file to a Python dictionary.
 
 ```py
 from prelude_parser import parse_to_dict
+
 data = parse_to_dict("physical_examination.xml")
 ```
 
@@ -48,6 +49,7 @@ will result in a PhysicalExamination class being created.
 
 ```py
 from prelude_parser import parse_to_classes
+
 data = parse_to_classes("physical_examination.xml")
 ```
 
@@ -57,6 +59,7 @@ were exported with the "write tables to separate files" option. In order to use 
 
 ```py
 from prelude_parser.pandas import to_dataframe
+
 df = to_dataframe("physical_examination.xml")
 ```
 
@@ -66,6 +69,7 @@ were exported with the "write tables to separate files" option. In order to use 
 
 ```py
 from prelude_parser.polars import to_dataframe
+
 df = to_dataframe("physical_examination.xml")
 ```
 
