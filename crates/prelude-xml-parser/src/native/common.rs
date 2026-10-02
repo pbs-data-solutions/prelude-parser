@@ -628,14 +628,15 @@ impl File {
         dict.set_item("file_location", &self.file_location)?;
         dict.set_item("size", self.size)?;
 
-        for (key, items) in [(
-            "entries",
-            self.entries.as_deref().map(|v| {
-                v.iter()
-                    .map(|x| x.to_dict(py))
-                    .collect::<PyResult<Vec<_>>>()
-            }),
-        )] {
+        {
+            let (key, items) = (
+                "entries",
+                self.entries.as_deref().map(|v| {
+                    v.iter()
+                        .map(|x| x.to_dict(py))
+                        .collect::<PyResult<Vec<_>>>()
+                }),
+            );
             match items {
                 Some(items) => dict.set_item(key, items?)?,
                 None => dict.set_item(key, py.None())?,
