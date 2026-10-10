@@ -4,18 +4,18 @@ build-backend = "maturin"
 
 [project]
 name = "prelude-parser"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 description = "Parses XML files exported from Prelude EDC into formats usable by Python."
 authors = [{name = "Paul Sanders", email = "paul@pbsdatasolutions.com"}]
 keywords = ["parser", "prelude-edc", "xml", "pandas", "polars"]
 classifiers = [
   "Programming Language :: Rust",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Rust",
   "License :: OSI Approved :: MIT License",
   "Typing :: Typed",
@@ -42,7 +42,6 @@ dev = [
   "pytest==9.1.1",
   "pytest-cov==7.1.0",
   "ruff==0.16.9",
-  "tomli==2.0.2; python_version<'3.11'",
 ]
 
 [tool.maturin]
