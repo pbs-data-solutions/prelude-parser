@@ -35,7 +35,7 @@ all = ["pandas>=2.1.0", "polars>=0.17.14"]
 
 [dependency-groups]
 dev = [
-  "maturin==1.15.0",
+  "maturin==1.16.0",
   "pandas-stubs==3.0.5.260914",
   "prek==0.5.7",
   "pyrefly==1.4.0",
