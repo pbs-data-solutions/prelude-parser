@@ -476,7 +476,7 @@ checksum = "05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85"
 
 [[package]]
 name = "prelude-parser-py"
-version = "0.20.0"
+version = "0.20.1"
 dependencies = [
  "chrono",
  "prelude-xml-parser",
