@@ -79,7 +79,27 @@ pub(crate) fn decode_error(e: impl std::fmt::Display) -> crate::errors::Error {
 /// quick-xml reports references as their own events, so text content has to be reassembled from
 /// the surrounding [`Event::Text`](quick_xml::events::Event::Text) events and these. A reference
 /// that cannot be resolved is kept verbatim rather than dropped, so no input is silently lost.
-pub(crate) fn push_general_ref(
+///
+/// # Errors
+///
+/// [`Error::ParsingError`](crate::errors::Error::ParsingError) if a character reference such as
+/// `&#xZZ;` does not name a valid character.
+///
+/// # Example
+///
+/// ```
+/// use prelude_xml_parser::push_general_ref;
+/// use quick_xml::events::BytesRef;
+///
+/// let mut text = String::from("a ");
+/// push_general_ref(&mut text, &BytesRef::new("amp")).unwrap();
+/// push_general_ref(&mut text, &BytesRef::new("#x3C")).unwrap();
+/// push_general_ref(&mut text, &BytesRef::new("custom")).unwrap();
+///
+/// assert_eq!(text, "a &<&custom;");
+/// assert!(push_general_ref(&mut text, &BytesRef::new("#xZZ")).is_err());
+/// ```
+pub fn push_general_ref(
     text: &mut String,
     reference: &BytesRef<'_>,
 ) -> Result<(), crate::errors::Error> {

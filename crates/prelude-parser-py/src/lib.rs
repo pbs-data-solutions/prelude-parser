@@ -20,17 +20,13 @@ use prelude_xml_parser::{
     parse_subject_native_file as parse_subject_native_file_rs,
     parse_subject_native_string as parse_subject_native_string_rs,
     parse_user_native_file as parse_user_native_file_rs,
-    parse_user_native_string as parse_user_native_string_rs,
+    parse_user_native_string as parse_user_native_string_rs, push_general_ref,
 };
 use pyo3::{
     prelude::*,
     types::{PyDict, PyList, PyString},
 };
-use quick_xml::{
-    escape::resolve_predefined_entity,
-    events::{BytesRef, Event},
-    Reader,
-};
+use quick_xml::{events::Event, Reader};
 
 use crate::{
     errors::{FileNotFoundError, InvalidFileTypeError, ParsingError},
@@ -155,31 +151,6 @@ fn xml_error(e: impl std::fmt::Display) -> PyErr {
     ParsingError::new_err(format!("Error parsing xml file: {e}"))
 }
 
-/// Append a `&...;` reference to the text being accumulated.
-///
-/// quick-xml reports references as their own events, so a value's text has to be reassembled from
-/// the surrounding text events and these. This matches what a DOM parser hands back as the node's
-/// text. An unresolvable reference is kept verbatim rather than dropped.
-fn push_general_ref(text: &mut String, reference: &BytesRef<'_>) -> PyResult<()> {
-    if let Some(character) = reference.resolve_char_ref().map_err(xml_error)? {
-        text.push(character);
-        return Ok(());
-    }
-
-    let name = reference.xml10_content();
-
-    match resolve_predefined_entity(&name) {
-        Some(resolved) => text.push_str(resolved),
-        None => {
-            text.push('&');
-            text.push_str(&name);
-            text.push(';');
-        }
-    }
-
-    Ok(())
-}
-
 fn convert_name(raw: &str, short_names: bool) -> String {
     if short_names {
         raw.to_lowercase()
@@ -210,6 +181,28 @@ impl FormTable {
 
         Ok(self.keys.len() - 1)
     }
+}
+
+fn table_for(
+    tables: &mut Vec<FormTable>,
+    table_index: &mut HashMap<String, usize>,
+    raw: &str,
+    short_names: bool,
+) -> usize {
+    if let Some(index) = table_index.get(raw) {
+        return *index;
+    }
+
+    tables.push(FormTable {
+        name: convert_name(raw, short_names),
+        keys: Vec::new(),
+        types: Vec::new(),
+        index: HashMap::new(),
+        rows: Vec::new(),
+    });
+    table_index.insert(raw.to_string(), tables.len() - 1);
+
+    tables.len() - 1
 }
 
 fn parse_xml<'py>(
@@ -244,23 +237,12 @@ fn parse_xml<'py>(
 
                 match depth {
                     2 => {
-                        let raw = e.name().into_inner();
-                        let index = match table_index.get(raw) {
-                            Some(index) => *index,
-                            None => {
-                                let name = convert_name(raw, short_names);
-                                tables.push(FormTable {
-                                    name,
-                                    keys: Vec::new(),
-                                    types: Vec::new(),
-                                    index: HashMap::new(),
-                                    rows: Vec::new(),
-                                });
-                                table_index.insert(raw.to_string(), tables.len() - 1);
-                                tables.len() - 1
-                            }
-                        };
-                        current_table = Some(index);
+                        current_table = Some(table_for(
+                            &mut tables,
+                            &mut table_index,
+                            e.name().into_inner(),
+                            short_names,
+                        ));
                         row = Vec::new();
                     }
                     3 => {
@@ -279,22 +261,13 @@ fn parse_xml<'py>(
 
             Event::Empty(e) => match depth + 1 {
                 2 => {
-                    let raw = e.name().into_inner();
-                    if !table_index.contains_key(raw) {
-                        let name = convert_name(raw, short_names);
-                        tables.push(FormTable {
-                            name,
-                            keys: Vec::new(),
-                            types: Vec::new(),
-                            index: HashMap::new(),
-                            rows: Vec::new(),
-                        });
-                        table_index.insert(raw.to_string(), tables.len() - 1);
-                    }
-                    if let Some(index) = table_index.get(raw) {
-                        let index = *index;
-                        tables[index].rows.push(Vec::new());
-                    }
+                    let index = table_for(
+                        &mut tables,
+                        &mut table_index,
+                        e.name().into_inner(),
+                        short_names,
+                    );
+                    tables[index].rows.push(Vec::new());
                 }
                 3 => {
                     if let Some(index) = current_table {
@@ -317,7 +290,7 @@ fn parse_xml<'py>(
             }
 
             Event::GeneralRef(ref e) if depth == 3 => {
-                push_general_ref(text.get_or_insert_with(String::new), e)?;
+                push_general_ref(text.get_or_insert_with(String::new), e).map_err(native_error)?;
             }
 
             Event::End(_) => {
