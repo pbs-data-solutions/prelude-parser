@@ -14,9 +14,9 @@ use crate::native::deserializers::{
     deserialize_empty_string_as_none, optional_string, required_attribute, visit_attributes,
 };
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct User {
     #[serde(rename = "uniqueId")]
     #[serde(alias = "@uniqueId")]
@@ -41,69 +41,6 @@ pub struct User {
     pub forms: Option<Arc<Vec<Form>>>,
 }
 
-#[cfg(not(feature = "python"))]
-impl User {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
-        let mut unique_id: Option<&str> = None;
-        let mut last_language = "";
-        let mut creator: Option<&str> = None;
-        let mut number_of_forms = "";
-
-        visit_attributes(e, |key, attr| match key {
-            "uniqueId" => unique_id = Some(attr),
-            "lastLanguage" => last_language = attr,
-            "creator" => creator = Some(attr),
-            "numberOfForms" => number_of_forms = attr,
-            _ => {}
-        })?;
-
-        Ok(User {
-            unique_id: required_attribute(unique_id, "uniqueId")?,
-            last_language: optional_string(last_language),
-            creator: required_attribute(creator, "creator")?,
-            number_of_forms: number_of_forms.parse().unwrap_or(0),
-            forms: None,
-        })
-    }
-
-    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() {
-            None
-        } else {
-            Some(Arc::new(forms))
-        };
-    }
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-#[pyclass()]
-pub struct User {
-    #[serde(rename = "uniqueId")]
-    #[serde(alias = "@uniqueId")]
-    #[serde(alias = "uniqueId")]
-    pub unique_id: String,
-
-    #[serde(rename = "lastLanguage")]
-    #[serde(alias = "@lastLanguage")]
-    #[serde(alias = "lastLanguage")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub last_language: Option<String>,
-    #[serde(rename = "creator")]
-    #[serde(alias = "@creator")]
-    #[serde(alias = "creator")]
-    pub creator: String,
-    #[serde(rename = "numberOfForms")]
-    #[serde(alias = "@numberOfForms")]
-    #[serde(alias = "numberOfForms")]
-    pub number_of_forms: usize,
-
-    #[serde(alias = "form")]
-    pub forms: Option<Arc<Vec<Form>>>,
-}
-
-#[cfg(feature = "python")]
 impl User {
     pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
         let mut unique_id: Option<&str> = None;
@@ -188,18 +125,6 @@ impl User {
 }
 
 #[cfg(not(feature = "python"))]
-/// Contains the information from the Prelude native user XML.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct UserNative {
-    #[serde(default)]
-    pub export: Option<Export>,
-
-    #[serde(alias = "user")]
-    pub users: Vec<User>,
-}
-
-#[cfg(not(feature = "python"))]
 impl UserNative {
     /// Convert to a JSON string
     ///
@@ -224,11 +149,10 @@ impl UserNative {
     }
 }
 
-#[cfg(feature = "python")]
 /// Contains the information from the Prelude native user XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[cfg_attr(feature = "python", pyclass(get_all))]
 pub struct UserNative {
     #[serde(default)]
     pub export: Option<Export>,
