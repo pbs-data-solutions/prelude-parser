@@ -95,7 +95,7 @@ use quick_xml::events::BytesStart;
 use crate::native::deserializers::{
     attribute_string, checked_datetime, deserialize_empty_string_as_none,
     deserialize_empty_string_as_none_arc, deserialize_empty_string_as_none_datetime,
-    optional_datetime, optional_string, visit_attributes, Interner,
+    optional_string, visit_attributes, Interner,
 };
 
 #[cfg(feature = "python")]
@@ -1282,7 +1282,7 @@ impl Form {
 
         Ok(Form {
             name: attribute_string(name),
-            last_modified: optional_datetime(last_modified),
+            last_modified: checked_datetime(last_modified)?,
             who_last_modified_name: optional_string(who_last_modified_name),
             who_last_modified_role: optional_string(who_last_modified_role),
             when_created: when_created.parse().unwrap_or(0),
@@ -1290,7 +1290,7 @@ impl Form {
             has_warnings: has_warnings == "true",
             locked: locked == "true",
             user: optional_string(user),
-            date_time_changed: optional_datetime(date_time_changed),
+            date_time_changed: checked_datetime(date_time_changed)?,
             form_title: attribute_string(form_title),
             form_index: form_index.parse().unwrap_or(0),
             form_group: optional_string(form_group),
@@ -1840,7 +1840,7 @@ impl State {
             value: interner.intern(value),
             signer: interner.intern(signer),
             signer_unique_id: interner.intern(signer_unique_id),
-            date_signed: optional_datetime(date_signed),
+            date_signed: checked_datetime(date_signed)?,
         })
     }
 }
@@ -1864,7 +1864,7 @@ impl LockState {
             locked: locked == "true",
             user: optional_string(user),
             user_unique_id: optional_string(user_unique_id),
-            date_time_changed: optional_datetime(date_time_changed),
+            date_time_changed: checked_datetime(date_time_changed)?,
         })
     }
 }
@@ -1961,7 +1961,7 @@ impl Entry {
             entry_id: interner.intern(id.or(entry_id).unwrap_or_default()),
             reviewed_by: optional_string(reviewed_by),
             reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
-            reviewed_by_when: optional_datetime(reviewed_by_when),
+            reviewed_by_when: checked_datetime(reviewed_by_when)?,
             value: None,
             reason: None,
         })
@@ -2042,7 +2042,7 @@ impl Export {
         })?;
 
         Ok(Export {
-            date: optional_datetime(date),
+            date: checked_datetime(date)?,
             created_by: optional_string(created_by),
             role: optional_string(role),
             number_subjects_processed: number_subjects_processed.parse().ok(),
@@ -2115,7 +2115,7 @@ impl Query {
             query_id: interner.intern(id.or(query_id).unwrap_or_default()),
             reviewed_by: optional_string(reviewed_by),
             reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
-            reviewed_by_when: optional_datetime(reviewed_by_when),
+            reviewed_by_when: checked_datetime(reviewed_by_when)?,
             value: None,
             answer: None,
         })
@@ -2184,7 +2184,7 @@ impl Comment {
             comment_id: attribute_string(comment_id),
             reviewed_by: optional_string(reviewed_by),
             reviewed_by_unique_id: optional_string(reviewed_by_unique_id),
-            reviewed_by_when: optional_datetime(reviewed_by_when),
+            reviewed_by_when: checked_datetime(reviewed_by_when)?,
             value: None,
         })
     }
