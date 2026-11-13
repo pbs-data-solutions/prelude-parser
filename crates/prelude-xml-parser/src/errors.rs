@@ -7,11 +7,11 @@ use thiserror::Error;
 #[non_exhaustive]
 pub enum Error {
     /// The file is not a XML file.
-    #[error("File {:?} is not a XML file.", 0)]
+    #[error("File {0:?} is not a XML file.")]
     InvalidFileType(PathBuf),
 
     /// The file was not found at the specified path.
-    #[error("File was not found at the specified path: {:?}.", 0)]
+    #[error("File was not found at the specified path: {0:?}.")]
     FileNotFound(PathBuf),
 
     /// An io error occurred.
@@ -21,8 +21,4 @@ pub enum Error {
     /// A parsing error occurred.
     #[error("{0}")]
     ParsingError(String),
-
-    /// An unknown error occurred.
-    #[error("Unknown error")]
-    Unknown,
 }

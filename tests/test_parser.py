@@ -166,6 +166,20 @@ def test_parse_to_classes_invalid_file_type_error(tmp_path):
         parse_to_classes(bad)
 
 
+def test_parse_to_classes_no_extension_error(tmp_path):
+    bad = tmp_path / "export"
+    bad.touch()
+    with pytest.raises(InvalidFileTypeError, match="export"):
+        parse_to_classes(bad)
+
+
+def test_parse_subject_native_file_no_extension_error(tmp_path):
+    bad = tmp_path / "export"
+    bad.touch()
+    with pytest.raises(InvalidFileTypeError, match="export"):
+        parse_subject_native_file(bad)
+
+
 def test_parse_to_classes_parsing_error(tmp_path):
     bad = tmp_path / "bad.xml"
     bad.touch()

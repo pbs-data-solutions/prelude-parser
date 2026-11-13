@@ -1,19 +1,4 @@
-use std::path::PathBuf;
-
 use pyo3::{create_exception, exceptions::PyException};
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum XmlFileValidationError {
-    #[error("File not found: {0:?}")]
-    FileNotFound(PathBuf),
-
-    #[error("{0:?} is not an xml file")]
-    InvalidFileType(PathBuf),
-
-    #[error("No file extension found in {0:?}")]
-    NoFileExtension(PathBuf),
-}
 
 create_exception!(_prelude_parser, FileNotFoundError, PyException);
 create_exception!(_prelude_parser, InvalidFileTypeError, PyException);

@@ -5,6 +5,7 @@ use std::{collections::HashMap, fs::read_to_string, path::PathBuf};
 
 use chrono::{Datelike, NaiveDate};
 use prelude_xml_parser::{
+    check_valid_xml_file,
     native::{
         common::{
             Category, Comment, Entry, Export, Field, File, Form, LockState, Query, Reason, State,
@@ -32,33 +33,9 @@ use quick_xml::{
 };
 
 use crate::{
-    errors::{FileNotFoundError, InvalidFileTypeError, ParsingError, XmlFileValidationError},
-    utils::{to_snake, validate_file},
+    errors::{FileNotFoundError, InvalidFileTypeError, ParsingError},
+    utils::to_snake,
 };
-
-fn check_valid_file(xml_file: &PathBuf) -> PyResult<()> {
-    if let Err(e) = validate_file(xml_file) {
-        match e {
-            XmlFileValidationError::FileNotFound(_) => {
-                return Err(FileNotFoundError::new_err(format!(
-                    "File not found: {xml_file:?}"
-                )))
-            }
-            XmlFileValidationError::InvalidFileType(_) => {
-                return Err(InvalidFileTypeError::new_err(format!(
-                    "{xml_file:?} is not an xml file"
-                )))
-            }
-            XmlFileValidationError::NoFileExtension(_) => {
-                return Err(InvalidFileTypeError::new_err(
-                    "No file extension found in file: {xml_file:?}",
-                ))
-            }
-        };
-    };
-
-    Ok(())
-}
 
 /// The type a whole column is given, decided from every value in it rather than value by value.
 ///
@@ -399,7 +376,7 @@ fn _parse_flat_file_to_dict<'py>(
     xml_file: PathBuf,
     short_names: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
-    check_valid_file(&xml_file)?;
+    check_valid_xml_file(&xml_file).map_err(native_error)?;
     let data = parse_xml(py, &xml_file, short_names)?;
 
     Ok(data)

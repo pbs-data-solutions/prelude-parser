@@ -1911,25 +1911,47 @@ fn parse_user_xml(user_xml: &str) -> Result<User, Error> {
     current_user.ok_or_else(|| Error::ParsingError("No user element found".to_string()))
 }
 
-fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {
+/// Checks that a path points to an existing file with an `.xml` extension (any case).
+///
+/// The `parse_*_native_file` functions already run this check, so it does not need to be called
+/// before parsing. It is useful for validating a path up front, for example before queuing work.
+/// Only the path is checked; the file's contents are not read.
+///
+/// # Errors
+///
+/// - [`Error::FileNotFound`] if the path does not exist or is not a file.
+/// - [`Error::InvalidFileType`] if the file has no extension or an extension other than `xml`.
+///
+/// # Example
+///
+/// ```
+/// use std::path::Path;
+///
+/// use prelude_xml_parser::{check_valid_xml_file, errors::Error};
+///
+/// assert!(check_valid_xml_file(Path::new("tests/assets/site_native.xml")).is_ok());
+///
+/// let missing = check_valid_xml_file(Path::new("tests/assets/missing.xml"));
+/// assert!(matches!(missing, Err(Error::FileNotFound(_))));
+///
+/// let not_xml = check_valid_xml_file(Path::new("Cargo.toml"));
+/// assert!(matches!(not_xml, Err(Error::InvalidFileType(_))));
+/// ```
+pub fn check_valid_xml_file(xml_path: &Path) -> Result<(), Error> {
     if !xml_path.is_file() {
         return Err(Error::FileNotFound(xml_path.to_path_buf()));
     }
 
-    if let Some(extension) = xml_path.extension() {
-        if !extension.eq_ignore_ascii_case("xml") {
-            return Err(Error::InvalidFileType(xml_path.to_owned()));
-        }
-    } else {
-        return Err(Error::Unknown);
+    match xml_path.extension() {
+        Some(extension) if extension.eq_ignore_ascii_case("xml") => Ok(()),
+        _ => Err(Error::InvalidFileType(xml_path.to_path_buf())),
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
     use tempfile::{tempdir, Builder};
 
     #[test]
@@ -2394,5 +2416,27 @@ mod tests {
         let result = parse_site_native_string(xml);
 
         assert!(matches!(result, Err(Error::ParsingError(_))));
+    }
+
+    #[test]
+    fn test_no_extension_is_invalid_file_type() {
+        let file = Builder::new().prefix("export").tempfile().unwrap();
+        let result = parse_subject_native_file(file.path());
+
+        assert!(matches!(result, Err(Error::InvalidFileType(_))));
+    }
+
+    #[test]
+    fn test_file_error_messages_include_path() {
+        let path = PathBuf::from("missing/export.xml");
+
+        assert_eq!(
+            Error::FileNotFound(path.clone()).to_string(),
+            "File was not found at the specified path: \"missing/export.xml\"."
+        );
+        assert_eq!(
+            Error::InvalidFileType(path).to_string(),
+            "File \"missing/export.xml\" is not a XML file."
+        );
     }
 }
