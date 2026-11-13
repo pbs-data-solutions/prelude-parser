@@ -42,7 +42,7 @@ use crate::{
 /// Per-value typing lets one column hold several Python types and, worse, merges distinct
 /// identifiers: `"0067"` and `"67"` both become `67`. Deciding per column keeps a column's type
 /// stable and keeps zero-padded identifiers intact.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ColumnType {
     /// No non-empty value seen yet.
     Unknown,
@@ -498,5 +498,57 @@ mod tests {
             to_snake("i_communications_Details"),
             String::from("i_communications_details")
         );
+    }
+
+    #[test]
+    fn test_classify() {
+        let cases = [
+            ("", ColumnType::Unknown),
+            ("67", ColumnType::Integer),
+            ("-67", ColumnType::Integer),
+            ("+67", ColumnType::Integer),
+            ("0", ColumnType::Integer),
+            ("-0", ColumnType::Integer),
+            ("0067", ColumnType::Text),
+            ("-007", ColumnType::Text),
+            ("00", ColumnType::Text),
+            ("1.5", ColumnType::Float),
+            ("0.5", ColumnType::Float),
+            ("1e5", ColumnType::Float),
+            ("nan", ColumnType::Text),
+            ("inf", ColumnType::Text),
+            ("Infinity", ColumnType::Text),
+            ("01-Jan-2024", ColumnType::Date),
+            ("Yes", ColumnType::Text),
+            (" 12", ColumnType::Text),
+        ];
+
+        cases.iter().for_each(|(value, expected)| {
+            assert_eq!(classify(value), *expected, "classify({value:?})");
+        });
+    }
+
+    #[test]
+    fn test_widen() {
+        let cases: [(&[&str], ColumnType); 11] = [
+            (&[], ColumnType::Unknown),
+            (&["1", "2"], ColumnType::Integer),
+            (&["1", "2.5"], ColumnType::Float),
+            (&["2.5", "1"], ColumnType::Float),
+            (&["1", "x"], ColumnType::Text),
+            (&["", "1"], ColumnType::Integer),
+            (&["1", ""], ColumnType::Integer),
+            (&["0067", "67"], ColumnType::Text),
+            (&["67", "0067"], ColumnType::Text),
+            (&["01-Jan-2024", ""], ColumnType::Date),
+            (&["01-Jan-2024", "5"], ColumnType::Text),
+        ];
+
+        cases.iter().for_each(|(values, expected)| {
+            let column_type = values
+                .iter()
+                .fold(ColumnType::Unknown, |current, value| widen(current, value));
+            assert_eq!(column_type, *expected, "widen over {values:?}");
+        });
     }
 }
