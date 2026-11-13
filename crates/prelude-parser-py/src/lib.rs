@@ -311,6 +311,11 @@ fn parse_xml<'py>(
                 text.get_or_insert_with(String::new).push_str(&decoded);
             }
 
+            Event::CData(e) if depth == 3 => {
+                text.get_or_insert_with(String::new)
+                    .push_str(&e.xml10_content());
+            }
+
             Event::GeneralRef(ref e) if depth == 3 => {
                 push_general_ref(text.get_or_insert_with(String::new), e)?;
             }
