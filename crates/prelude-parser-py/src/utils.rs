@@ -1,7 +1,3 @@
-use std::path::PathBuf;
-
-use crate::errors::XmlFileValidationError;
-
 pub fn to_snake(camel_string: &str) -> String {
     let mut snake_string = String::with_capacity(
         camel_string.len() + camel_string.chars().filter(|c| c.is_uppercase()).count(),
@@ -18,20 +14,4 @@ pub fn to_snake(camel_string: &str) -> String {
     }
 
     snake_string.to_lowercase()
-}
-
-pub fn validate_file(xml_file: &PathBuf) -> Result<(), XmlFileValidationError> {
-    if !xml_file.is_file() {
-        return Err(XmlFileValidationError::FileNotFound(xml_file.to_owned()));
-    }
-
-    if let Some(extension) = xml_file.extension() {
-        if !extension.eq_ignore_ascii_case("xml") {
-            return Err(XmlFileValidationError::InvalidFileType(xml_file.to_owned()));
-        }
-    } else {
-        return Err(XmlFileValidationError::NoFileExtension(xml_file.to_owned()));
-    }
-
-    Ok(())
 }
