@@ -459,7 +459,7 @@ pub fn parse_site_native_file(xml_path: &Path) -> Result<SiteNative, Error> {
 /// let result = parse_site_native_string(xml).unwrap();
 /// assert_eq!(result, expected);
 pub fn parse_site_native_string(xml_str: &str) -> Result<SiteNative, Error> {
-    let chunks = extract_site_chunks(xml_str);
+    let chunks = extract_site_chunks(xml_str)?;
     let sites = chunks
         .into_par_iter()
         .map(parse_site_xml)
@@ -488,7 +488,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
     check_valid_xml_file(xml_path)?;
 
     let xml_str = read_to_string(xml_path)?;
-    let chunks = extract_patient_chunks(&xml_str);
+    let chunks = extract_patient_chunks(&xml_str)?;
     let patients = chunks
         .into_par_iter()
         .map(parse_patient_xml)
@@ -711,7 +711,7 @@ pub fn parse_subject_native_file(xml_path: &Path) -> Result<SubjectNative, Error
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_subject_native_string(xml_str: &str) -> Result<SubjectNative, Error> {
-    let chunks = extract_patient_chunks(xml_str);
+    let chunks = extract_patient_chunks(xml_str)?;
     let patients = chunks
         .into_par_iter()
         .map(parse_patient_xml)
@@ -749,41 +749,58 @@ fn parse_export(xml: &str) -> Result<Option<Export>, Error> {
 /// The scan is textual, so the character after the tag name has to be checked: searching for
 /// `"<patient "` alone misses `<patient>` when the element carries no attributes, which silently
 /// yields no records at all.
-fn extract_chunks<'a>(xml: &'a str, tag: &str) -> Vec<&'a str> {
+fn extract_chunks<'a>(xml: &'a str, tag: &str) -> Result<Vec<&'a str>, Error> {
     let open = format!("<{tag}");
     let close = format!("</{tag}>");
 
     let mut chunks = Vec::new();
     let mut pos = 0;
 
-    while let Some(rel) = xml[pos..].find(&open) {
+    while let Some(start) = find_open(xml, pos, &open) {
+        let Some(rel_end) = xml[start..].find(&close) else {
+            return Err(Error::ParsingError(format!(
+                "Missing {close} for <{tag}> at byte {start}"
+            )));
+        };
+
+        let end = start + rel_end + close.len();
+
+        if find_open(xml, start + open.len(), &open).is_some_and(|next| next < end) {
+            return Err(Error::ParsingError(format!(
+                "<{tag}> at byte {start} is not closed before the next <{tag}>"
+            )));
+        }
+
+        chunks.push(&xml[start..end]);
+        pos = end;
+    }
+
+    Ok(chunks)
+}
+
+fn find_open(xml: &str, from: usize, open: &str) -> Option<usize> {
+    let mut pos = from;
+
+    while let Some(rel) = xml[pos..].find(open) {
         let start = pos + rel;
         let after_name = start + open.len();
 
-        // Anything else means we matched a longer tag that merely starts with this name.
         let ends_name = xml[after_name..]
             .chars()
             .next()
             .is_some_and(|c| c.is_whitespace() || c == '>');
 
-        if !ends_name {
-            pos = after_name;
-            continue;
+        if ends_name {
+            return Some(start);
         }
 
-        let Some(rel_end) = xml[start..].find(&close) else {
-            break;
-        };
-
-        let end = start + rel_end + close.len();
-        chunks.push(&xml[start..end]);
-        pos = end;
+        pos = after_name;
     }
 
-    chunks
+    None
 }
 
-fn extract_patient_chunks(xml: &str) -> Vec<&str> {
+fn extract_patient_chunks(xml: &str) -> Result<Vec<&str>, Error> {
     extract_chunks(xml, "patient")
 }
 
@@ -1082,7 +1099,7 @@ fn parse_patient_xml(patient_xml: &str) -> Result<Patient, Error> {
     current_patient.ok_or_else(|| Error::ParsingError("No patient found in chunk".to_string()))
 }
 
-fn extract_site_chunks(xml: &str) -> Vec<&str> {
+fn extract_site_chunks(xml: &str) -> Result<Vec<&str>, Error> {
     extract_chunks(xml, "site")
 }
 
@@ -1595,7 +1612,7 @@ pub fn parse_user_native_file(xml_path: &Path) -> Result<UserNative, Error> {
 /// assert_eq!(result, expected);
 /// ```
 pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
-    let chunks = extract_user_chunks(xml_str);
+    let chunks = extract_user_chunks(xml_str)?;
     let users = chunks
         .into_par_iter()
         .map(parse_user_xml)
@@ -1606,7 +1623,7 @@ pub fn parse_user_native_string(xml_str: &str) -> Result<UserNative, Error> {
     })
 }
 
-fn extract_user_chunks(xml: &str) -> Vec<&str> {
+fn extract_user_chunks(xml: &str) -> Result<Vec<&str>, Error> {
     extract_chunks(xml, "user")
 }
 
@@ -2346,5 +2363,36 @@ mod tests {
             "Empty when attribute in reason should be None"
         );
         assert_eq!(reason.value, "Test Reason");
+    }
+
+    const PATIENT: &str = r#"<patient patientId="P-1" uniqueId="1" whenCreated="2023-04-15 12:09:02 -0400" creator="Test User" siteName="Site" siteUniqueId="2" lastLanguage="" numberOfForms="0">"#;
+
+    #[test]
+    fn test_truncated_patient_errors() {
+        let xml =
+            format!("<export_from_vision_EDC>\n{PATIENT}\n</patient>\n{PATIENT}\n<form name=\"f\"");
+        let result = parse_subject_native_string(&xml);
+
+        assert!(matches!(result, Err(Error::ParsingError(_))));
+    }
+
+    #[test]
+    fn test_unclosed_middle_patient_errors() {
+        let xml = format!(
+            "<export_from_vision_EDC>\n{PATIENT}\n{PATIENT}\n</patient>\n</export_from_vision_EDC>"
+        );
+        let result = parse_subject_native_string(&xml);
+
+        assert!(matches!(result, Err(Error::ParsingError(_))));
+    }
+
+    #[test]
+    fn test_truncated_site_errors() {
+        let xml = r#"<export_from_vision_EDC>
+<site name="Some Site" uniqueId="1" numberOfPatients="0" countOfRandomizedPatients="0" whenCreated="2023-04-15 12:08:19 -0400" creator="Test User" numberOfForms="0">
+"#;
+        let result = parse_site_native_string(xml);
+
+        assert!(matches!(result, Err(Error::ParsingError(_))));
     }
 }
