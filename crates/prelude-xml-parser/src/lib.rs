@@ -940,6 +940,10 @@ fn parse_record<R>(
                 text_content.push_str(&e.xml10_content());
             }
 
+            Ok(Event::CData(e)) if (in_value || in_reason) => {
+                text_content.push_str(&e.xml10_content());
+            }
+
             Ok(Event::GeneralRef(ref e)) if (in_value || in_reason) => {
                 push_general_ref(&mut text_content, e)?;
             }
@@ -1895,5 +1899,33 @@ mod tests {
         assert!(
             matches!(result, Err(Error::ParsingError(message)) if message.contains("not a date"))
         );
+    }
+
+    #[test]
+    fn test_cdata_value_text_is_kept() {
+        let xml = r#"<export_from_vision_EDC>
+    <patient patientId="P-1" uniqueId="1" whenCreated="2023-04-15 12:09:02 -0400" creator="Test User" siteName="Site" siteUniqueId="2" lastLanguage="" numberOfForms="1">
+        <form name="f" lastModified="" whoLastModifiedName="Test User" whoLastModifiedRole="Tester" whenCreated="123456789" hasErrors="false" hasWarnings="false" locked="false" user="" dateTimeChanged="" formTitle="F" formIndex="1" formGroup="G" formState="In-Work">
+            <category name="C" type="normal" highestIndex="0">
+                <field name="note" type="text" dataType="string" errorCode="valid" whenCreated="" keepHistory="true">
+                    <entry id="1">
+                        <value by="Test User" byUniqueId="1" role="Tester" when="">a &amp; <![CDATA[x < 5]]></value>
+                        <reason by="Test User" byUniqueId="1" role="Tester" when=""><![CDATA[<typo>]]></reason>
+                    </entry>
+                </field>
+            </category>
+        </form>
+    </patient>
+</export_from_vision_EDC>"#;
+        let native = parse_subject_native_string(xml).unwrap();
+        let forms = native.patients[0].forms.as_ref().unwrap();
+        let fields = forms[0].categories.as_ref().unwrap()[0]
+            .fields
+            .as_ref()
+            .unwrap();
+        let entry = &fields[0].entries.as_ref().unwrap()[0];
+
+        assert_eq!(entry.value.as_ref().unwrap().value, "a & x < 5");
+        assert_eq!(entry.reason.as_ref().unwrap().value, "<typo>");
     }
 }

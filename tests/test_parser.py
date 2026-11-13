@@ -378,3 +378,12 @@ def test_parse_to_dict_short_names(test_file_4):
     result["communications"] = [dict(sorted(x.items())) for x in result["communications"]]
 
     assert result == expected
+
+
+def test_parse_to_dict_keeps_cdata_text(tmp_path):
+    xml_file = tmp_path / "cdata.xml"
+    xml_file.write_text(
+        "<export><communications><note>a &amp; <![CDATA[x < 5]]></note></communications></export>"
+    )
+
+    assert parse_to_dict(xml_file) == {"communications": [{"note": "a & x < 5"}]}
