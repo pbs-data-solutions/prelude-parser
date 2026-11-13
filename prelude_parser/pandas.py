@@ -4,11 +4,6 @@ from pathlib import Path
 
 from prelude_parser._prelude_parser import _parse_flat_file_to_dict
 
-
-class UnsupportedPythonVersionError(Exception):
-    pass
-
-
 try:
     import pandas as pd
 except ImportError as e:  # pragma: no cover
