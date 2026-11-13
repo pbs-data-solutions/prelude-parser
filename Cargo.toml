@@ -6,7 +6,6 @@ resolver = "2"
 edition = "2021"
 license = "MIT"
 authors = ["Paul Sanders <paul@pbsdatasolutions.com>"]
-homepage = "https://github.com/pbs-data-solutions/prelude-parser"
 repository = "https://github.com/pbs-data-solutions/prelude-parser"
 
 [profile.release]
