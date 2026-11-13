@@ -392,126 +392,6 @@ fn parse_xml<'py>(
     Ok(data)
 }
 
-fn parse_xml_pandas<'py>(
-    py: Python<'py>,
-    xml_file: &PathBuf,
-    short_names: bool,
-) -> PyResult<Bound<'py, PyDict>> {
-    let date = py.import("datetime")?.getattr("date")?;
-    let contents = read_to_string(xml_file).map_err(xml_error)?;
-
-    let mut reader = Reader::from_str(&contents);
-    reader.config_mut().trim_text(false);
-
-    let mut keys: Vec<Py<PyString>> = Vec::new();
-    let mut types: Vec<ColumnType> = Vec::new();
-    let mut values: Vec<Vec<Option<String>>> = Vec::new();
-    let mut index: HashMap<String, usize> = HashMap::new();
-
-    let mut depth = 0usize;
-    let mut saw_root = false;
-    let mut column: Option<usize> = None;
-    let mut text: Option<String> = None;
-
-    let column_for = |py: Python<'py>,
-                      raw: &str,
-                      keys: &mut Vec<Py<PyString>>,
-                      types: &mut Vec<ColumnType>,
-                      values: &mut Vec<Vec<Option<String>>>,
-                      index: &mut HashMap<String, usize>|
-     -> PyResult<usize> {
-        if let Some(found) = index.get(raw) {
-            return Ok(*found);
-        }
-
-        let name = convert_name(raw, short_names);
-        keys.push(PyString::new(py, &name).unbind());
-        types.push(ColumnType::Unknown);
-        values.push(Vec::new());
-        index.insert(raw.to_string(), keys.len() - 1);
-
-        Ok(keys.len() - 1)
-    };
-
-    loop {
-        match reader.read_event().map_err(xml_error)? {
-            Event::Eof => break,
-
-            Event::Start(e) => {
-                depth += 1;
-                saw_root = true;
-                if depth == 3 {
-                    column = Some(column_for(
-                        py,
-                        e.name().into_inner(),
-                        &mut keys,
-                        &mut types,
-                        &mut values,
-                        &mut index,
-                    )?);
-                    text = None;
-                }
-            }
-
-            Event::Empty(e) => {
-                if depth + 1 == 3 {
-                    let column = column_for(
-                        py,
-                        e.name().into_inner(),
-                        &mut keys,
-                        &mut types,
-                        &mut values,
-                        &mut index,
-                    )?;
-                    values[column].push(None);
-                }
-            }
-
-            Event::Text(e) if depth == 3 => {
-                let decoded = e.xml10_content();
-                text.get_or_insert_with(String::new).push_str(&decoded);
-            }
-
-            Event::GeneralRef(ref e) if depth == 3 => {
-                push_general_ref(text.get_or_insert_with(String::new), e)?;
-            }
-
-            Event::End(_) => {
-                if depth == 3 {
-                    if let Some(column) = column.take() {
-                        let value = text.take();
-                        if let Some(ref value) = value {
-                            types[column] = widen(types[column], value);
-                        }
-                        values[column].push(value);
-                    }
-                    text = None;
-                }
-                depth -= 1;
-            }
-
-            _ => {}
-        }
-    }
-
-    if !saw_root {
-        return Err(ParsingError::new_err(
-            "Error parsing xml file: no root element found",
-        ));
-    }
-
-    let data = PyDict::new(py);
-    for (position, key) in keys.iter().enumerate() {
-        let list = PyList::empty(py);
-        for value in &values[position] {
-            list.append(to_py_value(py, value.as_deref(), types[position], &date)?)?;
-        }
-        data.set_item(key.bind(py), list)?;
-    }
-
-    Ok(data)
-}
-
 #[pyfunction]
 #[pyo3(signature = (xml_file, *, short_names=false))]
 fn _parse_flat_file_to_dict<'py>(
@@ -521,19 +401,6 @@ fn _parse_flat_file_to_dict<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     check_valid_file(&xml_file)?;
     let data = parse_xml(py, &xml_file, short_names)?;
-
-    Ok(data)
-}
-
-#[pyfunction]
-#[pyo3(signature = (xml_file, *, short_names=false))]
-fn _parse_flat_file_to_pandas_dict<'py>(
-    py: Python<'py>,
-    xml_file: PathBuf,
-    short_names: bool,
-) -> PyResult<Bound<'py, PyDict>> {
-    check_valid_file(&xml_file)?;
-    let data = parse_xml_pandas(py, &xml_file, short_names)?;
 
     Ok(data)
 }
@@ -623,7 +490,6 @@ fn _prelude_parser(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<UserNative>()?;
     m.add_class::<Value>()?;
     m.add_function(wrap_pyfunction!(_parse_flat_file_to_dict, m)?)?;
-    m.add_function(wrap_pyfunction!(_parse_flat_file_to_pandas_dict, m)?)?;
     m.add_function(wrap_pyfunction!(parse_site_native_file, m)?)?;
     m.add_function(wrap_pyfunction!(parse_site_native_string, m)?)?;
     m.add_function(wrap_pyfunction!(parse_subject_native_file, m)?)?;

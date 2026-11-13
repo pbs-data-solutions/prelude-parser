@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from prelude_parser.pandas import to_dataframe
 
@@ -35,3 +36,15 @@ def test_pandas_to_dataframe_short_names(test_file_4):
     expected = pd.DataFrame.from_dict(data)
     result = result.reindex(sorted(result.columns), axis=1)
     assert expected.equals(result)
+
+
+def test_pandas_to_dataframe_missing_fields(test_file_5):
+    result = to_dataframe(test_file_5)
+    expected = pd.DataFrame(
+        {
+            "study_name": ["PBS", "PBS"],
+            "site_name": ["Some Site", None],
+            "patient_name": [None, "ABC-002"],
+        }
+    )
+    assert_frame_equal(expected, result)

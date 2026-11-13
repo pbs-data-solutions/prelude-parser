@@ -26,6 +26,11 @@ def test_file_4():
 
 
 @pytest.fixture
+def test_file_5():
+    return ASSETS_PATH / "test5.xml"
+
+
+@pytest.fixture
 def site_native_xml():
     return ASSETS_PATH / "site_native.xml"
 
