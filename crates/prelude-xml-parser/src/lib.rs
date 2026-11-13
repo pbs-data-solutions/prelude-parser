@@ -1,6 +1,8 @@
 pub mod errors;
 pub mod native;
 
+pub use native::deserializers::push_general_ref;
+
 use std::{fs::read_to_string, path::Path, sync::Arc};
 
 use rayon::prelude::*;
@@ -11,7 +13,7 @@ use crate::{
         common::{
             Category, Comment, Entry, Export, Field, File, LockState, Query, Reason, State, Value,
         },
-        deserializers::{push_general_ref, take_trimmed, Interner},
+        deserializers::{take_trimmed, Interner},
         site_native::{Site, SiteNative},
         subject_native::{Form, Patient, SubjectNative},
         user_native::{User, UserNative},
