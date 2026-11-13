@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from prelude_parser._prelude_parser import _parse_flat_file_to_pandas_dict
+from prelude_parser._prelude_parser import _parse_flat_file_to_dict
 
 try:
     import polars as pl
@@ -29,5 +29,6 @@ def to_dataframe(xml_file: str | Path, *, short_names: bool = False) -> pl.DataF
         >>> from prelude_parser.polars import to_dataframe
         >>> df = to_dataframe("physical_examination.xml")
     """
-    data = _parse_flat_file_to_pandas_dict(xml_file, short_names=short_names)
-    return pl.from_dict(data)
+    data = _parse_flat_file_to_dict(xml_file, short_names=short_names)
+    rows = [row for form in data.values() for row in form]
+    return pl.from_dicts(rows, infer_schema_length=None)
