@@ -6,7 +6,10 @@ use chrono::{Datelike, Timelike};
 use chrono::{DateTime, FixedOffset, NaiveDate, TimeZone, Utc};
 
 #[cfg(feature = "python")]
-use pyo3::{prelude::*, types::PyDateTime};
+use pyo3::{
+    prelude::*,
+    types::{PyDateTime, PyTzInfo},
+};
 
 use quick_xml::{
     escape::resolve_predefined_entity,
@@ -307,7 +310,7 @@ pub fn to_py_datetime<'py>(
     py: Python<'py>,
     date_time: &DateTime<Utc>,
 ) -> PyResult<Bound<'py, PyDateTime>> {
-    let py_datetime = PyDateTime::new(
+    PyDateTime::new(
         py,
         date_time.year(),
         date_time.month() as u8,
@@ -316,9 +319,8 @@ pub fn to_py_datetime<'py>(
         date_time.minute() as u8,
         date_time.second() as u8,
         date_time.timestamp_subsec_micros(),
-        None,
-    )?;
-    Ok(py_datetime)
+        Some(&PyTzInfo::utc(py)?.to_owned()),
+    )
 }
 
 #[cfg(feature = "python")]
@@ -326,22 +328,10 @@ pub fn to_py_datetime_option<'py>(
     py: Python<'py>,
     date_time: &Option<DateTime<Utc>>,
 ) -> PyResult<Option<Bound<'py, PyDateTime>>> {
-    if let Some(d) = date_time {
-        let py_datetime = Some(PyDateTime::new(
-            py,
-            d.year(),
-            d.month() as u8,
-            d.day() as u8,
-            d.hour() as u8,
-            d.minute() as u8,
-            d.second() as u8,
-            d.timestamp_subsec_micros(),
-            None,
-        )?);
-        Ok(py_datetime)
-    } else {
-        Ok(None)
-    }
+    date_time
+        .as_ref()
+        .map(|d| to_py_datetime(py, d))
+        .transpose()
 }
 
 #[cfg(test)]
