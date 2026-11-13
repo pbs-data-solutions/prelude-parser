@@ -141,16 +141,6 @@ pub(crate) fn visit_attributes<'a>(
     Ok(())
 }
 
-/// Parse an attribute that carries a datetime, treating an empty string as absent and an
-/// unparsable value as absent.
-pub(crate) fn optional_datetime(s: &str) -> Option<DateTime<Utc>> {
-    if s.is_empty() {
-        None
-    } else {
-        parse_datetime(s).ok()
-    }
-}
-
 /// Parse an attribute that carries a datetime, treating an empty string as absent but reporting an
 /// unparsable value as an error.
 pub(crate) fn checked_datetime(s: &str) -> Result<Option<DateTime<Utc>>, crate::errors::Error> {

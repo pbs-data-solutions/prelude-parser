@@ -2439,4 +2439,19 @@ mod tests {
             "File \"missing/export.xml\" is not a XML file."
         );
     }
+
+    #[test]
+    fn test_unparsable_form_datetime_errors() {
+        let xml = r#"<export_from_vision_EDC>
+    <patient patientId="P-1" uniqueId="1" whenCreated="2023-04-15 12:09:02 -0400" creator="Test User" siteName="Site" siteUniqueId="2" lastLanguage="" numberOfForms="1">
+        <form name="f" lastModified="not a date" whoLastModifiedName="Test User" whoLastModifiedRole="Tester" whenCreated="123456789" hasErrors="false" hasWarnings="false" locked="false" user="" dateTimeChanged="" formTitle="F" formIndex="1" formGroup="G" formState="In-Work">
+        </form>
+    </patient>
+</export_from_vision_EDC>"#;
+        let result = parse_subject_native_string(xml);
+
+        assert!(
+            matches!(result, Err(Error::ParsingError(message)) if message.contains("not a date"))
+        );
+    }
 }
