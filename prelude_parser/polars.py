@@ -8,7 +8,7 @@ try:
     import polars as pl
 except ImportError as e:  # pragma: no cover
     raise ImportError(
-        "prelude-parser must be installed with the polars or all extra to use pandas"
+        "prelude-parser must be installed with the polars or all extra to use polars"
     ) from e
 
 
