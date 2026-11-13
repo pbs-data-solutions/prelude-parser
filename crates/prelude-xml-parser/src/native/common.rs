@@ -1,48 +1,7 @@
-#[cfg(not(feature = "python"))]
 /// The attributes on the `export_from_vision_EDC` root element: who produced the export, when, and
 /// how much of the study it covers.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Export {
-    #[serde(rename = "date")]
-    #[serde(alias = "@date")]
-    #[serde(alias = "date")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub date: Option<DateTime<Utc>>,
-
-    #[serde(rename = "createdBy")]
-    #[serde(alias = "@createdBy")]
-    #[serde(alias = "createdBy")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub created_by: Option<String>,
-
-    #[serde(rename = "role")]
-    #[serde(alias = "@role")]
-    #[serde(alias = "role")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub role: Option<String>,
-
-    #[serde(rename = "numberSubjectsProcessed")]
-    #[serde(alias = "@numberSubjectsProcessed")]
-    #[serde(alias = "numberSubjectsProcessed")]
-    #[serde(default)]
-    pub number_subjects_processed: Option<usize>,
-
-    /// Present when the export was split, e.g. `"1 of 6"`.
-    #[serde(rename = "pageNumber")]
-    #[serde(alias = "@pageNumber")]
-    #[serde(alias = "pageNumber")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub page_number: Option<String>,
-}
-
-#[cfg(feature = "python")]
-/// The attributes on the `export_from_vision_EDC` root element: who produced the export, when, and
-/// how much of the study it covers.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Export {
     #[serde(rename = "date")]
     #[serde(alias = "@date")]
@@ -101,39 +60,8 @@ use crate::native::deserializers::{
 #[cfg(feature = "python")]
 use crate::native::deserializers::{to_py_datetime, to_py_datetime_option};
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Value {
-    #[serde(rename = "by")]
-    #[serde(alias = "@by")]
-    #[serde(alias = "by")]
-    pub by: Arc<str>,
-
-    #[serde(rename = "byUniqueId")]
-    #[serde(alias = "@byUniqueId")]
-    #[serde(alias = "byUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
-    pub by_unique_id: Option<Arc<str>>,
-    #[serde(rename = "role")]
-    #[serde(alias = "@role")]
-    #[serde(alias = "role")]
-    pub role: Arc<str>,
-    #[serde(rename = "when")]
-    #[serde(alias = "@when")]
-    #[serde(alias = "when")]
-    pub when: Option<DateTime<Utc>>,
-
-    #[serde(rename = "value")]
-    #[serde(alias = "$text")]
-    #[serde(alias = "#text")]
-    #[serde(alias = "value")]
-    #[serde(default)]
-    pub value: String,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Value {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
@@ -202,40 +130,8 @@ impl Value {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Reason {
-    #[serde(rename = "by")]
-    #[serde(alias = "@by")]
-    #[serde(alias = "by")]
-    pub by: Arc<str>,
-
-    #[serde(rename = "byUniqueId")]
-    #[serde(alias = "@byUniqueId")]
-    #[serde(alias = "byUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
-    pub by_unique_id: Option<Arc<str>>,
-
-    #[serde(rename = "role")]
-    #[serde(alias = "@role")]
-    #[serde(alias = "role")]
-    pub role: Arc<str>,
-    #[serde(rename = "when")]
-    #[serde(alias = "@when")]
-    #[serde(alias = "when")]
-    pub when: Option<DateTime<Utc>>,
-
-    #[serde(rename = "value")]
-    #[serde(alias = "$text")]
-    #[serde(alias = "#text")]
-    #[serde(alias = "value")]
-    #[serde(default)]
-    pub value: String,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Reason {
     #[serde(rename = "by")]
     #[serde(alias = "@by")]
@@ -305,42 +201,8 @@ impl Reason {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Entry {
-    #[serde(rename = "entryId")]
-    #[serde(alias = "@id")]
-    #[serde(alias = "entryId")]
-    pub entry_id: Arc<str>,
-
-    #[serde(rename = "reviewedBy")]
-    #[serde(alias = "@reviewedBy")]
-    #[serde(alias = "reviewedBy")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by: Option<String>,
-
-    #[serde(rename = "reviewedByUniqueId")]
-    #[serde(alias = "@reviewedByUniqueId")]
-    #[serde(alias = "reviewedByUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by_unique_id: Option<String>,
-
-    #[serde(rename = "reviewedByWhen")]
-    #[serde(alias = "@reviewedByWhen")]
-    #[serde(alias = "reviewedByWhen")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub reviewed_by_when: Option<DateTime<Utc>>,
-
-    pub value: Option<Value>,
-    pub reason: Option<Reason>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Entry {
     #[serde(rename = "entryId")]
     #[serde(alias = "@id")]
@@ -429,41 +291,8 @@ impl Entry {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Comment {
-    #[serde(rename = "commentId")]
-    #[serde(alias = "@id")]
-    #[serde(alias = "commentId")]
-    pub comment_id: String,
-
-    #[serde(rename = "reviewedBy")]
-    #[serde(alias = "@reviewedBy")]
-    #[serde(alias = "reviewedBy")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by: Option<String>,
-
-    #[serde(rename = "reviewedByUniqueId")]
-    #[serde(alias = "@reviewedByUniqueId")]
-    #[serde(alias = "reviewedByUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by_unique_id: Option<String>,
-
-    #[serde(rename = "reviewedByWhen")]
-    #[serde(alias = "@reviewedByWhen")]
-    #[serde(alias = "reviewedByWhen")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub reviewed_by_when: Option<DateTime<Utc>>,
-
-    pub value: Option<Value>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Comment {
     #[serde(rename = "commentId")]
     #[serde(alias = "@id")]
@@ -727,8 +556,8 @@ impl Comment {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Query {
     #[serde(rename = "queryId")]
     #[serde(alias = "@id")]
@@ -760,8 +589,8 @@ pub struct Query {
     pub answer: Option<Value>,
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct File {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -820,145 +649,8 @@ pub struct File {
     pub download_history: Option<Arc<Vec<Comment>>>,
 }
 
-#[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
-pub struct Query {
-    #[serde(rename = "queryId")]
-    #[serde(alias = "@id")]
-    #[serde(alias = "queryId")]
-    pub query_id: Arc<str>,
-
-    #[serde(rename = "reviewedBy")]
-    #[serde(alias = "@reviewedBy")]
-    #[serde(alias = "reviewedBy")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by: Option<String>,
-
-    #[serde(rename = "reviewedByUniqueId")]
-    #[serde(alias = "@reviewedByUniqueId")]
-    #[serde(alias = "reviewedByUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub reviewed_by_unique_id: Option<String>,
-
-    #[serde(rename = "reviewedByWhen")]
-    #[serde(alias = "@reviewedByWhen")]
-    #[serde(alias = "reviewedByWhen")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub reviewed_by_when: Option<DateTime<Utc>>,
-
-    pub value: Option<Value>,
-    pub answer: Option<Value>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
-pub struct File {
-    #[serde(rename = "name")]
-    #[serde(alias = "@name")]
-    #[serde(alias = "name")]
-    pub name: Arc<str>,
-
-    #[serde(rename = "fileType")]
-    #[serde(alias = "@type")]
-    #[serde(alias = "fileType")]
-    pub file_type: Arc<str>,
-
-    #[serde(rename = "dataType")]
-    #[serde(alias = "@dataType")]
-    #[serde(alias = "dataType")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
-    pub data_type: Option<Arc<str>>,
-
-    #[serde(rename = "errorCode")]
-    #[serde(alias = "@errorCode")]
-    #[serde(alias = "errorCode")]
-    pub error_code: Arc<str>,
-
-    #[serde(rename = "whenCreated")]
-    #[serde(alias = "@whenCreated")]
-    #[serde(alias = "whenCreated")]
-    pub when_created: Option<DateTime<Utc>>,
-
-    #[serde(rename = "keepHistory")]
-    #[serde(alias = "@keepHistory")]
-    #[serde(alias = "keepHistory")]
-    pub keep_history: bool,
-
-    #[serde(rename = "fileLocation")]
-    #[serde(alias = "@fileLocation")]
-    #[serde(alias = "fileLocation")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub file_location: Option<String>,
-
-    #[serde(rename = "size")]
-    #[serde(alias = "@size")]
-    #[serde(alias = "size")]
-    #[serde(default)]
-    pub size: Option<usize>,
-
-    #[serde(alias = "entry")]
-    pub entries: Option<Arc<Vec<Entry>>>,
-
-    #[serde(alias = "comment")]
-    pub comments: Option<Arc<Vec<Comment>>>,
-
-    #[serde(alias = "query")]
-    pub queries: Option<Arc<Vec<Query>>>,
-
-    #[serde(rename = "downloadHistory")]
-    #[serde(alias = "downloadHistory")]
-    pub download_history: Option<Arc<Vec<Comment>>>,
-}
-
-#[cfg(not(feature = "python"))]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Field {
-    #[serde(rename = "name")]
-    #[serde(alias = "@name")]
-    #[serde(alias = "name")]
-    pub name: Arc<str>,
-
-    #[serde(rename = "fieldType")]
-    #[serde(alias = "@type")]
-    #[serde(alias = "fieldType")]
-    pub field_type: Arc<str>,
-
-    #[serde(rename = "dataType")]
-    #[serde(alias = "@dataType")]
-    #[serde(alias = "dataType")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none_arc")]
-    pub data_type: Option<Arc<str>>,
-    #[serde(rename = "errorCode")]
-    #[serde(alias = "@errorCode")]
-    #[serde(alias = "errorCode")]
-    pub error_code: Arc<str>,
-    #[serde(rename = "whenCreated")]
-    #[serde(alias = "@whenCreated")]
-    #[serde(alias = "whenCreated")]
-    pub when_created: Option<DateTime<Utc>>,
-    #[serde(rename = "keepHistory")]
-    #[serde(alias = "@keepHistory")]
-    #[serde(alias = "keepHistory")]
-    pub keep_history: bool,
-
-    #[serde(alias = "entry")]
-    pub entries: Option<Arc<Vec<Entry>>>,
-
-    #[serde(alias = "comment")]
-    pub comments: Option<Arc<Vec<Comment>>>,
-
-    #[serde(alias = "query")]
-    pub queries: Option<Arc<Vec<Query>>>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Field {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -1100,46 +792,8 @@ impl Field {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Category {
-    #[serde(rename = "name")]
-    #[serde(alias = "@name")]
-    #[serde(alias = "name")]
-    pub name: Arc<str>,
-
-    #[serde(rename = "categoryType")]
-    #[serde(alias = "@type")]
-    #[serde(alias = "categoryType")]
-    pub category_type: Arc<str>,
-
-    #[serde(rename = "highestIndex")]
-    #[serde(alias = "@highestIndex")]
-    #[serde(alias = "highestIndex")]
-    pub highest_index: usize,
-
-    #[serde(rename = "obfuscated")]
-    #[serde(alias = "@obfuscated")]
-    #[serde(alias = "obfuscated")]
-    #[serde(default)]
-    pub obfuscated: bool,
-
-    #[serde(rename = "overRideHighestIndex")]
-    #[serde(alias = "@overRideHighestIndex")]
-    #[serde(alias = "overRideHighestIndex")]
-    #[serde(default)]
-    pub over_ride_highest_index: bool,
-
-    #[serde(alias = "field")]
-    pub fields: Option<Arc<Vec<Field>>>,
-
-    #[serde(alias = "file")]
-    pub files: Option<Arc<Vec<File>>>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Category {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]
@@ -1302,35 +956,8 @@ impl Form {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct State {
-    #[serde(rename = "value")]
-    #[serde(alias = "@value")]
-    #[serde(alias = "value")]
-    pub value: Arc<str>,
-    #[serde(rename = "signer")]
-    #[serde(alias = "@signer")]
-    #[serde(alias = "signer")]
-    pub signer: Arc<str>,
-    #[serde(rename = "signerUniqueId")]
-    #[serde(alias = "@signerUniqueId")]
-    #[serde(alias = "signerUniqueId")]
-    pub signer_unique_id: Arc<str>,
-
-    #[serde(rename = "dateSigned")]
-    #[serde(alias = "@dateSigned")]
-    #[serde(alias = "dateSigned")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub date_signed: Option<DateTime<Utc>>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct State {
     #[serde(rename = "value")]
     #[serde(alias = "@value")]
@@ -1389,39 +1016,8 @@ impl State {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct LockState {
-    #[serde(rename = "locked")]
-    #[serde(alias = "@locked")]
-    #[serde(alias = "locked")]
-    pub locked: bool,
-
-    #[serde(rename = "user")]
-    #[serde(alias = "@user")]
-    #[serde(alias = "user")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub user: Option<String>,
-
-    #[serde(rename = "userUniqueId")]
-    #[serde(alias = "@userUniqueId")]
-    #[serde(alias = "userUniqueId")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub user_unique_id: Option<String>,
-
-    #[serde(rename = "dateTimeChanged")]
-    #[serde(alias = "@dateTimeChanged")]
-    #[serde(alias = "dateTimeChanged")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub date_time_changed: Option<DateTime<Utc>>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct LockState {
     #[serde(rename = "locked")]
     #[serde(alias = "@locked")]
@@ -1487,100 +1083,8 @@ impl LockState {
     }
 }
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Form {
-    #[serde(rename = "name")]
-    #[serde(alias = "@name")]
-    #[serde(alias = "name")]
-    pub name: String,
-
-    #[serde(rename = "lastModified")]
-    #[serde(alias = "@lastModified")]
-    #[serde(alias = "lastModified")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub last_modified: Option<DateTime<Utc>>,
-
-    #[serde(rename = "whoLastModifiedName")]
-    #[serde(alias = "@whoLastModifiedName")]
-    #[serde(alias = "whoLastModifiedName")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub who_last_modified_name: Option<String>,
-
-    #[serde(rename = "whoLastModifiedRole")]
-    #[serde(alias = "@whoLastModifiedRole")]
-    #[serde(alias = "whoLastModifiedRole")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub who_last_modified_role: Option<String>,
-
-    #[serde(rename = "whenCreated")]
-    #[serde(alias = "@whenCreated")]
-    #[serde(alias = "whenCreated")]
-    pub when_created: usize,
-    #[serde(rename = "hasErrors")]
-    #[serde(alias = "@hasErrors")]
-    #[serde(alias = "hasErrors")]
-    pub has_errors: bool,
-    #[serde(rename = "hasWarnings")]
-    #[serde(alias = "@hasWarnings")]
-    #[serde(alias = "hasWarnings")]
-    pub has_warnings: bool,
-    #[serde(rename = "locked")]
-    #[serde(alias = "@locked")]
-    #[serde(alias = "locked")]
-    pub locked: bool,
-
-    #[serde(rename = "user")]
-    #[serde(alias = "@user")]
-    #[serde(alias = "user")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub user: Option<String>,
-
-    #[serde(rename = "dateTimeChanged")]
-    #[serde(alias = "@dateTimeChanged")]
-    #[serde(alias = "dateTimeChanged")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub date_time_changed: Option<DateTime<Utc>>,
-
-    #[serde(rename = "formTitle")]
-    #[serde(alias = "@formTitle")]
-    #[serde(alias = "formTitle")]
-    pub form_title: String,
-    #[serde(rename = "formIndex")]
-    #[serde(alias = "@formIndex")]
-    #[serde(alias = "formIndex")]
-    pub form_index: usize,
-
-    #[serde(rename = "formGroup")]
-    #[serde(alias = "@formGroup")]
-    #[serde(alias = "formGroup")]
-    #[serde(default, deserialize_with = "deserialize_empty_string_as_none")]
-    pub form_group: Option<String>,
-
-    #[serde(rename = "formState")]
-    #[serde(alias = "@formState")]
-    #[serde(alias = "formState")]
-    pub form_state: String,
-
-    #[serde(alias = "state")]
-    pub states: Option<Arc<Vec<State>>>,
-
-    #[serde(alias = "lockState")]
-    pub lock_states: Option<Arc<Vec<LockState>>>,
-
-    #[serde(alias = "category")]
-    pub categories: Option<Arc<Vec<Category>>>,
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Form {
     #[serde(rename = "name")]
     #[serde(alias = "@name")]

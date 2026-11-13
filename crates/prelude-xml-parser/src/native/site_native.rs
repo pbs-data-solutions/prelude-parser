@@ -22,9 +22,9 @@ use crate::native::deserializers::{checked_datetime, required_attribute, visit_a
 #[cfg(feature = "python")]
 use crate::native::deserializers::to_py_datetime;
 
-#[cfg(not(feature = "python"))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Site {
     #[serde(alias = "@name")]
     #[serde(alias = "name")]
@@ -58,87 +58,6 @@ pub struct Site {
     pub forms: Option<Arc<Vec<Form>>>,
 }
 
-#[cfg(not(feature = "python"))]
-impl Site {
-    pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
-        let mut name: Option<&str> = None;
-        let mut unique_id: Option<&str> = None;
-        let mut number_of_patients = "";
-        let mut count_of_randomized_patients = "";
-        let mut when_created = "";
-        let mut creator: Option<&str> = None;
-        let mut number_of_forms = "";
-
-        visit_attributes(e, |key, attr| match key {
-            "name" => name = Some(attr),
-            "uniqueId" => unique_id = Some(attr),
-            "numberOfPatients" => number_of_patients = attr,
-            "countOfRandomizedPatients" => count_of_randomized_patients = attr,
-            "whenCreated" => when_created = attr,
-            "creator" => creator = Some(attr),
-            "numberOfForms" => number_of_forms = attr,
-            _ => {}
-        })?;
-
-        Ok(Site {
-            name: required_attribute(name, "name")?,
-            unique_id: required_attribute(unique_id, "uniqueId")?,
-            number_of_patients: number_of_patients.parse().unwrap_or(0),
-            count_of_randomized_patients: count_of_randomized_patients.parse().unwrap_or(0),
-            when_created: checked_datetime(when_created)?,
-            creator: required_attribute(creator, "creator")?,
-            number_of_forms: number_of_forms.parse().unwrap_or(0),
-            forms: None,
-        })
-    }
-
-    pub(crate) fn set_forms(&mut self, forms: Vec<Form>) {
-        self.forms = if forms.is_empty() {
-            None
-        } else {
-            Some(Arc::new(forms))
-        };
-    }
-}
-
-#[cfg(feature = "python")]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-#[pyclass()]
-pub struct Site {
-    #[serde(alias = "@name")]
-    #[serde(alias = "name")]
-    pub name: String,
-    #[serde(rename = "uniqueId")]
-    #[serde(alias = "@uniqueId")]
-    #[serde(alias = "uniqueId")]
-    pub unique_id: String,
-    #[serde(rename = "numberOfPatients")]
-    #[serde(alias = "@numberOfPatients")]
-    #[serde(alias = "numberOfPatients")]
-    pub number_of_patients: usize,
-    #[serde(rename = "countOfRandomizedPatients")]
-    #[serde(alias = "@countOfRandomizedPatients")]
-    #[serde(alias = "countOfRandomizedPatients")]
-    pub count_of_randomized_patients: usize,
-    #[serde(rename = "whenCreated")]
-    #[serde(alias = "@whenCreated")]
-    #[serde(alias = "whenCreated")]
-    pub when_created: Option<DateTime<Utc>>,
-    #[serde(alias = "@creator")]
-    #[serde(alias = "creator")]
-    pub creator: String,
-    #[serde(rename = "numberOfForms")]
-    #[serde(alias = "@numberOfForms")]
-    #[serde(alias = "numberOfForms")]
-    pub number_of_forms: usize,
-
-    #[serde(rename = "form")]
-    #[serde(alias = "form")]
-    pub forms: Option<Arc<Vec<Form>>>,
-}
-
-#[cfg(feature = "python")]
 impl Site {
     pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
         let mut name: Option<&str> = None;
@@ -262,18 +181,6 @@ impl Site {
 }
 
 #[cfg(not(feature = "python"))]
-/// Contains the information from the Prelude native site XML.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct SiteNative {
-    #[serde(default)]
-    pub export: Option<Export>,
-
-    #[serde(alias = "site")]
-    pub sites: Vec<Site>,
-}
-
-#[cfg(not(feature = "python"))]
 impl SiteNative {
     /// Convert to a JSON string
     ///
@@ -300,11 +207,10 @@ impl SiteNative {
     }
 }
 
-#[cfg(feature = "python")]
 /// Contains the information from the Prelude native site XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[cfg_attr(feature = "python", pyclass(get_all))]
 pub struct SiteNative {
     #[serde(default)]
     pub export: Option<Export>,

@@ -12,45 +12,18 @@ use pyo3::{
 use quick_xml::events::BytesStart;
 
 use crate::native::deserializers::{
-    checked_datetime, deserialize_empty_string_as_none_datetime, optional_string,
-    required_attribute, visit_attributes,
+    checked_datetime, deserialize_empty_string_as_none, deserialize_empty_string_as_none_datetime,
+    optional_string, required_attribute, visit_attributes,
 };
 
 #[cfg(feature = "python")]
-use crate::native::deserializers::{deserialize_empty_string_as_none, to_py_datetime};
+use crate::native::deserializers::to_py_datetime;
 
 use serde::{Deserialize, Serialize};
 
 pub use crate::native::common::{
     Category, Comment, Entry, Export, Field, Form, Reason, State, Value,
 };
-
-#[cfg(not(feature = "python"))]
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Patient {
-    #[serde(rename = "patientId")]
-    pub patient_id: String,
-    #[serde(rename = "uniqueId")]
-    pub unique_id: String,
-    #[serde(rename = "whenCreated")]
-    pub when_created: Option<DateTime<Utc>>,
-    #[serde(rename = "passwordChangeDate")]
-    #[serde(
-        default,
-        deserialize_with = "deserialize_empty_string_as_none_datetime"
-    )]
-    pub password_change_date: Option<DateTime<Utc>>,
-    pub creator: String,
-    #[serde(rename = "siteName")]
-    pub site_name: String,
-    #[serde(rename = "siteUniqueId")]
-    pub site_unique_id: String,
-    #[serde(rename = "lastLanguage")]
-    pub last_language: Option<String>,
-    #[serde(rename = "numberOfForms")]
-    pub number_of_forms: usize,
-    pub forms: Option<Arc<Vec<Form>>>,
-}
 
 impl Patient {
     pub(crate) fn from_attributes(e: &BytesStart<'_>) -> Result<Self, crate::errors::Error> {
@@ -100,10 +73,9 @@ impl Patient {
     }
 }
 
-#[cfg(feature = "python")]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass()]
+#[cfg_attr(feature = "python", pyclass())]
 pub struct Patient {
     #[serde(rename = "patientId")]
     #[serde(alias = "@patientId")]
@@ -256,15 +228,6 @@ impl Patient {
 }
 
 #[cfg(not(feature = "python"))]
-/// Contains the information from the Prelude native subject XML.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct SubjectNative {
-    #[serde(default)]
-    pub export: Option<Export>,
-    pub patients: Vec<Patient>,
-}
-
-#[cfg(not(feature = "python"))]
 impl SubjectNative {
     /// Convert to a JSON string
     ///
@@ -290,11 +253,10 @@ impl SubjectNative {
     }
 }
 
-#[cfg(feature = "python")]
 /// Contains the information from the Prelude native subject XML.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-#[pyclass(get_all)]
+#[cfg_attr(feature = "python", pyclass(get_all))]
 pub struct SubjectNative {
     #[serde(default)]
     pub export: Option<Export>,
